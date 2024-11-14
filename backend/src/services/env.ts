@@ -22,7 +22,7 @@ export const Env = v.object({
 
   REDIS_URL: s.nonEmptyString(),
   REDIS_PASSWORD: s.nonEmptyString(),
-  
+
   S3_FORCE_PATH_STYLE: s.stringToBoolean(),
   S3_ENDPOINT: s.nonEmptyString(),
   S3_REGION: s.nonEmptyString(),
@@ -31,8 +31,7 @@ export const Env = v.object({
 
   IPINFO_ACCESS_TOKEN: s.nonEmptyString(),
 
-  KYOSO_OWNER: s.stringToInteger(),
-
+  KYOSO_OWNER: s.stringToInteger()
 });
 
 export type Env = v.InferOutput<typeof Env>;
