@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import * as s from '$services/validation';
+import * as s from '$src/utils/validation';
 
 export const Env = v.object({
   NODE_ENV: v.optional(

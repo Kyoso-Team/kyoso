@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { env } from '$services/env';
+import { env } from '$src/utils/env';
 
 const client = postgres(env.NODE_ENV === 'test' ? env.TEST_DATABASE_URL : env.DATABASE_URL, {
   onnotice: () => {}

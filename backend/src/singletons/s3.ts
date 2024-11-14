@@ -1,5 +1,5 @@
 import { S3 } from '@aws-sdk/client-s3';
-import { env } from '$services/env';
+import { env } from '$src/utils/env';
 
 export const s3 = new S3({
   forcePathStyle: env.S3_FORCE_PATH_STYLE,
