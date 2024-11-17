@@ -19,7 +19,7 @@ export function unknownError(description: string) {
 
 class ValidationError extends Error {
   constructor(message: string, key: string, issue: string, options?: ErrorOptions) {
-    super(`${message}. Validation error for \'${key}\': ${issue}`, options);
+    super(`${message}. Validation error for '${key}': ${issue}`, options);
   }
 }
 
@@ -32,7 +32,7 @@ export function validationError(description: string, item: string) {
 
     if (v.isValiError(err)) {
       const flattened = v.flatten(err.issues);
-      
+
       if (flattened.root) {
         throw new ValidationError(description, item, flattened.root[0], options);
       } else if (flattened.nested) {
@@ -41,6 +41,9 @@ export function validationError(description: string, item: string) {
       }
     }
 
-    throw new UnknownError(`Attempted to parse a validation error but received an unknown error instead`, options);
-  }
+    throw new UnknownError(
+      'Attempted to parse a validation error but received an unknown error instead',
+      options
+    );
+  };
 }
