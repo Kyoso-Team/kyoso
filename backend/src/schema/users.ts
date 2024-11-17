@@ -1,4 +1,48 @@
-import { char, pgTable, varchar } from 'drizzle-orm/pg-core';
+import { bigint, boolean, char, inet, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
+import { timestampConfig } from './utils';
+import type { OAuthToken } from '$src/types';
+
+export const User = pgTable('user', {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  registeredAt: timestamp(timestampConfig).notNull().defaultNow(),
+  updatedApiDataAt: timestamp(timestampConfig).notNull().defaultNow(),
+  admin: boolean().notNull().default(false),
+  approvedHost: boolean().notNull().default(false)
+});
+
+export const UserApiKey = pgTable('user_api_key', {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  createdAt: timestamp(timestampConfig).notNull().defaultNow(),
+  key: varchar({ length: 32 }).notNull().unique(),
+  userId: integer().notNull().references(() => User.id, {
+    onDelete: 'cascade'
+  })
+});
+
+export const OsuUser = pgTable(
+  'osu_user',
+  {
+    userId: integer().primaryKey().references(() => User.id, {
+      onDelete: 'cascade'
+    }),
+    osuUserId: integer().notNull(),
+    username: varchar({ length: 15 }).notNull(),
+    restricted: boolean().notNull(),
+    globalStdRank: integer(),
+    globalTaikoRank: integer(),
+    globalCatchRank: integer(),
+    globalManiaRank: integer(),
+    token: jsonb().notNull().$type<OAuthToken>(),
+    countryCode: char('country_code', {
+      length: 2
+    })
+      .notNull()
+      .references(() => Country.code)
+  },
+  (table) => [
+    unique('osu_user_osu_user_id_uni').on(table.osuUserId)
+  ]
+);
 
 export const Country = pgTable('country', {
   code: char({
@@ -8,3 +52,63 @@ export const Country = pgTable('country', {
     length: 35
   }).notNull()
 });
+
+export const OsuBadge = pgTable(
+  'osu_badge',
+  {
+    id: integer().generatedAlwaysAsIdentity().primaryKey(),
+    /** Example: In URL `https://assets.ppy.sh/profile-badges/owc2023-winner.png`, `owc2023-winner.png` is the file name */
+    imgFileName: text().notNull(),
+    description: text()
+  }
+);
+
+export const OsuUserAwardedBadge = pgTable(
+  'osu_user_awarded_badge',
+  {
+    osuUserId: integer()
+      .notNull()
+      .references(() => OsuUser.osuUserId),
+    osuBadgeId: integer()
+      .notNull()
+      .references(() => OsuBadge.id),
+    awardedAt: timestamp(timestampConfig).notNull()
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.osuUserId, table.osuBadgeId]
+    })
+  ]
+);
+
+export const DiscordUser = pgTable('discord_user', {
+  userId: integer().primaryKey().references(() => User.id, {
+    onDelete: 'cascade'
+  }),
+  discordUserId: bigint({ mode: 'bigint' }).notNull(),
+  username: varchar({ length: 32 }).notNull(),
+  token: jsonb().notNull().$type<OAuthToken>()
+});
+
+export const Session = pgTable(
+  'session',
+  {
+    id: text().primaryKey(),
+    createdAt: timestamp(timestampConfig).notNull().defaultNow(),
+    lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
+    expiresAt: timestamp(timestampConfig).notNull(),
+    updateCookie: boolean().notNull().default(false),
+    ipAddress: inet().notNull(),
+    ipMetadata: jsonb().notNull().$type<{
+      city: string;
+      region: string;
+      country: string;
+    }>(),
+    userAgent: text().notNull(),
+    userId: integer()
+      .notNull()
+      .references(() => User.id, {
+        onDelete: 'cascade'
+      })
+  }
+);
