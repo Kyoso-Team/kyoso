@@ -1,5 +1,6 @@
 import type { DatabaseClient } from '$src/types';
 import { env } from '$src/utils/env';
+import { sql, Table, type SQL } from 'drizzle-orm';
 
 async function resetDatabase(db: DatabaseClient) {
   if (env.NODE_ENV === 'production') return;
@@ -15,4 +16,14 @@ async function prePushDatabase(db: DatabaseClient) {
   await db.execute('create extension "pg_trgm"');
 }
 
-export const databaseRepository = { resetDatabase, prePushDatabase };
+async function exists(
+  db: DatabaseClient,
+  table: Table,
+  where: SQL
+) {
+  return await db
+    .execute(sql`select exists(select 1 as "exists" from ${table} where ${where})`)
+    .then(([{ exists }]) => !!exists);
+}
+
+export const databaseRepository = { resetDatabase, prePushDatabase, exists };
