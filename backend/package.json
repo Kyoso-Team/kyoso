@@ -10,7 +10,7 @@
     "@aws-sdk/s3-request-presigner": "^3.689.0",
     "@hono/valibot-validator": "^0.5.1",
     "arctic": "^2.2.2",
-    "drizzle-orm": "^0.36.1",
+    "drizzle-orm": "^0.36.3",
     "hono": "^4.6.10",
     "ioredis": "^5.4.1",
     "osu-web.js": "^2.5.0",

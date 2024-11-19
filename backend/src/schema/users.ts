@@ -60,7 +60,10 @@ export const OsuBadge = pgTable(
     /** Example: In URL `https://assets.ppy.sh/profile-badges/owc2023-winner.png`, `owc2023-winner.png` is the file name */
     imgFileName: text().notNull(),
     description: text()
-  }
+  },
+  (table) => [
+    unique('osu_badge_img_file_name_uni').on(table.imgFileName)
+  ]
 );
 
 export const OsuUserAwardedBadge = pgTable(

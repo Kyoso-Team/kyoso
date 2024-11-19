@@ -2,8 +2,8 @@ import type { Context } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 
-function setOsuOAuthState(c: Context, state: string) {
-  setCookie(c, 'osu_oauth_state', state, {
+function setOAuthState(c: Context, forOAuth: 'osu' | 'discord', state: string) {
+  setCookie(c, `${forOAuth}_oauth_state`, state, {
     path: '/',
     httpOnly: true,
     maxAge: 600,
@@ -11,14 +11,15 @@ function setOsuOAuthState(c: Context, state: string) {
   });
 }
 
-function getOsuOAuthState(c: Context) {
-  const cookie = getCookie(c, 'osu_oauth_state');
+function getOAuthState(c: Context, forOAuth: 'osu' | 'discord') {
+  const cookieName = `${forOAuth}_oauth_state`;
+  const cookie = getCookie(c, cookieName);
   if (!cookie) {
     throw new HTTPException(400, {
-      message: 'Missing cookie: osu_oauth_state'
+      message: `Missing cookie: ${cookieName}`
     });
   }
   return cookie;
 }
 
-export const cookieService = { setOsuOAuthState, getOsuOAuthState };
+export const cookieService = { setOAuthState, getOAuthState };

@@ -12,15 +12,12 @@ import { databaseRepository } from '$src/modules/database/repository';
 import { db } from '$src/singletons';
 import { eq } from 'drizzle-orm';
 import { OsuUser } from '$src/schema';
+import { authenticationService } from '$src/modules/authentication/service';
 
 const authRouter = new Hono().basePath('/auth');
 
 authRouter.get('/login', async (c) => {
-  const state = generateState();
-	const url = osuOAuth.createAuthorizationURL(state, ['identify', 'public']);
-
-  cookieService.setOsuOAuthState(c, state);
-  return c.redirect(url, 302);
+  return await authenticationService.redirectToOsuLogin(c);
 });
 
 authRouter.get(
@@ -34,7 +31,7 @@ authRouter.get(
   ),
   async (c) => {
     const { code, state } = c.req.valid('query');
-    const storedState = cookieService.getOsuOAuthState(c);
+    const storedState = cookieService.getOAuthState(c, 'osu');
 
     if (state !== storedState) {
       throw new HTTPException(400, {
