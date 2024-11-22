@@ -4,7 +4,10 @@
     "dev": "bun run --hot src/index.ts",
     "db:push": "bun ./scripts/db/push.ts",
     "db:reset": "bun ./scripts/db/reset.ts",
-    "new:module": "bun ./scripts/modules/new-module.ts"
+    "new:module": "bun ./scripts/modules/new-module.ts",
+    "new:service": "bun ./scripts/modules/new-service.ts",
+    "new:repository": "bun ./scripts/modules/new-repository.ts",
+    "new:validation": "bun ./scripts/modules/new-validation.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.689.0",
