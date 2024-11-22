@@ -1,11 +1,11 @@
+import type * as v from 'valibot';
 import { bigint, boolean, char, inet, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
-import type { OAuthToken } from '$src/types';
+import type { OAuthToken } from '$src/modules/authentication/validation';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   registeredAt: timestamp(timestampConfig).notNull().defaultNow(),
-  updatedApiDataAt: timestamp(timestampConfig).notNull().defaultNow(),
   admin: boolean().notNull().default(false),
   approvedHost: boolean().notNull().default(false)
 });
@@ -25,6 +25,7 @@ export const OsuUser = pgTable(
     userId: integer().primaryKey().references(() => User.id, {
       onDelete: 'cascade'
     }),
+    updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
     osuUserId: integer().notNull(),
     username: varchar({ length: 15 }).notNull(),
     restricted: boolean().notNull(),
@@ -32,7 +33,7 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb().notNull().$type<OAuthToken>(),
+    token: jsonb().notNull().$type<v.InferOutput<typeof OAuthToken>>(),
     countryCode: char('country_code', {
       length: 2
     })
@@ -88,9 +89,10 @@ export const DiscordUser = pgTable('discord_user', {
   userId: integer().primaryKey().references(() => User.id, {
     onDelete: 'cascade'
   }),
+  updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<OAuthToken>()
+  token: jsonb().notNull().$type<v.InferOutput<typeof OAuthToken>>()
 });
 
 export const Session = pgTable(

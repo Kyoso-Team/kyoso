@@ -9,10 +9,6 @@ const CreateOsuUserAwardedBadge = v.object({
   ])
 });
 
-export type OsuUserAwardedBadgeValidationOutput = {
-  CreateOsuUserAwardedBadge: v.InferOutput<typeof CreateOsuUserAwardedBadge>;
-}
-
 export const OsuUserAwardedBadgeValidation = {
   CreateOsuUserAwardedBadge
 };

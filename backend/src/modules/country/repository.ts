@@ -1,14 +1,12 @@
+import * as v from 'valibot';
 import { Country } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
-import type { CountryValidationOutput } from './validation';
+import type { CountryValidation } from './validation';
 
-async function createCountry(db: DatabaseClient, country: CountryValidationOutput['CreateCountry']) {
+async function createCountry(db: DatabaseClient, country: v.InferOutput<typeof CountryValidation['CreateCountry']>) {
   return db
     .insert(Country)
-    .values({
-      code: country.code.toUpperCase(),
-      name: country.name
-    })
+    .values(country)
     .onConflictDoNothing({
       target: Country.code
     });

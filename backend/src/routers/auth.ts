@@ -41,15 +41,13 @@ authRouter.get(
 
     const tokens = await osuOAuth.validateAuthorizationCode(code).catch(unknownError('Failed to validate authorization code'));
     const osuUserId = osuService.getOsuUserIdFromAccessToken(tokens.accessToken());
-
     const userExists = await databaseRepository.exists(db, OsuUser, eq(OsuUser.osuUserId, osuUserId));
 
     if (userExists) {
       // TODO: get user -> check if banned -> create session -> redirect
     }
 
-    const user = await osuService.getOsuSelf(tokens.accessToken());
-    // TODO: create user + osu user -> redirect to Discord AOuth
+    // TODO: temporarily store osu! user ID in Redis to be consumed by the Discord OAuth callback -> redirect to Discord AOuth
   }
 );
 

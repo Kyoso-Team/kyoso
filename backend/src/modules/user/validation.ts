@@ -1,14 +1,13 @@
 import * as v from 'valibot';
-import * as s from '$src/utils/validation';
 
 const CreateUser = v.object({
-  osuUserId: s.integerId()
+  admin: v.boolean(),
+  approvedHost: v.boolean()
 });
 
-export type UserValidationOutput = {
-  CreateUser: v.InferOutput<typeof CreateUser>;
-}
+const UpdateUser = CreateUser;
 
 export const UserValidation = {
-  CreateUser
+  CreateUser,
+  UpdateUser
 };

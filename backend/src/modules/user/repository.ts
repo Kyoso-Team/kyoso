@@ -1,14 +1,10 @@
+import * as v from 'valibot';
 import { User } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
-import { env } from '$src/utils/env';
-import type { UserValidationOutput } from './validation';
+import type { UserValidation } from './validation';
 
-async function createUser(db: DatabaseClient, user: UserValidationOutput['CreateUser']) {
-  const isKyosoOwner = env.KYOSO_OWNER === user.osuUserId;
-  return db.insert(User).values({
-    admin: isKyosoOwner,
-    approvedHost: isKyosoOwner
-  }).returning({ id: User.id }).then((rows) => rows[0]);
+async function createUser(db: DatabaseClient, user: v.InferOutput<typeof UserValidation['CreateUser']>) {
+  return db.insert(User).values(user).returning({ id: User.id }).then((rows) => rows[0]);
 }
 
 export const userRepository = { createUser };

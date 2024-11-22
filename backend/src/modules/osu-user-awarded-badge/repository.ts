@@ -1,12 +1,13 @@
+import * as v from 'valibot';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import { sql } from 'drizzle-orm';
-import type { OsuUserAwardedBadgeValidationOutput } from './validations';
+import type { OsuUserAwardedBadgeValidation } from './validation';
 
-async function createOsuUserAwardedBadge(
+async function createOsuUserAwardedBadges(
   db: DatabaseClient,
-  osuUserId: number,
-  badges: OsuUserAwardedBadgeValidationOutput['CreateOsuUserAwardedBadge'][]
+  badges: v.InferOutput<typeof OsuUserAwardedBadgeValidation['CreateOsuUserAwardedBadge']>[],
+  osuUserId: number
 ) {
   return db
     .insert(OsuUserAwardedBadge)
@@ -24,4 +25,4 @@ async function createOsuUserAwardedBadge(
     });
 }
 
-export const osuUserAwardedBadgeRepository = { createOsuUserAwardedBadge };
+export const osuUserAwardedBadgeRepository = { createOsuUserAwardedBadges };
