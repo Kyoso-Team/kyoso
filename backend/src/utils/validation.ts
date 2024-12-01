@@ -1,3 +1,4 @@
+import { is, SQL } from 'drizzle-orm';
 import * as v from 'valibot';
 
 export const integerId = () => v.pipe(v.number(), v.integer(), v.minValue(1));
@@ -13,3 +14,7 @@ export const stringToBoolean = () =>
     v.transform((v) => v === 'true'),
     v.boolean()
   );
+
+export const validUrlSlug = () => v.regex(/^[a-z0-9_]+$/g, 'Invalid slug: Expected to only contain any of the following characters: abcdefghijkmnlopqrstuvwxyz0123456789_');
+
+export const deletionDate = (valueIfUndefined?: SQL | Date) => v.nullable(v.optional(v.union([v.date(), v.custom((v) => is(v, SQL))]), valueIfUndefined));

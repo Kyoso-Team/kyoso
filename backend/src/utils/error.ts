@@ -1,3 +1,6 @@
+import { getTableName, type Column } from 'drizzle-orm';
+import { toSnakeCase } from 'drizzle-orm/casing';
+import postgres from 'postgres';
 import * as v from 'valibot';
 
 class UnknownError extends Error {
@@ -46,4 +49,11 @@ export function validationError(description: string, item: string) {
       options
     );
   };
+}
+
+export function isUniqueConstraintViolationError(err: unknown, forColumns?: Column[]): err is postgres.PostgresError {
+  return err instanceof postgres.PostgresError && err.code === '23505' && (
+    !forColumns ||
+    (err.message.includes(getTableName(forColumns[0].table)) && forColumns.every((column) => err.message.includes(toSnakeCase(column.name))))
+  );
 }
