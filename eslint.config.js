@@ -37,7 +37,7 @@ export default ts.config(
         'warn',
         'single',
         {
-          avoidEscape: false
+          avoidEscape: true
         }
       ],
       'semi': ['warn', 'always'],
