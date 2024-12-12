@@ -1,7 +1,8 @@
-import { getTableName, type Column } from 'drizzle-orm';
+import { getTableName } from 'drizzle-orm';
 import { toSnakeCase } from 'drizzle-orm/casing';
 import postgres from 'postgres';
 import * as v from 'valibot';
+import type { Column } from 'drizzle-orm';
 
 class UnknownError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -51,9 +52,15 @@ export function validationError(description: string, item: string) {
   };
 }
 
-export function isUniqueConstraintViolationError(err: unknown, forColumns?: Column[]): err is postgres.PostgresError {
-  return err instanceof postgres.PostgresError && err.code === '23505' && (
-    !forColumns ||
-    (err.message.includes(getTableName(forColumns[0].table)) && forColumns.every((column) => err.message.includes(toSnakeCase(column.name))))
+export function isUniqueConstraintViolationError(
+  err: unknown,
+  forColumns?: Column[]
+): err is postgres.PostgresError {
+  return (
+    err instanceof postgres.PostgresError &&
+    err.code === '23505' &&
+    (!forColumns ||
+      (err.message.includes(getTableName(forColumns[0].table)) &&
+        forColumns.every((column) => err.message.includes(toSnakeCase(column.name)))))
   );
 }

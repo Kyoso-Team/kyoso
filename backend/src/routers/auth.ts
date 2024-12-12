@@ -1,21 +1,21 @@
-import { cookieService } from '$src/modules/cookie/service';
-import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { vValidator } from '@hono/valibot-validator';
-import { Hono } from 'hono';
-import * as v from 'valibot';
-import * as s from '$src/utils/validation';
-import { HTTPException } from 'hono/http-exception';
-import { unknownError } from '$src/utils/error';
-import { osuService } from '$src/modules/osu/service';
-import { databaseRepository } from '$src/modules/database/repository';
-import { db, redis } from '$src/singletons';
-import { eq } from 'drizzle-orm';
-import { OsuUser } from '$src/schema';
-import { authenticationService } from '$src/modules/authentication/service';
-import { osuRepository } from '$src/modules/osu/repository';
 import { generateState } from 'arctic';
+import { eq } from 'drizzle-orm';
+import { Hono } from 'hono';
 import { getConnInfo } from 'hono/bun';
+import { HTTPException } from 'hono/http-exception';
+import * as v from 'valibot';
+import { authenticationService } from '$src/modules/authentication/service';
+import { cookieService } from '$src/modules/cookie/service';
+import { databaseRepository } from '$src/modules/database/repository';
+import { osuRepository } from '$src/modules/osu/repository';
+import { osuService } from '$src/modules/osu/service';
 import { sessionService } from '$src/modules/session/service';
+import { OsuUser } from '$src/schema';
+import { db, redis } from '$src/singletons';
+import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { unknownError } from '$src/utils/error';
+import * as s from '$src/utils/validation';
 
 const authRouter = new Hono().basePath('/auth');
 
@@ -38,21 +38,32 @@ authRouter.get(
 
     if (state !== storedState) {
       throw new HTTPException(400, {
-        message: 'State doesn\'t match'
+        message: "State doesn't match"
       });
     }
 
-    const tokens = await osuOAuth.validateAuthorizationCode(code).catch(unknownError('Failed to validate authorization code'));
+    const tokens = await osuOAuth
+      .validateAuthorizationCode(code)
+      .catch(unknownError('Failed to validate authorization code'));
     const accessToken = tokens.accessToken();
     const osuUserId = osuService.getOsuUserIdFromAccessToken(accessToken);
-    const userExists = await databaseRepository.exists(db, OsuUser, eq(OsuUser.osuUserId, osuUserId));
+    const userExists = await databaseRepository.exists(
+      db,
+      OsuUser,
+      eq(OsuUser.osuUserId, osuUserId)
+    );
 
     if (userExists) {
       // TODO: get user -> check if banned -> create session -> redirect
     }
 
     const newState = generateState();
-    await osuRepository.temporarilyStoreTokens(redis, authenticationService.transformArcticToken(tokens), newState, 300_000 /* 5 minutes */);
+    await osuRepository.temporarilyStoreTokens(
+      redis,
+      authenticationService.transformArcticToken(tokens),
+      newState,
+      300_000 /* 5 minutes */
+    );
 
     return await authenticationService.redirectToDiscordLogin(c, newState);
   }
@@ -73,11 +84,13 @@ authRouter.get(
 
     if (state !== storedState) {
       throw new HTTPException(400, {
-        message: 'State doesn\'t match'
+        message: "State doesn't match"
       });
     }
 
-    const discordTokens = await mainDiscordOAuth.validateAuthorizationCode(code).catch(unknownError('Failed to validate authorization code'));
+    const discordTokens = await mainDiscordOAuth
+      .validateAuthorizationCode(code)
+      .catch(unknownError('Failed to validate authorization code'));
     const osuTokens = await osuService.getTemporarilyStoredTokens(redis, state);
 
     if (osuTokens === null) {
@@ -85,9 +98,12 @@ authRouter.get(
         message: 'Log into osu! first'
       });
     }
-    
+
     await osuService.deleteTemporarilyStoredTokens(redis, state);
-    const user = await authenticationService.registerUser(osuTokens, authenticationService.transformArcticToken(discordTokens));
+    const user = await authenticationService.registerUser(
+      osuTokens,
+      authenticationService.transformArcticToken(discordTokens)
+    );
 
     const ip = getConnInfo(c).remote.address ?? '127.0.0.1';
     const ipMetadata = await authenticationService.getIpMetadata(ip);

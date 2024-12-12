@@ -1,6 +1,6 @@
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { discordUserRepository } from './repository';
 import { DiscordUserValidation } from './validation';
-import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
 const createDiscordUser = createServiceFnFromRepositoryQueryAndValidation(
   DiscordUserValidation.CreateDiscordUser,

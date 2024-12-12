@@ -1,6 +1,7 @@
-import type { DatabaseClient } from '$src/types';
+import { sql, Table } from 'drizzle-orm';
 import { env } from '$src/utils/env';
-import { sql, Table, type SQL } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import type { DatabaseClient } from '$src/types';
 
 async function resetDatabase(db: DatabaseClient) {
   if (env.NODE_ENV === 'production') return;
@@ -16,11 +17,7 @@ async function prePushDatabase(db: DatabaseClient) {
   await db.execute('create extension "pg_trgm"');
 }
 
-async function exists(
-  db: DatabaseClient,
-  table: Table,
-  where: SQL
-) {
+async function exists(db: DatabaseClient, table: Table, where: SQL) {
   return await db
     .execute(sql`select exists(select 1 as "exists" from ${table} where ${where})`)
     .then(([{ exists }]) => !!exists);

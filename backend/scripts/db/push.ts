@@ -1,6 +1,6 @@
-import { db } from '$src/singletons/db';
-import { databaseRepository } from '$src/modules/database/repository';
 import { $ } from 'bun';
+import { databaseRepository } from '$src/modules/database/repository';
+import { db } from '$src/singletons/db';
 
 await databaseRepository.resetDatabase(db);
 await databaseRepository.prePushDatabase(db);

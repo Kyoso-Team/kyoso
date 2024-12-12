@@ -37,4 +37,6 @@ export const Env = v.object({
 
 export type Env = v.InferOutput<typeof Env>;
 
-export const env = await v.parseAsync(Env, Bun.env).catch(validationError('Failed to parse env', 'env'));
+export const env = await v
+  .parseAsync(Env, Bun.env)
+  .catch(validationError('Failed to parse env', 'env'));

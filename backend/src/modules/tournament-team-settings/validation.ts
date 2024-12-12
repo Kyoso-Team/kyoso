@@ -2,7 +2,8 @@ import * as v from 'valibot';
 import * as s from '$src/utils/validation';
 
 const teamSettingsCheck = [
-  <T extends { minTeamSize: number; maxTeamSize: number }>(input: T) => input.minTeamSize <= input.maxTeamSize,
+  <T extends { minTeamSize: number; maxTeamSize: number }>(input: T) =>
+    input.minTeamSize <= input.maxTeamSize,
   'Invalid team settings: Expected the max. team size to be greater than the min. team size'
 ] as const;
 

@@ -17,6 +17,11 @@ export const stringToBoolean = () =>
     v.boolean()
   );
 
-export const validUrlSlug = () => v.regex(/^[a-z0-9_]+$/g, 'Invalid slug: Expected to only contain any of the following characters: abcdefghijkmnlopqrstuvwxyz0123456789_');
+export const validUrlSlug = () =>
+  v.regex(
+    /^[a-z0-9_]+$/g,
+    'Invalid slug: Expected to only contain any of the following characters: abcdefghijkmnlopqrstuvwxyz0123456789_'
+  );
 
-export const deletionDate = (valueIfUndefined?: SQL | Date) => v.nullable(v.optional(v.union([v.date(), v.custom((v) => is(v, SQL))]), valueIfUndefined));
+export const deletionDate = (valueIfUndefined?: SQL | Date) =>
+  v.nullable(v.optional(v.union([v.date(), v.custom((v) => is(v, SQL))]), valueIfUndefined));

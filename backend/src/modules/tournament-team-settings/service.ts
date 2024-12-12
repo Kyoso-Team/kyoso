@@ -1,7 +1,7 @@
 import * as v from 'valibot';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { tournamentTeamSettingsRepository } from './repository';
 import { TournamentTeamSettingsValidation } from './validation';
-import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
 const createTeamSettings = createServiceFnFromRepositoryQueryAndValidation(
   TournamentTeamSettingsValidation.CreateTeamSettings,

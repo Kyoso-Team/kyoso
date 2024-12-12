@@ -1,6 +1,20 @@
-import type * as v from 'valibot';
-import { bigint, boolean, char, inet, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  char,
+  inet,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  varchar
+} from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
+import type * as v from 'valibot';
 import type { AuthenticationValidation } from '$src/modules/authentication/validation';
 
 export const User = pgTable('user', {
@@ -15,17 +29,21 @@ export const UserApiKey = pgTable('user_api_key', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   createdAt: timestamp(timestampConfig).notNull().defaultNow(),
   key: varchar({ length: 32 }).notNull().unique(),
-  userId: integer().notNull().references(() => User.id, {
-    onDelete: 'cascade'
-  })
+  userId: integer()
+    .notNull()
+    .references(() => User.id, {
+      onDelete: 'cascade'
+    })
 });
 
 export const OsuUser = pgTable(
   'osu_user',
   {
-    userId: integer().primaryKey().references(() => User.id, {
-      onDelete: 'cascade'
-    }),
+    userId: integer()
+      .primaryKey()
+      .references(() => User.id, {
+        onDelete: 'cascade'
+      }),
     updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
     osuUserId: integer().notNull(),
     username: varchar({ length: 15 }).notNull(),
@@ -34,16 +52,16 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb().notNull().$type<v.InferOutput<typeof AuthenticationValidation['OAuthToken']>>(),
+    token: jsonb()
+      .notNull()
+      .$type<v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>>(),
     countryCode: char('country_code', {
       length: 2
     })
       .notNull()
       .references(() => Country.code)
   },
-  (table) => [
-    unique('osu_user_osu_user_id_uni').on(table.osuUserId)
-  ]
+  (table) => [unique('osu_user_osu_user_id_uni').on(table.osuUserId)]
 );
 
 export const Country = pgTable('country', {
@@ -63,9 +81,7 @@ export const OsuBadge = pgTable(
     imgFileName: text().notNull(),
     description: text()
   },
-  (table) => [
-    unique('osu_badge_img_file_name_uni').on(table.imgFileName)
-  ]
+  (table) => [unique('osu_badge_img_file_name_uni').on(table.imgFileName)]
 );
 
 export const OsuUserAwardedBadge = pgTable(
@@ -87,34 +103,33 @@ export const OsuUserAwardedBadge = pgTable(
 );
 
 export const DiscordUser = pgTable('discord_user', {
-  userId: integer().primaryKey().references(() => User.id, {
-    onDelete: 'cascade'
-  }),
+  userId: integer()
+    .primaryKey()
+    .references(() => User.id, {
+      onDelete: 'cascade'
+    }),
   updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<v.InferOutput<typeof AuthenticationValidation['OAuthToken']>>()
+  token: jsonb().notNull().$type<v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>>()
 });
 
-export const Session = pgTable(
-  'session',
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    createdAt: timestamp(timestampConfig).notNull().defaultNow(),
-    lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
-    expiresAt: timestamp(timestampConfig).notNull(),
-    updateCookie: boolean().notNull().default(false),
-    ipAddress: inet().notNull(),
-    ipMetadata: jsonb().notNull().$type<{
-      city: string;
-      region: string;
-      country: string;
-    }>(),
-    userAgent: text(),
-    userId: integer()
-      .notNull()
-      .references(() => User.id, {
-        onDelete: 'cascade'
-      })
-  }
-);
+export const Session = pgTable('session', {
+  id: uuid().primaryKey().defaultRandom(),
+  createdAt: timestamp(timestampConfig).notNull().defaultNow(),
+  lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
+  expiresAt: timestamp(timestampConfig).notNull(),
+  updateCookie: boolean().notNull().default(false),
+  ipAddress: inet().notNull(),
+  ipMetadata: jsonb().notNull().$type<{
+    city: string;
+    region: string;
+    country: string;
+  }>(),
+  userAgent: text(),
+  userId: integer()
+    .notNull()
+    .references(() => User.id, {
+      onDelete: 'cascade'
+    })
+});

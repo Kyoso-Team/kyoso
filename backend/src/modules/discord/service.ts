@@ -8,10 +8,12 @@ async function getDiscordSelf(accessToken: string) {
       Authorization: `Bearer ${accessToken}`
     }
   })
-    .then(res => res.json() as Record<string, any>)
+    .then((res) => res.json() as Record<string, any>)
     .catch(unknownError('Failed to get discord user data'));
 
-  const parsed = await v.parseAsync(DiscordValidation.DiscordUserResponse, user).catch(unknownError('Failed to parse discord user data'));
+  const parsed = await v
+    .parseAsync(DiscordValidation.DiscordUserResponse, user)
+    .catch(unknownError('Failed to parse discord user data'));
   return parsed;
 }
 

@@ -1,6 +1,6 @@
+import { Client } from 'osu-web.js';
 import { unknownError } from '$src/utils/error';
 import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
-import { Client } from 'osu-web.js';
 import { osuRepository } from './repository';
 
 async function getOsuSelf(accessToken: string) {
@@ -25,10 +25,18 @@ const temporarilyStoreTokens = createServiceFnFromRepositoryQuery(
   'Failed to temporarily store osu! tokens'
 );
 
-async function getTemporarilyStoredTokens(...args: Parameters<typeof osuRepository['getTemporarilyStoredTokens']>) {
-  const result = await osuRepository.getTemporarilyStoredTokens(...args).catch(unknownError('Failed to get temporarily stored osu! tokens'));
+async function getTemporarilyStoredTokens(
+  ...args: Parameters<(typeof osuRepository)['getTemporarilyStoredTokens']>
+) {
+  const result = await osuRepository
+    .getTemporarilyStoredTokens(...args)
+    .catch(unknownError('Failed to get temporarily stored osu! tokens'));
   if (!result) return null;
-  const data = JSON.parse(result as string) as { accessToken: string; refreshToken: string; tokenIssuedAt: number };
+  const data = JSON.parse(result as string) as {
+    accessToken: string;
+    refreshToken: string;
+    tokenIssuedAt: number;
+  };
   return data;
 }
 
@@ -37,4 +45,10 @@ const deleteTemporarilyStoredTokens = createServiceFnFromRepositoryQuery(
   'Failed to delete temporarily stored osu! tokens'
 );
 
-export const osuService = { getOsuSelf, getOsuUserIdFromAccessToken, temporarilyStoreTokens, getTemporarilyStoredTokens, deleteTemporarilyStoredTokens };
+export const osuService = {
+  getOsuSelf,
+  getOsuUserIdFromAccessToken,
+  temporarilyStoreTokens,
+  getTemporarilyStoredTokens,
+  deleteTemporarilyStoredTokens
+};

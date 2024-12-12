@@ -1,6 +1,6 @@
 import * as v from 'valibot';
-import * as s from '$src/utils/validation';
 import { TournamentType } from '$src/schema';
+import * as s from '$src/utils/validation';
 
 const BwsValues = v.record(
   v.union([v.literal('x'), v.literal('y'), v.literal('z')]),

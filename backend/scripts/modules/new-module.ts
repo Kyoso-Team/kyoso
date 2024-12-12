@@ -1,5 +1,5 @@
-import { multiselect, text } from '@clack/prompts';
 import { mkdirSync, readdirSync } from 'node:fs';
+import { multiselect, text } from '@clack/prompts';
 import { writeRepositoryFile, writeServiceFile, writeValidationFile } from './write-file';
 
 const folderName = await text({
@@ -16,7 +16,9 @@ if (typeof folderName === 'symbol') {
 
 const folderNames = readdirSync(`${process.cwd()}/src/modules`, {
   withFileTypes: true
-}).filter((item) => item.isDirectory()).map((folder) => folder.name);
+})
+  .filter((item) => item.isDirectory())
+  .map((folder) => folder.name);
 
 if (folderNames.includes(folderName)) {
   console.log(`Folder ${folderName} already exists`);
@@ -25,11 +27,7 @@ if (folderNames.includes(folderName)) {
 
 const files = await multiselect({
   message: 'Files to create',
-  options: [
-    { value: 'repository.ts' },
-    { value: 'service.ts' },
-    { value: 'validation.ts' }
-  ],
+  options: [{ value: 'repository.ts' }, { value: 'service.ts' }, { value: 'validation.ts' }],
   required: true
 });
 

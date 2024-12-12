@@ -5,7 +5,10 @@ const CreateOsuUserAwardedBadge = v.object({
   imgFileName: s.nonEmptyString(),
   awardedAt: v.union([
     v.date(),
-    v.pipe(s.nonEmptyString(), v.transform((v) => new Date(v)))
+    v.pipe(
+      s.nonEmptyString(),
+      v.transform((v) => new Date(v))
+    )
   ])
 });
 

@@ -1,6 +1,6 @@
-import type { Context } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
+import type { Context } from 'hono';
 
 function setOAuthState(c: Context, forOAuth: 'osu' | 'discord', state: string) {
   setCookie(c, `${forOAuth}_oauth_state`, state, {

@@ -1,23 +1,25 @@
-import type { Context } from 'hono';
-import { osuService } from '../osu/service';
 import { generateState, OAuth2Tokens } from 'arctic';
+import * as v from 'valibot';
+import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { env } from '$src/utils/env';
+import { unknownError } from '$src/utils/error';
 import { cookieService } from '../cookie/service';
 import { countryService } from '../country/service';
-import { db } from '$src/singletons';
-import { userService } from '../user/service';
+import { discordUserService } from '../discord-user/service';
+import { discordService } from '../discord/service';
 import { osuBadgeService } from '../osu-badge/service';
 import { osuUserAwardedBadgeService } from '../osu-user-awarded-badge/service';
 import { osuUserService } from '../osu-user/service';
-import { env } from '$src/utils/env';
-import * as v from 'valibot';
+import { osuService } from '../osu/service';
+import { userService } from '../user/service';
 import { AuthenticationValidation } from './validation';
+import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
-import { discordService } from '../discord/service';
-import { discordUserService } from '../discord-user/service';
-import { unknownError } from '$src/utils/error';
 
-function transformArcticToken(token: OAuth2Tokens): v.InferOutput<typeof AuthenticationValidation['OAuthToken']> {
+function transformArcticToken(
+  token: OAuth2Tokens
+): v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']> {
   return {
     accessToken: token.accessToken(),
     refreshToken: token.refreshToken(),
@@ -28,12 +30,16 @@ function transformArcticToken(token: OAuth2Tokens): v.InferOutput<typeof Authent
 function transformBadge(badge: UserBadge) {
   return {
     description: badge.description,
-    imgFileName: badge.image_url.match(/https:\/\/assets\.ppy\.sh\/profile-badges\/(.*)/)?.[1] ?? '',
+    imgFileName:
+      badge.image_url.match(/https:\/\/assets\.ppy\.sh\/profile-badges\/(.*)/)?.[1] ?? '',
     awardedAt: new Date(badge.awarded_at)
   };
 }
 
-async function registerUser(osuToken: v.InferOutput<typeof AuthenticationValidation['OAuthToken']>, discordToken: v.InferOutput<typeof AuthenticationValidation['OAuthToken']>) {
+async function registerUser(
+  osuToken: v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>,
+  discordToken: v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>
+) {
   const osuUser = await osuService.getOsuSelf(osuToken.accessToken);
   const badges = osuUser.badges.map(transformBadge);
 
@@ -84,7 +90,7 @@ async function registerUser(osuToken: v.InferOutput<typeof AuthenticationValidat
 
 async function redirectToOsuLogin(c: Context) {
   const state = generateState();
-	const url = osuOAuth.createAuthorizationURL(state, ['identify', 'public']);
+  const url = osuOAuth.createAuthorizationURL(state, ['identify', 'public']);
 
   cookieService.setOAuthState(c, 'osu', state);
   return c.redirect(url, 302);
@@ -108,11 +114,19 @@ async function getIpMetadata(ip: string) {
   }
 
   const info = await fetch(`https://ipinfo.io/${ip}?token=${env.IPINFO_ACCESS_TOKEN}`)
-    .then(res => res.json() as Record<string, any>)
+    .then((res) => res.json() as Record<string, any>)
     .catch(unknownError('Failed to get info about IP'));
 
-  const parsed = await v.parseAsync(AuthenticationValidation.IpInfoResponse, info).catch(unknownError('Failed to parse info about IP'));
+  const parsed = await v
+    .parseAsync(AuthenticationValidation.IpInfoResponse, info)
+    .catch(unknownError('Failed to parse info about IP'));
   return parsed;
 }
 
-export const authenticationService = { transformArcticToken, redirectToOsuLogin, redirectToDiscordLogin, registerUser, getIpMetadata };
+export const authenticationService = {
+  transformArcticToken,
+  redirectToOsuLogin,
+  redirectToDiscordLogin,
+  registerUser,
+  getIpMetadata
+};
