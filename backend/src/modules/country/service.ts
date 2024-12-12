@@ -1,8 +1,8 @@
 import { countryRepository } from './repository';
 import { CountryValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
-export const createCountry = createServiceFnFromRepositoryQuery(
+export const createCountry = createServiceFnFromRepositoryQueryAndValidation(
   CountryValidation.CreateCountry,
   countryRepository.createCountry,
   'country',

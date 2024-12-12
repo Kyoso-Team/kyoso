@@ -1,8 +1,8 @@
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { userRepository } from './repository';
 import { UserValidation } from './validation';
 
-export const createUser = createServiceFnFromRepositoryQuery(
+export const createUser = createServiceFnFromRepositoryQueryAndValidation(
   UserValidation.CreateUser,
   userRepository.createUser,
   'user',

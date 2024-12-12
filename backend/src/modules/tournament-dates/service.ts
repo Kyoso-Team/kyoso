@@ -1,16 +1,16 @@
 import * as v from 'valibot';
 import { tournamentDatesRepository } from './repository';
 import { TournamentDatesValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
-const createTournamentDates = createServiceFnFromRepositoryQuery(
+const createTournamentDates = createServiceFnFromRepositoryQueryAndValidation(
   TournamentDatesValidation.CreateTournamentDates,
   tournamentDatesRepository.createTournamentDates,
   'tournamentDates',
   'Failed to create tournament dates'
 );
 
-const updateTournamentDates = createServiceFnFromRepositoryQuery(
+const updateTournamentDates = createServiceFnFromRepositoryQueryAndValidation(
   TournamentDatesValidation.UpdateTournamentDates,
   tournamentDatesRepository.updateTournamentDates,
   'tournamentDates',

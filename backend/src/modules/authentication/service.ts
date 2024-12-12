@@ -11,12 +11,15 @@ import { osuUserAwardedBadgeService } from '../osu-user-awarded-badge/service';
 import { osuUserService } from '../osu-user/service';
 import { env } from '$src/utils/env';
 import * as v from 'valibot';
-import type { AuthenticationValidation } from './validation';
+import { AuthenticationValidation } from './validation';
 import type { UserBadge } from 'osu-web.js';
+import { discordService } from '../discord/service';
+import { discordUserService } from '../discord-user/service';
+import { unknownError } from '$src/utils/error';
 
 function transformArcticToken(token: OAuth2Tokens): v.InferOutput<typeof AuthenticationValidation['OAuthToken']> {
   return {
-    accesstoken: token.accessToken(),
+    accessToken: token.accessToken(),
     refreshToken: token.refreshToken(),
     tokenIssuedAt: Date.now()
   };
@@ -30,8 +33,8 @@ function transformBadge(badge: UserBadge) {
   };
 }
 
-async function registerUser(token: v.InferOutput<typeof AuthenticationValidation['OAuthToken']>) {
-  const osuUser = await osuService.getOsuSelf(token.accesstoken);
+async function registerUser(osuToken: v.InferOutput<typeof AuthenticationValidation['OAuthToken']>, discordToken: v.InferOutput<typeof AuthenticationValidation['OAuthToken']>) {
+  const osuUser = await osuService.getOsuSelf(osuToken.accessToken);
   const badges = osuUser.badges.map(transformBadge);
 
   await countryService.createCountry(db, osuUser.country);
@@ -55,7 +58,7 @@ async function registerUser(token: v.InferOutput<typeof AuthenticationValidation
       globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
       globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
       countryCode: osuUser.country.code,
-      token
+      token: osuToken
     });
 
     return user;
@@ -67,7 +70,14 @@ async function registerUser(token: v.InferOutput<typeof AuthenticationValidation
 
   // NOTE: If a badge has been removed from the user, this case isn't hadled due to the very high unlikelyhood of this happening
 
-  // TODO: Discord stuff
+  const discordUser = await discordService.getDiscordSelf(discordToken.accessToken);
+
+  await discordUserService.createDiscordUser(db, {
+    userId: user.id,
+    discordUserId: BigInt(discordUser.id),
+    username: discordUser.username,
+    token: discordToken
+  });
 
   return user;
 }
@@ -80,12 +90,29 @@ async function redirectToOsuLogin(c: Context) {
   return c.redirect(url, 302);
 }
 
-async function redirectToDiscordLogin(c: Context) {
-  const state = generateState();
+async function redirectToDiscordLogin(c: Context, generatedState?: string) {
+  const state = generatedState ?? generateState();
   const url = mainDiscordOAuth.createAuthorizationURL(state, ['identify']);
 
   cookieService.setOAuthState(c, 'discord', state);
   return c.redirect(url, 302);
 }
 
-export const authenticationService = { transformArcticToken, redirectToOsuLogin, redirectToDiscordLogin };
+async function getIpMetadata(ip: string) {
+  if (ip === '127.0.0.1') {
+    return {
+      city: 'Some City',
+      region: 'Some Region',
+      country: 'Some Country'
+    };
+  }
+
+  const info = await fetch(`https://ipinfo.io/${ip}?token=${env.IPINFO_ACCESS_TOKEN}`)
+    .then(res => res.json() as Record<string, any>)
+    .catch(unknownError('Failed to get info about IP'));
+
+  const parsed = await v.parseAsync(AuthenticationValidation.IpInfoResponse, info).catch(unknownError('Failed to parse info about IP'));
+  return parsed;
+}
+
+export const authenticationService = { transformArcticToken, redirectToOsuLogin, redirectToDiscordLogin, registerUser, getIpMetadata };

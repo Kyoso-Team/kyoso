@@ -3,6 +3,8 @@ import * as v from 'valibot';
 
 export const integerId = () => v.pipe(v.number(), v.integer(), v.minValue(1));
 
+export const bigintId = () => v.pipe(v.bigint(), v.minValue(1n));
+
 export const nonEmptyString = () => v.pipe(v.string(), v.nonEmpty());
 
 export const stringToInteger = () =>

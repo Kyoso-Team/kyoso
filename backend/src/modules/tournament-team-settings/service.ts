@@ -1,16 +1,16 @@
 import * as v from 'valibot';
 import { tournamentTeamSettingsRepository } from './repository';
 import { TournamentTeamSettingsValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
-const createTeamSettings = createServiceFnFromRepositoryQuery(
+const createTeamSettings = createServiceFnFromRepositoryQueryAndValidation(
   TournamentTeamSettingsValidation.CreateTeamSettings,
   tournamentTeamSettingsRepository.createTeamSettings,
   'teamSettings',
   'Failed to create tournament team settings'
 );
 
-const updateTeamSettings = createServiceFnFromRepositoryQuery(
+const updateTeamSettings = createServiceFnFromRepositoryQueryAndValidation(
   TournamentTeamSettingsValidation.UpdateTeamSettings,
   tournamentTeamSettingsRepository.updateTeamSettings,
   'teamSettings',

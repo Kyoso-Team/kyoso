@@ -1,16 +1,16 @@
 import * as v from 'valibot';
 import { tournamentRankRangeRepository } from './repository';
 import { TournamentRankRangeValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
-const createRankRange = createServiceFnFromRepositoryQuery(
+const createRankRange = createServiceFnFromRepositoryQueryAndValidation(
   TournamentRankRangeValidation.CreateRankRange,
   tournamentRankRangeRepository.createRankRange,
   'tournamentRankRange',
   'Failed to create tournament rank range'
 );
 
-const updateRankRange = createServiceFnFromRepositoryQuery(
+const updateRankRange = createServiceFnFromRepositoryQueryAndValidation(
   TournamentRankRangeValidation.UpdateRankRange,
   tournamentRankRangeRepository.updateRankRange,
   'tournamentRankRange',

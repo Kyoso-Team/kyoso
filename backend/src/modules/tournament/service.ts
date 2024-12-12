@@ -1,26 +1,26 @@
 import * as v from 'valibot';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Tournament } from '$src/schema';
 import { HTTPException } from 'hono/http-exception';
 
-const createSoloTournament = createServiceFnFromRepositoryQuery(
+const createSoloTournament = createServiceFnFromRepositoryQueryAndValidation(
   TournamentValidation.CreateSoloTournament,
   tournamentRepository.createSoloTournament,
   'tournament',
   'Failed to create solo tournament'
 );
 
-const createTeamsTournament = createServiceFnFromRepositoryQuery(
+const createTeamsTournament = createServiceFnFromRepositoryQueryAndValidation(
   TournamentValidation.CreateTeamsTournament,
   tournamentRepository.createTeamsTournament,
   'tournament',
   'Failed to create teams tournament'
 );
 
-const createDraftTournament = createServiceFnFromRepositoryQuery(
+const createDraftTournament = createServiceFnFromRepositoryQueryAndValidation(
   TournamentValidation.CreateDraftTournament,
   tournamentRepository.createDraftTournament,
   'tournament',

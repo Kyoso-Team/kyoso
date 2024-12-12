@@ -1,13 +1,14 @@
 import type * as v from 'valibot';
-import { bigint, boolean, char, inet, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
+import { bigint, boolean, char, inet, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
-import type { OAuthToken } from '$src/modules/authentication/validation';
+import type { AuthenticationValidation } from '$src/modules/authentication/validation';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   registeredAt: timestamp(timestampConfig).notNull().defaultNow(),
   admin: boolean().notNull().default(false),
-  approvedHost: boolean().notNull().default(false)
+  approvedHost: boolean().notNull().default(false),
+  banned: boolean().notNull().default(false)
 });
 
 export const UserApiKey = pgTable('user_api_key', {
@@ -33,7 +34,7 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb().notNull().$type<v.InferOutput<typeof OAuthToken>>(),
+    token: jsonb().notNull().$type<v.InferOutput<typeof AuthenticationValidation['OAuthToken']>>(),
     countryCode: char('country_code', {
       length: 2
     })
@@ -92,13 +93,13 @@ export const DiscordUser = pgTable('discord_user', {
   updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<v.InferOutput<typeof OAuthToken>>()
+  token: jsonb().notNull().$type<v.InferOutput<typeof AuthenticationValidation['OAuthToken']>>()
 });
 
 export const Session = pgTable(
   'session',
   {
-    id: text().primaryKey(),
+    id: uuid().primaryKey().defaultRandom(),
     createdAt: timestamp(timestampConfig).notNull().defaultNow(),
     lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
     expiresAt: timestamp(timestampConfig).notNull(),
@@ -109,7 +110,7 @@ export const Session = pgTable(
       region: string;
       country: string;
     }>(),
-    userAgent: text().notNull(),
+    userAgent: text(),
     userId: integer()
       .notNull()
       .references(() => User.id, {

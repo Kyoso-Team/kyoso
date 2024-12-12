@@ -1,9 +1,9 @@
 import * as v from 'valibot';
 import { osuUserAwardedBadgeRepository } from './repository';
 import { OsuUserAwardedBadgeValidation } from './validation';
-import { createServiceFnFromRepositoryQuery } from '$src/utils/factories';
+import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 
-export const createOsuUserAwardedBadges = createServiceFnFromRepositoryQuery(
+export const createOsuUserAwardedBadges = createServiceFnFromRepositoryQueryAndValidation(
   v.array(OsuUserAwardedBadgeValidation.CreateOsuUserAwardedBadge),
   osuUserAwardedBadgeRepository.createOsuUserAwardedBadges,
   'osuUserAwardedBadges',
