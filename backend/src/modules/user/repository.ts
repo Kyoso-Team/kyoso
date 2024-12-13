@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm';
 import * as v from 'valibot';
 import { User } from '$src/schema';
-import type { DatabaseClient } from '$src/types';
+import type { DatabaseClient, Selection } from '$src/types';
 import type { UserValidation } from './validation';
+import { pick } from '$src/utils/query';
 
 async function createUser(
   db: DatabaseClient,
@@ -19,4 +20,8 @@ async function updateUserBanStatus(db: DatabaseClient, userId: number, ban: bool
   return db.update(User).set({ banned: ban }).where(eq(User.id, userId));
 }
 
-export const userRepository = { createUser, updateUserBanStatus };
+async function getUser<T extends Selection<typeof User>>(db: DatabaseClient, userId: number, select: T) {
+  return db.select(pick(User, select)).from(User).where(eq(User.id, userId)).then((rows) => rows[0]);
+}
+
+export const userRepository = { createUser, updateUserBanStatus, getUser };

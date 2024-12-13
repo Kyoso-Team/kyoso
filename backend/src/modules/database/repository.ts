@@ -17,7 +17,7 @@ async function prePushDatabase(db: DatabaseClient) {
   await db.execute('create extension "pg_trgm"');
 }
 
-async function exists(db: DatabaseClient, table: Table, where: SQL) {
+async function exists(db: DatabaseClient, table: Table, where: SQL | undefined) {
   return await db
     .execute(sql`select exists(select 1 as "exists" from ${table} where ${where})`)
     .then(([{ exists }]) => !!exists);

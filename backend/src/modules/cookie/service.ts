@@ -22,4 +22,17 @@ function getOAuthState(c: Context, forOAuth: 'osu' | 'discord') {
   return cookie;
 }
 
-export const cookieService = { setOAuthState, getOAuthState };
+function setSession(c: Context, sessionToken: string) {
+  setCookie(c, 'session', sessionToken, {
+    path: '/',
+    httpOnly: true,
+    maxAge: 2592000 /* 30 days */,
+    sameSite: 'lax'
+  });
+}
+
+function getSession(c: Context) {
+  return getCookie(c, 'session');
+}
+
+export const cookieService = { setOAuthState, getOAuthState, setSession, getSession };

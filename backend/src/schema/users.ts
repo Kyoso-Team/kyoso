@@ -10,7 +10,6 @@ import {
   text,
   timestamp,
   unique,
-  uuid,
   varchar
 } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
@@ -115,11 +114,10 @@ export const DiscordUser = pgTable('discord_user', {
 });
 
 export const Session = pgTable('session', {
-  id: uuid().primaryKey().defaultRandom(),
+  id: text().primaryKey(),
   createdAt: timestamp(timestampConfig).notNull().defaultNow(),
   lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
   expiresAt: timestamp(timestampConfig).notNull(),
-  updateCookie: boolean().notNull().default(false),
   ipAddress: inet().notNull(),
   ipMetadata: jsonb().notNull().$type<{
     city: string;

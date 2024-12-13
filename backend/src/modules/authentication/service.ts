@@ -16,6 +16,14 @@ import { userService } from '../user/service';
 import { AuthenticationValidation } from './validation';
 import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
+import { sessionService } from '../session/service';
+import type { DatabaseClient } from '$src/types';
+import { getConnInfo } from 'hono/bun';
+import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
+import { sha256 } from '@oslojs/crypto/sha2';
+import { sessionRepository } from '../session/repository';
+import type { SessionSelection } from '../session/types';
+import type { Session } from '$src/schema';
 
 function transformArcticToken(
   token: OAuth2Tokens
@@ -123,10 +131,56 @@ async function getIpMetadata(ip: string) {
   return parsed;
 }
 
+export function generateSessionToken(): string {
+	const bytes = new Uint8Array(20);
+	crypto.getRandomValues(bytes);
+	const token = encodeBase32LowerCaseNoPadding(bytes);
+	return token;
+}
+
+async function createSession(c: Context, db: DatabaseClient, userId: number) {
+  const token = generateSessionToken();
+  const ip = getConnInfo(c).remote.address ?? '127.0.0.1';
+  const ipMetadata = await authenticationService.getIpMetadata(ip);
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
+  await sessionService.createSession(db, {
+    ipMetadata,
+    userId,
+    id: sessionId,
+    ipAddress: ip,
+    userAgent: c.req.header('user-agent')
+  });
+  cookieService.setSession(c, token);
+  return token;
+}
+
+async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(c: Context, db: DatabaseClient, select: T) {
+  const token = cookieService.getSession(c);
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
+  const session = await sessionRepository.getSession(db, sessionId, {
+    id: true,
+    expiresAt: true,
+    ...select
+  });
+
+  if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime()) {
+    await sessionRepository.deleteSession(db, sessionId);
+    return undefined;
+  } else if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime() - 432000 /* 5 days */) {
+    await sessionRepository.resetExpiresAt(db, sessionId);
+  }
+
+  return session;
+}
+
 export const authenticationService = {
   transformArcticToken,
   redirectToOsuLogin,
   redirectToDiscordLogin,
   registerUser,
-  getIpMetadata
+  getIpMetadata,
+  createSession,
+  validateSession
 };

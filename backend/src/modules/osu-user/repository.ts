@@ -1,8 +1,9 @@
 import { eq, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { OsuUser } from '$src/schema';
-import type { DatabaseClient } from '$src/types';
+import type { DatabaseClient, Selection } from '$src/types';
 import type { OsuUserValidation } from './validation';
+import { pick } from '$src/utils/query';
 
 async function createOsuUser(
   db: DatabaseClient,
@@ -25,4 +26,8 @@ async function updateOsuUser(
     .where(eq(OsuUser.osuUserId, osuUserId));
 }
 
-export const osuUserRepository = { createOsuUser, updateOsuUser };
+async function getOsuUser<T extends Selection<typeof OsuUser>>(db: DatabaseClient, osuUserId: number, select: T) {
+  return db.select(pick(OsuUser, select)).from(OsuUser).where(eq(OsuUser.osuUserId, osuUserId)).then((rows) => rows.at(0));
+}
+
+export const osuUserRepository = { createOsuUser, updateOsuUser, getOsuUser };

@@ -1,8 +1,7 @@
 import { vValidator } from '@hono/valibot-validator';
 import { generateState } from 'arctic';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { getConnInfo } from 'hono/bun';
 import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { authenticationService } from '$src/modules/authentication/service';
@@ -10,12 +9,12 @@ import { cookieService } from '$src/modules/cookie/service';
 import { databaseRepository } from '$src/modules/database/repository';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
-import { sessionService } from '$src/modules/session/service';
-import { OsuUser } from '$src/schema';
+import { User } from '$src/schema';
 import { db, redis } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
+import { osuUserRepository } from '$src/modules/osu-user/repository';
 
 const authRouter = new Hono().basePath('/auth');
 
@@ -47,14 +46,28 @@ authRouter.get(
       .catch(unknownError('Failed to validate authorization code'));
     const accessToken = tokens.accessToken();
     const osuUserId = osuService.getOsuUserIdFromAccessToken(accessToken);
-    const userExists = await databaseRepository.exists(
-      db,
-      OsuUser,
-      eq(OsuUser.osuUserId, osuUserId)
-    );
+    const osuUser = await osuUserRepository.getOsuUser(db, osuUserId, {
+      userId: true
+    });
 
-    if (userExists) {
-      // TODO: get user -> check if banned -> create session -> redirect
+    if (osuUser) {
+      const banned = await databaseRepository.exists(
+        db,
+        User,
+        and(
+          eq(User.id, osuUser.userId),
+          eq(User.banned, true)
+        )
+      );
+
+      if (banned) {
+        throw new HTTPException(403, {
+          message: 'You are banned from using this service'
+        });
+      }
+
+      await authenticationService.createSession(c, db, osuUser.userId);
+      return c.redirect('/');
     }
 
     const newState = generateState();
@@ -105,15 +118,7 @@ authRouter.get(
       authenticationService.transformArcticToken(discordTokens)
     );
 
-    const ip = getConnInfo(c).remote.address ?? '127.0.0.1';
-    const ipMetadata = await authenticationService.getIpMetadata(ip);
-    await sessionService.createSession(db, {
-      ipMetadata,
-      ipAddress: ip,
-      userAgent: c.req.header('user-agent'),
-      userId: user.id
-    });
-
+    await authenticationService.createSession(c, db, user.id);
     return c.redirect('/');
   }
 );
