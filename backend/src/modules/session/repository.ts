@@ -56,7 +56,7 @@ async function deleteSession(db: DatabaseClient, sessionId: string) {
 }
 
 async function resetExpiresAt(db: DatabaseClient, sessionId: string) {
-  return db.update(Session).set({ expiresAt: sql`now() + interval '3 months'` }).where(eq(Session.id, sessionId));
+  return db.update(Session).set({ expiresAt: sql`now() + interval '3 months'`, lastActiveAt: sql`now()` }).where(eq(Session.id, sessionId));
 }
 
 export const sessionRepository = { createSession, getSession, deleteSession, resetExpiresAt };

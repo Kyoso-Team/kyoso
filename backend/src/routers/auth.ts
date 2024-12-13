@@ -22,6 +22,13 @@ const authRouter = new Hono().basePath('/auth');
 authRouter.get('/login', vValidator('query', v.object({
   redirect_path: v.optional(s.nonEmptyString())
 })), async (c) => {
+  const session = cookieService.getSession(c);
+  if (session) {
+    throw new HTTPException(403, {
+      message: 'Already logged in'
+    });
+  }
+
   const { redirect_path } = c.req.valid('query');
   if (redirect_path) {
     cookieService.setRedirectPath(c, redirect_path);  

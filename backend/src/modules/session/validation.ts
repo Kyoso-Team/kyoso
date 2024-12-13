@@ -5,11 +5,11 @@ const CreateSession = v.object({
   id: s.nonEmptyString(),
   userAgent: v.nullish(v.pipe(v.string(), v.nonEmpty())),
   ipAddress: v.pipe(v.string(), v.ip()),
-  ipMetadata: v.object({
+  ipMetadata: v.partial(v.object({
     city: v.string(),
     region: v.string(),
     country: v.string()
-  }),
+  })),
   userId: s.integerId()
 });
 

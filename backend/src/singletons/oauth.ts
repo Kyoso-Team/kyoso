@@ -10,7 +10,7 @@ export const osuOAuth = new Osu(
 export const mainDiscordOAuth = new Discord(
   env.PUBLIC_DISCORD_CLIENT_ID,
   env.DISCORD_CLIENT_SECRET,
-  env.PUBLIC_DISCORD_CLIENT_ID
+  env.PUBLIC_DISCORD_MAIN_REDIRECT_URI
 );
 
 export const changeAccountDiscordOAuth = new Discord(

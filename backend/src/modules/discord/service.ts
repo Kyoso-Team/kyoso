@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { unknownError } from '$src/utils/error';
+import { unknownError, validationError } from '$src/utils/error';
 import { DiscordValidation } from './validation';
 
 async function getDiscordSelf(accessToken: string) {
@@ -13,7 +13,7 @@ async function getDiscordSelf(accessToken: string) {
 
   const parsed = await v
     .parseAsync(DiscordValidation.DiscordUserResponse, user)
-    .catch(unknownError('Failed to parse discord user data'));
+    .catch(validationError('Failed to parse discord user data', 'discordUser'));
   return parsed;
 }
 

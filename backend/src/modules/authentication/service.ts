@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
-import { unknownError } from '$src/utils/error';
+import { unknownError, validationError } from '$src/utils/error';
 import { cookieService } from '../cookie/service';
 import { countryService } from '../country/service';
 import { discordUserService } from '../discord-user/service';
@@ -101,7 +101,7 @@ async function redirectToOsuLogin(c: Context) {
   const url = osuOAuth.createAuthorizationURL(state, ['identify', 'public']);
 
   cookieService.setOAuthState(c, 'osu', state);
-  return c.redirect(url, 302);
+  return c.redirect(`${url}&prompt=consent`, 302);
 }
 
 async function redirectToDiscordLogin(c: Context, generatedState?: string) {
@@ -109,7 +109,7 @@ async function redirectToDiscordLogin(c: Context, generatedState?: string) {
   const url = mainDiscordOAuth.createAuthorizationURL(state, ['identify']);
 
   cookieService.setOAuthState(c, 'discord', state);
-  return c.redirect(url, 302);
+  return c.redirect(`${url}&prompt=consent`, 302);
 }
 
 async function getIpMetadata(ip: string) {
@@ -127,7 +127,7 @@ async function getIpMetadata(ip: string) {
 
   const parsed = await v
     .parseAsync(AuthenticationValidation.IpInfoResponse, info)
-    .catch(unknownError('Failed to parse info about IP'));
+    .catch(validationError('Failed to parse info about IP', 'ipMetadata'));
   return parsed;
 }
 
