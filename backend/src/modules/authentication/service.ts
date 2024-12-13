@@ -24,6 +24,7 @@ import { sha256 } from '@oslojs/crypto/sha2';
 import { sessionRepository } from '../session/repository';
 import type { SessionSelection } from '../session/types';
 import type { Session } from '$src/schema';
+import { HTTPException } from 'hono/http-exception';
 
 function transformArcticToken(
   token: OAuth2Tokens
@@ -155,6 +156,19 @@ async function createSession(c: Context, db: DatabaseClient, userId: number) {
   return token;
 }
 
+async function deleteSession(c: Context, db: DatabaseClient) {
+  const token = cookieService.getSession(c);
+  if (!token) {
+    throw new HTTPException(403, {
+      message: 'Not logged in'
+    });
+  }
+
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+  await sessionRepository.deleteSession(db, sessionId);
+  cookieService.deleteSession(c);
+}
+
 async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(c: Context, db: DatabaseClient, select: T) {
   const token = cookieService.getSession(c);
   if (!token) {
@@ -191,5 +205,6 @@ export const authenticationService = {
   registerUser,
   getIpMetadata,
   createSession,
-  validateSession
+  validateSession,
+  deleteSession
 };

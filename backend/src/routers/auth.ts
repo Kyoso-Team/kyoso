@@ -85,7 +85,7 @@ authRouter.get(
 
       const redirectPath = cookieService.getRedirectPath(c);
       cookieService.deleteRedirectPath(c);
-      return c.redirect(redirectPath ? `${env.FRONTEND_URL}${redirectPath}`  :  `${env.FRONTEND_URL}/`, 302);
+      return c.redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
     }
 
     const newState = generateState();
@@ -140,8 +140,16 @@ authRouter.get(
 
     const redirectPath = cookieService.getRedirectPath(c);
     cookieService.deleteRedirectPath(c);
-    return c.redirect(redirectPath ? `${env.FRONTEND_URL}${redirectPath}`  :  `${env.FRONTEND_URL}/`, 302);
+    return c.redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
   }
 );
+
+authRouter.get('/logout', vValidator('query', v.object({
+  redirect_path: v.optional(s.nonEmptyString())
+})), async (c) => {
+  const { redirect_path } = c.req.valid('query');
+  await authenticationService.deleteSession(c, db);
+  return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
+});
 
 export { authRouter };
