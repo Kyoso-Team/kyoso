@@ -7,6 +7,8 @@ export const Env = v.object({
     v.union([v.literal('development'), v.literal('production'), v.literal('test')]),
     'development'
   ),
+  FRONTEND_URL: s.nonEmptyString(),
+  KYOSO_OWNER: s.stringToInteger(),
 
   DATABASE_URL: s.nonEmptyString(),
   TEST_DATABASE_URL: s.nonEmptyString(),
@@ -30,9 +32,7 @@ export const Env = v.object({
   S3_ACCESS_KEY_ID: s.nonEmptyString(),
   S3_SECRET_ACCESS_KEY: s.nonEmptyString(),
 
-  IPINFO_ACCESS_TOKEN: s.nonEmptyString(),
-
-  KYOSO_OWNER: s.stringToInteger()
+  IPINFO_ACCESS_TOKEN: s.nonEmptyString()
 });
 
 export type Env = v.InferOutput<typeof Env>;

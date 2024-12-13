@@ -15,10 +15,18 @@ import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
 import { osuUserRepository } from '$src/modules/osu-user/repository';
+import { env } from '$src/utils/env';
 
 const authRouter = new Hono().basePath('/auth');
 
-authRouter.get('/login', async (c) => {
+authRouter.get('/login', vValidator('query', v.object({
+  redirect_path: v.optional(s.nonEmptyString())
+})), async (c) => {
+  const { redirect_path } = c.req.valid('query');
+  if (redirect_path) {
+    cookieService.setRedirectPath(c, redirect_path);  
+  }
+
   return await authenticationService.redirectToOsuLogin(c);
 });
 
@@ -67,7 +75,10 @@ authRouter.get(
       }
 
       await authenticationService.createSession(c, db, osuUser.userId);
-      return c.redirect('/');
+
+      const redirectPath = cookieService.getRedirectPath(c);
+      cookieService.deleteRedirectPath(c);
+      return c.redirect(redirectPath ? `${env.FRONTEND_URL}${redirectPath}`  :  `${env.FRONTEND_URL}/`, 302);
     }
 
     const newState = generateState();
@@ -119,7 +130,10 @@ authRouter.get(
     );
 
     await authenticationService.createSession(c, db, user.id);
-    return c.redirect('/');
+
+    const redirectPath = cookieService.getRedirectPath(c);
+    cookieService.deleteRedirectPath(c);
+    return c.redirect(redirectPath ? `${env.FRONTEND_URL}${redirectPath}`  :  `${env.FRONTEND_URL}/`, 302);
   }
 );
 

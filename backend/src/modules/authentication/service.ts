@@ -157,19 +157,28 @@ async function createSession(c: Context, db: DatabaseClient, userId: number) {
 
 async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(c: Context, db: DatabaseClient, select: T) {
   const token = cookieService.getSession(c);
-  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+  if (!token) {
+    return undefined;
+  }
 
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const session = await sessionRepository.getSession(db, sessionId, {
     id: true,
     expiresAt: true,
     ...select
   });
 
+  if (!session && token) {
+    cookieService.deleteSession(c);
+  }
+
   if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime()) {
     await sessionRepository.deleteSession(db, sessionId);
+    cookieService.deleteSession(c);
     return undefined;
-  } else if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime() - 432000 /* 5 days */) {
+  } else if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime() - 864_000_000 /* 10 days */) {
     await sessionRepository.resetExpiresAt(db, sessionId);
+    cookieService.setSession(c, token);
   }
 
   return session;
