@@ -6,6 +6,15 @@ function values(values) {
   };
 }
 
+const tokens = values(
+  ['950-50', '900-100', '800-200', '700-300', '600-400', '400-600', '300-700', '200-800', '100-900', '50-950']
+    .map((value) => [
+      ...['/5', '/10', '/20', '/30', '/40', '/50', '/60', '/70', '/80', '/90', '/95', '/100'].map((suffix) => `${value}${suffix}`),
+      value
+    ])
+    .flat(1)
+);
+
 const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) => {
   matchUtilities(
     {
@@ -16,7 +25,20 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
         };
       }
     },
-    values(['950-50', '900-100', '800-200', '700-300', '600-400'])
+    tokens
+  );
+
+  matchUtilities(
+    {
+      'bg-primary-token': (value) => {
+        const shades = value.split('/')[0].split('-');
+        const opacity = value.split('/')[1] ? `/${value.split('/')[1]}` : '';
+        return {
+          [`@apply dark:bg-primary-${shades[0]}${opacity} bg-primary-${shades[1]}${opacity}`]: {}
+        };
+      }
+    },
+    tokens
   );
 
   matchUtilities(
@@ -28,7 +50,19 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
         };
       }
     },
-    values(['950-50', '900-100', '800-200', '700-300', '600-400'])
+    tokens
+  );
+
+  matchUtilities(
+    {
+      'border-primary-token': (value) => {
+        const split = value.split('-');
+        return {
+          [`@apply dark:border-primary-${split[0]} border-primary-${split[1]}`]: {}
+        };
+      }
+    },
+    tokens
   );
 
   addUtilities({
@@ -39,10 +73,23 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
 
   addComponents({
     '.btn': {
-      '@apply px-3 py-1': {}
+      '@apply block px-2 py-[2px] text-sm leading-normal duration-150 font-medium rounded-md': {}
     },
-    '.btn-primary': {
-      '@apply btn bg-primary-500 rounded-md': {}
+    '.btn-surface-soft': {
+      '@apply btn bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border': {}
+    },
+
+    '.btn-md': {
+      '@apply block px-4 py-1 text-sm leading-normal duration-150 font-medium rounded-md': {}
+    },
+    '.btn-md-surface-soft': {
+      '@apply btn-md bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border': {}
+    },
+    '.btn-md-ghost': {
+      '@apply btn-md bg-transparent hover:bg-primary-500/25 border-transparent border': {}
+    },
+    '.btn-md-contrast': {
+      '@apply btn-md bg-black dark:bg-white hover:bg-surface-token-100-900 dark:text-black text-white': {}
     }
   });
 });

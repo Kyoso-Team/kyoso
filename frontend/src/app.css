@@ -8,11 +8,8 @@
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.ttf)
-    format('truetype');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
-    U+FFFD;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.ttf) format('truetype');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
 /* inter-latin-500-normal */
@@ -21,11 +18,8 @@
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-500-normal.ttf)
-    format('truetype');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
-    U+FFFD;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-500-normal.ttf) format('truetype');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
 /* inter-latin-700-normal */
@@ -34,11 +28,18 @@
   font-style: normal;
   font-display: swap;
   font-weight: 700;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf)
-    format('truetype');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
-    U+FFFD;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf) format('truetype');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* inter-latin-800-normal */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-800-normal.ttf) format('truetype');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
 /* inter-latin-ext-400-normal */
@@ -47,10 +48,8 @@
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-400-normal.ttf)
-    format('truetype');
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
-    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-400-normal.ttf) format('truetype');
+  unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
 /* inter-latin-ext-500-normal */
@@ -59,10 +58,8 @@
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-500-normal.ttf)
-    format('truetype');
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
-    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-500-normal.ttf) format('truetype');
+  unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
 /* inter-latin-ext-700-normal */
@@ -71,14 +68,22 @@
   font-style: normal;
   font-display: swap;
   font-weight: 700;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-700-normal.ttf)
-    format('truetype');
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
-    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-700-normal.ttf) format('truetype');
+  unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* inter-latin-ext-800-normal */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-ext-800-normal.ttf) format('truetype');
+  unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter';
   @apply dark:bg-surface-900 bg-surface-100 text-black dark:text-white;
 }
 

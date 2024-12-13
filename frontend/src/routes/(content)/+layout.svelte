@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import '../app.css';
+  import '../../app.css';
   import NavBar from '$components/NavBar.svelte';
   import { toggleTheme } from '$lib/theme';
 
