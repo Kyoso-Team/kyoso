@@ -19,9 +19,10 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
   matchUtilities(
     {
       'bg-surface-token': (value) => {
-        const split = value.split('-');
+        const shades = value.split('/')[0].split('-');
+        const opacity = value.split('/')[1] ? `/${value.split('/')[1]}` : '';
         return {
-          [`@apply dark:bg-surface-${split[0]} bg-surface-${split[1]}`]: {}
+          [`@apply dark:bg-surface-${shades[0]}${opacity} bg-surface-${shades[1]}${opacity}`]: {}
         };
       }
     },
@@ -65,6 +66,32 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
     tokens
   );
 
+  matchUtilities(
+    {
+      'text-surface-token': (value) => {
+        const shades = value.split('/')[0].split('-');
+        const opacity = value.split('/')[1] ? `/${value.split('/')[1]}` : '';
+        return {
+          [`@apply dark:text-surface-${shades[0]}${opacity} text-surface-${shades[1]}${opacity}`]: {}
+        };
+      }
+    },
+    tokens
+  );
+
+  matchUtilities(
+    {
+      'text-primary-token': (value) => {
+        const shades = value.split('/')[0].split('-');
+        const opacity = value.split('/')[1] ? `/${value.split('/')[1]}` : '';
+        return {
+          [`@apply dark:text-primary-${shades[0]}${opacity} text-primary-${shades[1]}${opacity}`]: {}
+        };
+      }
+    },
+    tokens
+  );
+
   addUtilities({
     '.p-content': {
       '@apply px-20': {}
@@ -72,15 +99,18 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
   });
 
   addComponents({
-    '.btn': {
-      '@apply block px-2 py-[2px] text-sm leading-normal duration-150 font-medium rounded-md': {}
+    '.btn-sm': {
+      '@apply block px-3 py-1 text-sm leading-normal duration-150 font-medium rounded-md disabled:opacity-50': {}
     },
-    '.btn-surface-soft': {
-      '@apply btn bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border': {}
+    '.btn-sm-surface-soft': {
+      '@apply btn-sm bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border': {}
+    },
+    '.btn-sm-contrast': {
+      '@apply btn-sm bg-black dark:bg-white hover:bg-surface-token-100-900 dark:text-black text-white': {}
     },
 
     '.btn-md': {
-      '@apply block px-4 py-1 text-sm leading-normal duration-150 font-medium rounded-md': {}
+      '@apply block px-4 py-[6px] text-sm leading-normal duration-150 font-medium rounded-md': {}
     },
     '.btn-md-surface-soft': {
       '@apply btn-md bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border': {}
@@ -90,6 +120,36 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
     },
     '.btn-md-contrast': {
       '@apply btn-md bg-black dark:bg-white hover:bg-surface-token-100-900 dark:text-black text-white': {}
+    },
+
+    '.label': {
+      '@apply has-[:disabled]:opacity-50 duration-150 [&>legend]:text-sm [&>legend]:text-surface-token-200-800 [&>legend]:duration-150 [&>legend>span]:text-red-500 [&>legend>span]:duration-150 [&>.error]:block [&>.error]:text-red-500 [&>.error]:text-sm [&>.error]:mt-[2px] [&>.error]:duration-150 [&>.description]:block [&>.description]:text-xs [&>.description]:mt-[2px] [&>.description]:text-surface-token-400-600 [&>.description]:duration-150': {}
+    },
+    '.input': {
+      '@apply w-full rounded-md bg-surface-token-700-300 border border-surface-token-600-400 px-2 py-1 mt-1 text-black dark:text-white duration-150 disabled:cursor-not-allowed': {}
+    },
+    '.input-select': {
+      '@apply input px-2 py-[6.4px]': {}
+    },
+    '.input-checkbox': {
+      '@apply w-5 h-5 flex justify-center items-center rounded-md bg-surface-token-700-300 border border-surface-token-600-400 aria-checked:bg-primary-500 aria-checked:border-primary-token-400-600 duration-75': {}
+    },
+    '.input-error': {
+      '@apply dark:border-red-500/50 duration-150': {}
+    },
+    '.input-preview': {
+      '@apply block text-xs text-surface-token-200-800 mt-[2px] duration-150': {}
+    },
+    '.input-preview-error': {
+      '@apply block text-xs dark:text-red-300 text-red-700 mt-[2px] duration-150': {}
+    },
+
+    '.line': {
+      '@apply w-full h-[1px] bg-surface-token-600-400': {}
+    },
+
+    'h2': {
+      '@apply text-2xl font-bold text-surface-token-100-900 dark:text-white text-black': {}
     }
   });
 });
