@@ -9,13 +9,16 @@ export type DatabaseClient = PostgresJsDatabase | PgTransaction<PostgresJsQueryR
 export type RedisClient = Redis | ChainableCommander;
 
 export type Selection<TTable extends Table> = {
-  [K in keyof TTable['_']['columns']]?: true
+  [K in keyof TTable['_']['columns']]?: true;
 };
 
 export type Assume<T, U> = T extends U ? T : U;
 
 export type RemoveNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] };
 
-export type Simplify<T> = RemoveNever<T> extends infer TNew ? { [K in keyof TNew]: TNew[K] } & {} : never;
+export type Simplify<T> =
+  RemoveNever<T> extends infer TNew ? { [K in keyof TNew]: TNew[K] } & {} : never;
 
-export type PickColumns<TTable extends Table, TColumns extends string | number | symbol> = Simplify<Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>>;
+export type PickColumns<TTable extends Table, TColumns extends string | number | symbol> = Simplify<
+  Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>
+>;

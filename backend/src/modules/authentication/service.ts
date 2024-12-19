@@ -1,4 +1,8 @@
+import { sha256 } from '@oslojs/crypto/sha2';
+import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
 import { generateState, OAuth2Tokens } from 'arctic';
+import { getConnInfo } from 'hono/bun';
+import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
@@ -12,19 +16,15 @@ import { osuBadgeService } from '../osu-badge/service';
 import { osuUserAwardedBadgeService } from '../osu-user-awarded-badge/service';
 import { osuUserService } from '../osu-user/service';
 import { osuService } from '../osu/service';
+import { sessionRepository } from '../session/repository';
+import { sessionService } from '../session/service';
 import { userService } from '../user/service';
 import { AuthenticationValidation } from './validation';
 import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
-import { sessionService } from '../session/service';
-import type { DatabaseClient } from '$src/types';
-import { getConnInfo } from 'hono/bun';
-import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
-import { sha256 } from '@oslojs/crypto/sha2';
-import { sessionRepository } from '../session/repository';
-import type { SessionSelection } from '../session/types';
 import type { Session } from '$src/schema';
-import { HTTPException } from 'hono/http-exception';
+import type { DatabaseClient } from '$src/types';
+import type { SessionSelection } from '../session/types';
 
 function transformArcticToken(
   token: OAuth2Tokens
@@ -133,10 +133,10 @@ async function getIpMetadata(ip: string) {
 }
 
 export function generateSessionToken(): string {
-	const bytes = new Uint8Array(20);
-	crypto.getRandomValues(bytes);
-	const token = encodeBase32LowerCaseNoPadding(bytes);
-	return token;
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  const token = encodeBase32LowerCaseNoPadding(bytes);
+  return token;
 }
 
 async function createSession(c: Context, db: DatabaseClient, userId: number) {
@@ -169,7 +169,11 @@ async function deleteSession(c: Context, db: DatabaseClient) {
   cookieService.deleteSession(c);
 }
 
-async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(c: Context, db: DatabaseClient, select: T) {
+async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(
+  c: Context,
+  db: DatabaseClient,
+  select: T
+) {
   const token = cookieService.getSession(c);
   if (!token) {
     return undefined;
@@ -186,11 +190,15 @@ async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresA
     cookieService.deleteSession(c);
   }
 
-  if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime()) {
+  if (session && Date.now() >= (session as (typeof Session)['$inferSelect']).expiresAt.getTime()) {
     await sessionRepository.deleteSession(db, sessionId);
     cookieService.deleteSession(c);
     return undefined;
-  } else if (session && Date.now() >= (session as typeof Session['$inferSelect']).expiresAt.getTime() - 864_000_000 /* 10 days */) {
+  } else if (
+    session &&
+    Date.now() >=
+      (session as (typeof Session)['$inferSelect']).expiresAt.getTime() - 864_000_000 /* 10 days */
+  ) {
     await sessionRepository.resetExpiresAt(db, sessionId);
     cookieService.setSession(c, token);
   }

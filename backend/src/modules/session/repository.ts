@@ -1,10 +1,10 @@
 import { eq, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { DiscordUser, OsuUser, Session, User } from '$src/schema';
-import type { DatabaseClient, PickColumns, Simplify } from '$src/types';
-import type { SessionValidation } from './validation';
 import { pick } from '$src/utils/query';
+import type { DatabaseClient, PickColumns, Simplify } from '$src/types';
 import type { SessionSelection } from './types';
+import type { SessionValidation } from './validation';
 
 async function createSession(
   db: DatabaseClient,
@@ -16,13 +16,24 @@ async function createSession(
   });
 }
 
-async function getSession<T extends SessionSelection>(db: DatabaseClient, sessionId: string, select: T): Promise<
+async function getSession<T extends SessionSelection>(
+  db: DatabaseClient,
+  sessionId: string,
+  select: T
+): Promise<
   Simplify<
     PickColumns<typeof Session, Exclude<keyof T, 'user'>> & {
-    user: T extends { user: object } ? PickColumns<typeof User, Exclude<keyof T['user'], 'osu' | 'discord'>> : never;
-    osu: T extends { user: { osu: object } } ? PickColumns<typeof OsuUser, keyof T['user']['osu']> : never;
-    discord: T extends { user: { discord: object } } ? PickColumns<typeof DiscordUser, keyof T['user']['discord']> : never;
-  }>
+      user: T extends { user: object }
+        ? PickColumns<typeof User, Exclude<keyof T['user'], 'osu' | 'discord'>>
+        : never;
+      osu: T extends { user: { osu: object } }
+        ? PickColumns<typeof OsuUser, keyof T['user']['osu']>
+        : never;
+      discord: T extends { user: { discord: object } }
+        ? PickColumns<typeof DiscordUser, keyof T['user']['discord']>
+        : never;
+    }
+  >
 > {
   const selection: Record<string, any> = pick(Session, select);
 
@@ -56,7 +67,10 @@ async function deleteSession(db: DatabaseClient, sessionId: string) {
 }
 
 async function resetExpiresAt(db: DatabaseClient, sessionId: string) {
-  return db.update(Session).set({ expiresAt: sql`now() + interval '3 months'`, lastActiveAt: sql`now()` }).where(eq(Session.id, sessionId));
+  return db
+    .update(Session)
+    .set({ expiresAt: sql`now() + interval '3 months'`, lastActiveAt: sql`now()` })
+    .where(eq(Session.id, sessionId));
 }
 
 export const sessionRepository = { createSession, getSession, deleteSession, resetExpiresAt };

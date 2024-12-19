@@ -10,11 +10,13 @@ const OAuthToken = v.object({
   tokenIssuedAt: v.pipe(v.number(), v.integer())
 });
 
-const IpInfoResponse = v.partial(v.object({
-  city: v.string(),
-  region: v.string(),
-  country: v.string()
-}));
+const IpInfoResponse = v.partial(
+  v.object({
+    city: v.string(),
+    region: v.string(),
+    country: v.string()
+  })
+);
 
 export const AuthenticationValidation = {
   OAuthToken,

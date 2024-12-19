@@ -118,11 +118,13 @@ export const Session = pgTable('session', {
   lastActiveAt: timestamp(timestampConfig).notNull().defaultNow(),
   expiresAt: timestamp(timestampConfig).notNull(),
   ipAddress: inet().notNull(),
-  ipMetadata: jsonb().notNull().$type<Partial<{
-    city: string;
-    region: string;
-    country: string;
-  }>>(),
+  ipMetadata: jsonb().notNull().$type<
+    Partial<{
+      city: string;
+      region: string;
+      country: string;
+    }>
+  >(),
   userAgent: text(),
   userId: integer()
     .notNull()

@@ -56,4 +56,13 @@ function getRedirectPath(c: Context) {
   return getCookie(c, 'redirect_path');
 }
 
-export const cookieService = { setOAuthState, getOAuthState, setSession, deleteSession, getSession, setRedirectPath, deleteRedirectPath, getRedirectPath };
+export const cookieService = {
+  setOAuthState,
+  getOAuthState,
+  setSession,
+  deleteSession,
+  getSession,
+  setRedirectPath,
+  deleteRedirectPath,
+  getRedirectPath
+};
