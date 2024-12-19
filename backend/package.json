@@ -1,7 +1,13 @@
 {
   "name": "backend",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "default": "./dist/index.js"
+  },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
+    "build": "bun run ./scripts/build.ts",
     "db:push": "bun ./scripts/db/push.ts",
     "db:reset": "bun ./scripts/db/reset.ts",
     "new:module": "bun ./scripts/modules/new-module.ts",
@@ -28,6 +34,7 @@
     "@clack/prompts": "^0.8.1",
     "@types/bun": "^1.1.13",
     "@types/node": "^22.9.1",
+    "bun-plugin-dts": "^0.3.0",
     "drizzle-kit": "^0.28.0",
     "scule": "^1.3.0"
   }

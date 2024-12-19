@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:backend": "bun run ./scripts/build-backend.ts",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
@@ -23,6 +24,8 @@
     "vite": "^5.0.3"
   },
   "dependencies": {
+    "backend": "workspace:*",
+    "hono": "^4.6.14",
     "lucide-svelte": "^0.468.0",
     "svelte-portal": "^2.2.1"
   }

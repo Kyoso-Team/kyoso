@@ -29,7 +29,7 @@ export default ts.config(
     }
   },
   {
-    ignores: ['frontend/build/', 'frontend/.svelte-kit/', 'frontend/dist']
+    ignores: ['frontend/build/', 'frontend/.svelte-kit/', 'frontend/dist', 'backend/dist']
   },
   {
     rules: {

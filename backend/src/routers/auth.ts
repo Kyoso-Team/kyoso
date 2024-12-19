@@ -17,27 +17,26 @@ import * as s from '$src/utils/validation';
 import { osuUserRepository } from '$src/modules/osu-user/repository';
 import { env } from '$src/utils/env';
 
-const authRouter = new Hono().basePath('/auth');
+const authRouter = new Hono()
+  .basePath('/auth')
+  .get('/login', vValidator('query', v.object({
+    redirect_path: v.optional(s.nonEmptyString())
+  })), async (c) => {
+    const session = cookieService.getSession(c);
+    if (session) {
+      throw new HTTPException(403, {
+        message: 'Already logged in'
+      });
+    }
 
-authRouter.get('/login', vValidator('query', v.object({
-  redirect_path: v.optional(s.nonEmptyString())
-})), async (c) => {
-  const session = cookieService.getSession(c);
-  if (session) {
-    throw new HTTPException(403, {
-      message: 'Already logged in'
-    });
-  }
+    const { redirect_path } = c.req.valid('query');
+    if (redirect_path) {
+      cookieService.setRedirectPath(c, redirect_path);  
+    }
 
-  const { redirect_path } = c.req.valid('query');
-  if (redirect_path) {
-    cookieService.setRedirectPath(c, redirect_path);  
-  }
-
-  return await authenticationService.redirectToOsuLogin(c);
-});
-
-authRouter.get(
+    return await authenticationService.redirectToOsuLogin(c);
+  })
+  .get(
   '/callback/osu',
   vValidator(
     'query',
@@ -98,9 +97,7 @@ authRouter.get(
 
     return await authenticationService.redirectToDiscordLogin(c, newState);
   }
-);
-
-authRouter.get(
+).get(
   '/callback/discord',
   vValidator(
     'query',
@@ -142,9 +139,7 @@ authRouter.get(
     cookieService.deleteRedirectPath(c);
     return c.redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
   }
-);
-
-authRouter.get('/logout', vValidator('query', v.object({
+).get('/logout', vValidator('query', v.object({
   redirect_path: v.optional(s.nonEmptyString())
 })), async (c) => {
   const { redirect_path } = c.req.valid('query');
