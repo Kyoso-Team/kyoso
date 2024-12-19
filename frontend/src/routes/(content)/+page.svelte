@@ -8,7 +8,7 @@
   }
 </script>
 
-<button class="btn-md-contrast mt-16" onclick={() => open = !open}>Create tournament</button>
+<button class="btn-md-contrast mt-16" onclick={() => (open = !open)}>Create tournament</button>
 {#if open}
   <CreateTournamentForm unmount={close} />
 {/if}

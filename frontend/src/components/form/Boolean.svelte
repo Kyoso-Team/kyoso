@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { BooleanField } from '$lib/form.svelte';
   import Render from '../Render.svelte';
   import Check from 'lucide-svelte/icons/check';
   import { fade, slide } from 'svelte/transition';
+  import type { BooleanField } from '$lib/form.svelte';
 
-  const { field }: { field: BooleanField; } = $props();
+  const { field }: { field: BooleanField } = $props();
   let value: boolean | null | undefined = $state(false);
 
   $effect(() => {
@@ -22,7 +22,13 @@
 
 <label class="label grid grid-cols-[auto_1fr] gap-2">
   <div>
-    <button role="checkbox" aria-checked={value} class={`input-checkbox${field.canDiplayError && field.error ? ' input-error' : ''}`} onclick={toggle} disabled={field.isDisabled}>
+    <button
+      role="checkbox"
+      aria-checked={value}
+      class={`input-checkbox${field.canDiplayError && field.error ? ' input-error' : ''}`}
+      onclick={toggle}
+      disabled={field.isDisabled}
+    >
       {#if value}
         <div transition:fade={{ duration: 75 }}>
           <Check size={16} strokeWidth={3} />
@@ -44,12 +50,14 @@
         <Render el={field.description} />
       </p>
     {/if}
-    
+
     <legend>
       {field.legend}<span>{field.isOptional ? '' : '*'}</span>
     </legend>
     {#if field.preview}
-      <span class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}>
+      <span
+        class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}
+      >
         <Render el={field.preview} />
       </span>
     {/if}

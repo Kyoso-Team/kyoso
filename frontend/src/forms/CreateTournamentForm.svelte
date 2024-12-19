@@ -1,21 +1,27 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import FormElement from '$components/Form.svelte';
-  import Text from '$components/form/Text.svelte';
-  import Options from '$components/form/Options.svelte';
-  import Number from '$components/form/Number.svelte';
   import Boolean from '$components/form/Boolean.svelte';
-  import { Form, F } from '$lib/form.svelte';
+  import Number from '$components/form/Number.svelte';
+  import Options from '$components/form/Options.svelte';
+  import Text from '$components/form/Text.svelte';
+  import { F, Form } from '$lib/form.svelte';
+  import { page } from '$app/stores';
   import type { FormProps } from '$lib/types';
 
   const { unmount }: FormProps = $props();
 
   const form = new Form('Create Tournament', {
     name: new F.Text('Tournament name').gte(2).lte(50),
-    acronym: new  F.Text('Tournament acronym').gte(2).lte(8),
+    acronym: new F.Text('Tournament acronym').gte(2).lte(8),
     urlSlug: new F.Text('URL slug', {
       preview: urlSlugPreview
-    }).gte(2).lte(16).regex(/^[a-z0-9-]+$/, 'Input must only contain numbers (0-9), lowercase letters (a-z), and hyphens (-)'),
+    })
+      .gte(2)
+      .lte(16)
+      .regex(
+        /^[a-z0-9-]+$/,
+        'Input must only contain numbers (0-9), lowercase letters (a-z), and hyphens (-)'
+      ),
     type: new F.Options('Tournament type', {
       solo: 'Solo',
       teams: 'Teams',
@@ -30,9 +36,11 @@
       lower: new F.Number('Lower rank range limit').int().gte(1),
       upper: new F.Number('Upper rank range limit').optional().int().gte(1)
     }
-  }).onSubmit(async (value) => {
-    console.log(value);
-  }).onCancel(unmount);
+  })
+    .onSubmit(async (value) => {
+      console.log(value);
+    })
+    .onCancel(unmount);
 
   $effect(() => {
     const disable = form.fields.type.raw !== 'teams';
@@ -48,10 +56,10 @@
 </script>
 
 {#snippet urlSlugPreview()}
-  <span class="font-medium">Example URL:</span> 
+  <span class="font-medium">Example URL:</span>
   {$page.url.origin}/t/{form.fields.urlSlug.raw ? form.fields.urlSlug.raw : '[slug]'}
 {/snippet}
-<FormElement form={form}>
+<FormElement {form}>
   <strong>Branding</strong>
   <Text field={form.fields.name} />
   <Text field={form.fields.acronym} />

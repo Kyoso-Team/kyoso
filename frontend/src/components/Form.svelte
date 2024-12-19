@@ -1,12 +1,17 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { onDestroy, onMount, type Snippet } from 'svelte';
   import { fadeUi } from '$lib/fade-ui.svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { portal } from 'svelte-portal';
-    import type { Form } from '$lib/form.svelte';
-    import { focusTrap } from '$lib/focus-trap';
+  import { fade, fly } from 'svelte/transition';
+  import { focusTrap } from '$lib/focus-trap';
+  import type { Snippet } from 'svelte';
+  import type { Form } from '$lib/form.svelte';
 
-  const { form, header, children }: {
+  const {
+    form,
+    header,
+    children
+  }: {
     form: Form<any>;
     children: Snippet;
     header?: Snippet;
@@ -26,7 +31,7 @@
 </script>
 
 <form
-  class="rounded-md bg-surface-token-800-200 border border-surface-token-700-300 p-8 flex flex-col w-[32rem] h-max m-auto"
+  class="bg-surface-token-800-200 border-surface-token-700-300 m-auto flex h-max w-[32rem] flex-col rounded-md border p-8"
   role="presentation"
   onkeydown={onKeyDown}
   onsubmit={form.submit}
@@ -37,17 +42,19 @@
   <h2>{form.title}</h2>
   <div class="line mt-4"></div>
   {@render header?.()}
-  <div class="flex flex-col gap-4 my-4 [&>strong]:font-semibold [&>strong]:text-surface-token-100-900">
+  <div
+    class="[&>strong]:text-surface-token-100-900 my-4 flex flex-col gap-4 [&>strong]:font-semibold"
+  >
     {@render children()}
   </div>
   <div class="line my-4"></div>
   <div class="grid grid-cols-2 items-center">
-    <div class="text-red-500 text-sm">
+    <div class="text-sm text-red-500">
       {#if form.hasErrors && form.attemptedToSubmit}
         <span transition:fade={{ duration: 150 }}>You have errors in your form</span>
       {/if}
     </div>
-    <div class="w-full flex justify-end">
+    <div class="flex w-full justify-end">
       <div class="flex gap-2">
         <button type="button" class="btn-md-surface-soft" onclick={form.cancel}>Cancel</button>
         <button type="submit" class="btn-md-contrast">Submit</button>

@@ -1,21 +1,26 @@
-import type { Snippet } from 'svelte';
-import type { MaybePromise } from './types';
-import type { EventHandler } from 'svelte/elements';
 import { fadeUi } from './fade-ui.svelte';
+import type { Snippet } from 'svelte';
+import type { EventHandler } from 'svelte/elements';
+import type { MaybePromise } from './types';
 
-type HandleFieldType<T extends Field<any, any> | Record<string, Field<any, any>>> = T['$data'] extends boolean
-  ? T['$data']
-  : T['isOptional'] extends true
-    ? T['$data'] | null
-    : T['$data'];
+type HandleFieldType<T extends Field<any, any> | Record<string, Field<any, any>>> =
+  T['$data'] extends boolean
+    ? T['$data']
+    : T['isOptional'] extends true
+      ? T['$data'] | null
+      : T['$data'];
 
-export class Form<TFields extends Record<string, Field<any, any> | Record<string, Field<any, any>>>> {
+export class Form<
+  TFields extends Record<string, Field<any, any> | Record<string, Field<any, any>>>
+> {
   public $data: {
     [K1 in keyof TFields]: TFields[K1] extends Record<string, Field<any>>
-      ? {
-        [K2 in keyof TFields[K1]]: HandleFieldType<TFields[K1][K2]>;
-      } | null
-      :  HandleFieldType<TFields[K1]>
+      ?
+          | {
+              [K2 in keyof TFields[K1]]: HandleFieldType<TFields[K1][K2]>;
+            }
+          | null
+      : HandleFieldType<TFields[K1]>;
   } = undefined as any;
   public submit: EventHandler<SubmitEvent, HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -26,8 +31,11 @@ export class Form<TFields extends Record<string, Field<any, any> | Record<string
   public errors: Record<string, true> = $state({});
   public hasErrors: boolean = $derived(Object.keys(this.errors).length > 0);
   public attemptedToSubmit: boolean = $state(false);
-  
-  constructor(public title: string, public fields: TFields) {
+
+  constructor(
+    public title: string,
+    public fields: TFields
+  ) {
     for (const [k1, field1] of Object.entries(this.fields)) {
       if (field1 instanceof Field) {
         field1.setFormAndKey(this, k1);
@@ -106,10 +114,13 @@ abstract class Field<TType, TOptional extends boolean = boolean> {
   public form?: Form<any> | undefined;
   public key?: string | undefined;
 
-  constructor(public legend: string, options?: {
-    description?: string | Snippet;
-    preview?: string | Snippet;
-  }) {
+  constructor(
+    public legend: string,
+    options?: {
+      description?: string | Snippet;
+      preview?: string | Snippet;
+    }
+  ) {
     this.description = options?.description;
     this.preview = options?.preview;
   }
@@ -117,7 +128,7 @@ abstract class Field<TType, TOptional extends boolean = boolean> {
   public set(value: TType | null | undefined) {
     if (this.isDisabled) return;
     this.raw = value;
-    
+
     if (value === undefined || value === '') {
       value = null;
     }
@@ -200,10 +211,14 @@ export class TextField<TOptional extends boolean = false> extends Field<string, 
 export class OptionsField<T extends string> extends Field<T, false> {
   public options: Record<T, string>;
 
-  constructor(legend: string, fieldOptions: Record<T, string>, options?: {
-    description?: string | Snippet;
-    preview?: string | Snippet;
-  }) {
+  constructor(
+    legend: string,
+    fieldOptions: Record<T, string>,
+    options?: {
+      description?: string | Snippet;
+      preview?: string | Snippet;
+    }
+  ) {
     super(legend, options);
     this.options = fieldOptions;
   }
@@ -214,13 +229,18 @@ export class OptionsField<T extends string> extends Field<T, false> {
   }
 }
 
-export interface OptionalOptionsField<T extends string> extends Omit<OptionsField<T>, 'isOptional'>, Field<T, true> {}
+export interface OptionalOptionsField<T extends string>
+  extends Omit<OptionsField<T>, 'isOptional'>,
+    Field<T, true> {}
 
 export class BooleanField extends Field<boolean, true> {
-  constructor(legend: string, options?: {
-    description?: string | Snippet;
-    preview?: string | Snippet;
-  }) {
+  constructor(
+    legend: string,
+    options?: {
+      description?: string | Snippet;
+      preview?: string | Snippet;
+    }
+  ) {
     super(legend, options);
     this.isOptional = true as any;
   }
@@ -236,7 +256,7 @@ export class BooleanField extends Field<boolean, true> {
   public set(value: boolean | null | undefined) {
     if (this.isDisabled) return;
     this.raw = value;
-    
+
     if (value === undefined || value === null) {
       value = false;
     }

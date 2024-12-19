@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { TextField } from '$lib/form.svelte';
   import Render from '../Render.svelte';
   import { slide } from 'svelte/transition';
+  import type { TextField } from '$lib/form.svelte';
 
-  const { field }: { field: TextField<any>; } = $props();
+  const { field }: { field: TextField<any> } = $props();
   let value: string | null | undefined = $state();
 
   $effect(() => {
@@ -29,10 +29,12 @@
     class={`input${field.canDiplayError && field.error ? ' input-error' : ''}`}
     disabled={field.isDisabled}
     onblur={onBlur}
-    bind:value={value}
+    bind:value
   />
   {#if field.preview}
-    <span class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}>
+    <span
+      class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}
+    >
       <Render el={field.preview} />
     </span>
   {/if}

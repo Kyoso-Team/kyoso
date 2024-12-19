@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { OptionalOptionsField, OptionsField } from '$lib/form.svelte';
   import Render from '../Render.svelte';
   import { slide } from 'svelte/transition';
+  import type { OptionalOptionsField, OptionsField } from '$lib/form.svelte';
 
-  const { field }: { field: OptionsField<any> | OptionalOptionsField<any>; } = $props();
+  const { field }: { field: OptionsField<any> | OptionalOptionsField<any> } = $props();
   let value: string | null | undefined = $state();
 
   $effect(() => {
@@ -24,14 +24,21 @@
       <Render el={field.description} />
     </p>
   {/if}
-  <select class={`input-select${field.canDiplayError && field.error ? ' input-error' : ''}`} disabled={field.isDisabled} onblur={onBlur} bind:value={value}>
+  <select
+    class={`input-select${field.canDiplayError && field.error ? ' input-error' : ''}`}
+    disabled={field.isDisabled}
+    onblur={onBlur}
+    bind:value
+  >
     <option value="">---</option>
     {#each Object.entries(field.options) as [option, label]}
       <option value={option}>{label}</option>
     {/each}
   </select>
   {#if field.preview}
-    <span class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}>
+    <span
+      class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}
+    >
       <Render el={field.preview} />
     </span>
   {/if}
