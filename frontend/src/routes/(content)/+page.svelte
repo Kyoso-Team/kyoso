@@ -1,7 +1,7 @@
 <script lang="ts">
   import CreateTournamentForm from '$forms/CreateTournamentForm.svelte';
 
-  let open = $state(true);
+  let open = $state(false);
 
   function close() {
     open = false;

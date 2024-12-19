@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { loginUrl } from '$lib/api';
+  import { c } from '$lib/common.svelte';
+
   const links: {
     label: string;
     href: string;
@@ -20,6 +23,11 @@
   <div class="flex h-6 w-32 items-center text-sm">logo placeholder</div>
   <nav class="flex w-full items-center">
     <ul class="flex gap-2 font-medium">
+      {#if c.session}
+        <li>
+          <a class="btn-md-ghost" href="/dashboard">Dashboard</a>
+        </li>
+      {/if}
       {#each links as link}
         <li>
           <a class="btn-md-ghost" href={link.href}>{link.label}</a>
@@ -27,8 +35,14 @@
       {/each}
     </ul>
     <div class="flex w-full justify-end">
-      <div class="flex">
-        <a href="/" class="btn-md-contrast">Login</a>
+      <div class="flex gap-2">
+        {#if c.session}
+          <button class="btn-md-avatar">
+            <img src={`https://a.ppy.sh/${c.session.osu.osuUserId.toString()}`} alt="">
+          </button>
+        {:else}
+          <a href={loginUrl} class="btn-md-contrast">Login</a>
+        {/if}
       </div>
     </div>
   </nav>

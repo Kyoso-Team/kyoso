@@ -59,7 +59,7 @@ async function getSession<T extends SessionSelection>(
     qb.innerJoin(DiscordUser, eq(DiscordUser.userId, User.id));
   }
 
-  return qb.then((rows) => rows.at(0)) as any;
+  return qb.limit(1).then((rows) => rows.at(0)) as any;
 }
 
 async function deleteSession(db: DatabaseClient, sessionId: string) {

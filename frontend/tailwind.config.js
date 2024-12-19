@@ -130,6 +130,9 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
     '.btn-md': {
       '@apply block px-4 py-[6px] text-sm leading-normal duration-150 font-medium rounded-md': {}
     },
+    '.btn-md-avatar': {
+      '@apply w-[34.6px] h-[34.6px] border-2 dark:border-white border-black rounded-full overflow-hidden duration-150 hover:opacity-90': {}
+    },
     '.btn-md-surface-soft': {
       '@apply btn-md bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border':
         {}
@@ -138,7 +141,7 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
       '@apply btn-md bg-transparent hover:bg-primary-500/25 border-transparent border': {}
     },
     '.btn-md-contrast': {
-      '@apply btn-md bg-black dark:bg-white hover:bg-surface-token-100-900 dark:text-black text-white':
+      '@apply btn-md border bg-black border-black dark:bg-white dark:border-white hover:border-surface-token-100-900 hover:bg-surface-token-100-900 dark:text-black text-white':
         {}
     },
 

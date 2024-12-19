@@ -1,13 +1,8 @@
 import * as v from 'valibot';
 
-const DiscordUserResponse = v.pipe(
-  v.object({
-    user: v.object({
-      id: v.string(),
-      username: v.string()
-    })
-  }),
-  v.transform((value) => value.user)
-);
+const DiscordUserResponse = v.object({
+  id: v.string(),
+  username: v.string()
+});
 
 export const DiscordValidation = { DiscordUserResponse };

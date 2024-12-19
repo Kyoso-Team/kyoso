@@ -64,7 +64,7 @@ const authRouter = new Hono()
 
       const tokens = await osuOAuth
         .validateAuthorizationCode(code)
-        .catch(unknownError('Failed to validate authorization code'));
+        .catch(unknownError('Failed to validate osu! authorization code'));
       const accessToken = tokens.accessToken();
       const osuUserId = osuService.getOsuUserIdFromAccessToken(accessToken);
       const osuUser = await osuUserRepository.getOsuUser(db, osuUserId, {
@@ -123,7 +123,7 @@ const authRouter = new Hono()
 
       const discordTokens = await mainDiscordOAuth
         .validateAuthorizationCode(code)
-        .catch(unknownError('Failed to validate authorization code'));
+        .catch(unknownError('Failed to validate Discord authorization code'));
       const osuTokens = await osuService.getTemporarilyStoredTokens(redis, state);
 
       if (osuTokens === null) {
@@ -157,6 +157,34 @@ const authRouter = new Hono()
       const { redirect_path } = c.req.valid('query');
       await authenticationService.deleteSession(c, db);
       return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
+    }
+  )
+  .get(
+    '/session',
+    async (c) => {
+      const session = await authenticationService.validateSession(c, db, {
+        user: {
+          id: true,
+          osu: {
+            osuUserId: true,
+            username: true
+          },
+          discord: {
+            discordUserId: true,
+            username: true
+          }
+        }
+      });
+
+      return c.json(session ? {
+        id: session.id,
+        user: session.user,
+        osu: session.osu,
+        discord: {
+          id: session.discord.discordUserId.toString(),
+          username: session.discord.username
+        }
+      } : null);
     }
   );
 

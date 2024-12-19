@@ -5,10 +5,17 @@
   import { fadeUi } from '$lib/fade-ui.svelte';
   import { fade } from 'svelte/transition';
   import { toggleTheme } from '$lib/theme';
+  import type { LayoutData } from './$types';
+    import { c } from '$lib/common.svelte';
 
-  const { children } = $props() as {
+  const { children, data } = $props() as {
     children: Snippet;
+    data: LayoutData;
   };
+
+  $effect(() => {
+    c.setSession(data.session);
+  });
 </script>
 
 <svelte:head>

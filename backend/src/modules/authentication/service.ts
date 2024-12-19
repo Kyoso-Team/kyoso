@@ -50,6 +50,7 @@ async function registerUser(
   discordToken: v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>
 ) {
   const osuUser = await osuService.getOsuSelf(osuToken.accessToken);
+  const discordUser = await discordService.getDiscordSelf(discordToken.accessToken);
   const badges = osuUser.badges.map(transformBadge);
 
   await countryService.createCountry(db, osuUser.country);
@@ -76,6 +77,13 @@ async function registerUser(
       token: osuToken
     });
 
+    await discordUserService.createDiscordUser(tx, {
+      userId: user.id,
+      discordUserId: BigInt(discordUser.id),
+      username: discordUser.username,
+      token: discordToken
+    });
+
     return user;
   });
 
@@ -84,16 +92,6 @@ async function registerUser(
   }
 
   // NOTE: If a badge has been removed from the user, this case isn't hadled due to the very high unlikelyhood of this happening
-
-  const discordUser = await discordService.getDiscordSelf(discordToken.accessToken);
-
-  await discordUserService.createDiscordUser(db, {
-    userId: user.id,
-    discordUserId: BigInt(discordUser.id),
-    username: discordUser.username,
-    token: discordToken
-  });
-
   return user;
 }
 
@@ -188,6 +186,7 @@ async function validateSession<T extends Omit<SessionSelection, 'id' | 'expiresA
 
   if (!session && token) {
     cookieService.deleteSession(c);
+    return undefined;
   }
 
   if (session && Date.now() >= (session as (typeof Session)['$inferSelect']).expiresAt.getTime()) {

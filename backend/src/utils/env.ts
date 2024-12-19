@@ -8,6 +8,7 @@ export const Env = v.object({
     'development'
   ),
   FRONTEND_URL: s.nonEmptyString(),
+  CORS_ORIGIN: s.nonEmptyString(),
   KYOSO_OWNER: s.stringToInteger(),
 
   DATABASE_URL: s.nonEmptyString(),
