@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import '../../app.css';
-  import NavBar from '$components/NavBar.svelte';
-  import { fadeUi } from '$lib/fade-ui.svelte';
-  import { fade } from 'svelte/transition';
+  import NavBar from './NavBar.svelte';
   import { toggleTheme } from '$lib/theme';
   import type { LayoutData } from './$types';
-    import { c } from '$lib/common.svelte';
+  import { c } from '$lib/common.svelte';
+  import FadedBg from '$components/FadedBg.svelte';
 
   const { children, data } = $props() as {
     children: Snippet;
@@ -21,12 +20,6 @@
 <svelte:head>
   {@html `<\u{73}cript>(${toggleTheme.toString()})();</script>`}
 </svelte:head>
-{#if fadeUi.faded}
-  <div
-    id="faded-bg"
-    class="bg-surface-token-900-100/50 fixed inset-0 z-[75] flex min-h-screen w-screen items-center justify-center overflow-y-auto p-8"
-    transition:fade={{ duration: 150 }}
-  ></div>
-{/if}
+<FadedBg />
 <NavBar />
 {@render children()}
