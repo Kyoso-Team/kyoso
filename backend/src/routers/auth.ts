@@ -7,12 +7,14 @@ import * as v from 'valibot';
 import { authenticationService } from '$src/modules/authentication/service';
 import { cookieService } from '$src/modules/cookie/service';
 import { databaseRepository } from '$src/modules/database/repository';
+import { discordUserService } from '$src/modules/discord-user/service.ts';
+import { discordService } from '$src/modules/discord/service.ts';
 import { osuUserRepository } from '$src/modules/osu-user/repository';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
 import { User } from '$src/schema';
 import { db, redis } from '$src/singletons';
-import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { changeAccountDiscordOAuth, mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
@@ -146,6 +148,45 @@ const authRouter = new Hono()
     }
   )
   .get(
+    '/callback/discord/change',
+    vValidator(
+      'query',
+      v.object({
+        code: s.nonEmptyString(),
+        state: s.nonEmptyString()
+      })
+    ),
+    async (c) => {
+      const session = await authenticationService.validateSession(c, db, {
+        user: { discord: { discordUserId: true } }
+      });
+
+      if (!session) {
+        throw new HTTPException(403, {
+          message: 'Must be logged in'
+        });
+      }
+
+      const { code } = c.req.valid('query');
+
+      const discordTokens = await changeAccountDiscordOAuth
+        .validateAuthorizationCode(code)
+        .catch(unknownError('Failed to validate Discord authorization code'));
+
+      const transformedDiscordToken = authenticationService.transformArcticToken(discordTokens);
+
+      const discordUser = await discordService.getDiscordSelf(transformedDiscordToken.accessToken);
+      await discordUserService.updateDiscordUser(
+        db,
+        {
+          username: discordUser.username,
+          token: transformedDiscordToken
+        },
+        session.discord.discordUserId
+      );
+    }
+  )
+  .get(
     '/logout',
     vValidator(
       'query',
@@ -159,33 +200,34 @@ const authRouter = new Hono()
       return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
     }
   )
-  .get(
-    '/session',
-    async (c) => {
-      const session = await authenticationService.validateSession(c, db, {
-        user: {
-          id: true,
-          osu: {
-            osuUserId: true,
-            username: true
-          },
-          discord: {
-            discordUserId: true,
-            username: true
-          }
-        }
-      });
-
-      return c.json(session ? {
-        id: session.id,
-        user: session.user,
-        osu: session.osu,
+  .get('/session', async (c) => {
+    const session = await authenticationService.validateSession(c, db, {
+      user: {
+        id: true,
+        osu: {
+          osuUserId: true,
+          username: true
+        },
         discord: {
-          id: session.discord.discordUserId.toString(),
-          username: session.discord.username
+          discordUserId: true,
+          username: true
         }
-      } : null);
-    }
-  );
+      }
+    });
+
+    return c.json(
+      session
+        ? {
+            id: session.id,
+            user: session.user,
+            osu: session.osu,
+            discord: {
+              id: session.discord.discordUserId.toString(),
+              username: session.discord.username
+            }
+          }
+        : null
+    );
+  });
 
 export { authRouter };
