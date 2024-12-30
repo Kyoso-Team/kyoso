@@ -10,6 +10,7 @@ import { databaseRepository } from '$src/modules/database/repository';
 import { discordUserService } from '$src/modules/discord-user/service.ts';
 import { discordService } from '$src/modules/discord/service.ts';
 import { osuUserRepository } from '$src/modules/osu-user/repository';
+import { osuUserService } from '$src/modules/osu-user/service';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
 import { User } from '$src/schema';
@@ -184,8 +185,57 @@ const authRouter = new Hono()
         },
         session.discord.discordUserId
       );
+      return c.redirect(`${env.FRONTEND_URL}/`, 302);
     }
   )
+  .get('/refresh-tokens', async (c) => {
+    const session = await authenticationService.validateSession(c, db, {
+      user: {
+        osu: {
+          osuUserId: true,
+          token: true
+        },
+        discord: {
+          discordUserId: true,
+          token: true
+        }
+      }
+    });
+
+    if (!session) {
+      throw new HTTPException(403, {
+        message: 'Must be logged in'
+      });
+    }
+
+    const { osu, discord } = session;
+
+    const [updatedOsuTokens, updatedDiscordTokens] = await Promise.all([
+      osuOAuth.refreshAccessToken(osu.token.refreshToken),
+      mainDiscordOAuth.refreshAccessToken(discord.token.refreshToken)
+    ]);
+
+    await Promise.all([
+      osuUserService.updateOsuUser(
+        db,
+        {
+          token: authenticationService.transformArcticToken(updatedOsuTokens)
+        },
+        osu.osuUserId
+      ),
+      discordUserService.updateDiscordUser(
+        db,
+        {
+          token: authenticationService.transformArcticToken(updatedDiscordTokens)
+        },
+        discord.discordUserId
+      )
+    ]);
+
+    return c.json({
+      success: true
+    });
+  })
   .get(
     '/logout',
     vValidator(
