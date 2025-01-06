@@ -35,8 +35,8 @@ export const Env = v.object({
 
   IPINFO_ACCESS_TOKEN: s.nonEmptyString(),
 
-  MEILISEARCH_HOST: s.nonEmptyString(),
-  MEILISEARCH_MASTER_KEY: s.nonEmptyString()
+  MEILI_HOST: s.nonEmptyString(),
+  MEILI_MASTER_KEY: s.nonEmptyString()
 });
 
 export type Env = v.InferOutput<typeof Env>;

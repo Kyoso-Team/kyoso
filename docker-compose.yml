@@ -48,8 +48,7 @@ services:
   meilisearch:
     image: getmeili/meilisearch:latest
     container_name: kyoso-dev-meilisearch
-    environment:
-      MEILI_MASTER_KEY: 'MASTER_KEY'
+    command: meilisearch --master-key rhwMvpQ6ZZqBTtDD_OwDi9N4Kui_r1agM_Aw5-v28lo
     volumes:
       - meilisearch_data:/data
     ports:
