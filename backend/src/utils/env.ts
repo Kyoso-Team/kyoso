@@ -33,7 +33,10 @@ export const Env = v.object({
   S3_ACCESS_KEY_ID: s.nonEmptyString(),
   S3_SECRET_ACCESS_KEY: s.nonEmptyString(),
 
-  IPINFO_ACCESS_TOKEN: s.nonEmptyString()
+  IPINFO_ACCESS_TOKEN: s.nonEmptyString(),
+
+  MEILI_HOST: s.nonEmptyString(),
+  MEILI_MASTER_KEY: s.nonEmptyString()
 });
 
 export type Env = v.InferOutput<typeof Env>;

@@ -22,3 +22,21 @@ export type Simplify<T> =
 export type PickColumns<TTable extends Table, TColumns extends string | number | symbol> = Simplify<
   Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>
 >;
+
+// Meilisearch index types
+
+export type MeilisearchUserIndex = {
+  osuUserId: number;
+  discordUserId: string; //using string instead of bigint due to serialization issues
+  username: string;
+  banned: boolean;
+};
+
+export type MeilisearchTournamentIndex = {
+  id: number;
+  name: string;
+  acronym: string;
+  urlSlug: string;
+  publishedAt: Date | null;
+  deletedAt: Date | null;
+};

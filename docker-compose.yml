@@ -45,7 +45,17 @@ services:
     volumes:
       - redis_data:/data
 
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: kyoso-dev-meilisearch
+    command: meilisearch --master-key rhwMvpQ6ZZqBTtDD_OwDi9N4Kui_r1agM_Aw5-v28lo
+    volumes:
+      - meilisearch_data:/data
+    ports:
+      - '7700:7700'
+
 volumes:
   postgres_data:
   minio_data:
   redis_data:
+  meilisearch_data:
