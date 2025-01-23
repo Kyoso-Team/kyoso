@@ -1,30 +1,15 @@
 import { HTTPException } from 'hono/http-exception';
-import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
 
-const createSoloTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateSoloTournament,
-  tournamentRepository.createSoloTournament,
+const createTournament = createServiceFnFromRepositoryQueryAndValidation(
+  TournamentValidation.CreateTournament,
+  tournamentRepository.createTournament,
   'tournament',
-  'Failed to create solo tournament'
-);
-
-const createTeamsTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateTeamsTournament,
-  tournamentRepository.createTeamsTournament,
-  'tournament',
-  'Failed to create teams tournament'
-);
-
-const createDraftTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateDraftTournament,
-  tournamentRepository.createDraftTournament,
-  'tournament',
-  'Failed to create draft tournament'
+  'Failed to create tournament'
 );
 
 function handleTournamentCreationError(
@@ -50,8 +35,6 @@ function handleTournamentCreationError(
 }
 
 export const tournamentService = {
-  createSoloTournament,
-  createTeamsTournament,
-  createDraftTournament,
+  createTournament,
   handleTournamentCreationError
 };

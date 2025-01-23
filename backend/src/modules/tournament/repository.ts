@@ -4,31 +4,9 @@ import { Tournament } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidation } from './validation';
 
-async function createSoloTournament(
+async function createTournament(
   db: DatabaseClient,
-  tournament: v.InferOutput<(typeof TournamentValidation)['CreateSoloTournament']>
-) {
-  return db
-    .insert(Tournament)
-    .values(tournament)
-    .returning({ id: Tournament.id })
-    .then((rows) => rows[0]);
-}
-
-async function createTeamsTournament(
-  db: DatabaseClient,
-  tournament: v.InferOutput<(typeof TournamentValidation)['CreateTeamsTournament']>
-) {
-  return db
-    .insert(Tournament)
-    .values(tournament)
-    .returning({ id: Tournament.id })
-    .then((rows) => rows[0]);
-}
-
-async function createDraftTournament(
-  db: DatabaseClient,
-  tournament: v.InferOutput<(typeof TournamentValidation)['CreateDraftTournament']>
+  tournament: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>
 ) {
   return db
     .insert(Tournament)
@@ -73,9 +51,7 @@ async function restoreTournament(db: DatabaseClient, tournamentId: number) {
 }
 
 export const tournamentRepository = {
-  createSoloTournament,
-  createTeamsTournament,
-  createDraftTournament,
+  createTournament,
   updateTournament,
   changeTournamentType,
   changeTournamentHost,

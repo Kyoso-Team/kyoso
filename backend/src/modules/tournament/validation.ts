@@ -15,28 +15,10 @@ const CreateTournament = v.object({
   hostUserId: s.integerId()
 });
 
-const CreateSoloTournament = v.object({
-  ...v.omit(CreateTournament, ['type']).entries,
-  type: v.literal(TournamentType.enumValues[0])
-});
-
-const CreateTeamsTournament = v.object({
-  ...v.omit(CreateTournament, ['type']).entries,
-  type: v.literal(TournamentType.enumValues[1])
-});
-
-const CreateDraftTournament = v.object({
-  ...v.omit(CreateTournament, ['type']).entries,
-  type: v.literal(TournamentType.enumValues[2])
-});
-
 const UpdateTournament = v.partial(v.omit(CreateTournament, ['type', 'hostUserId']));
 
 export const TournamentValidation = {
   BwsValues,
   CreateTournament,
-  CreateSoloTournament,
-  CreateTeamsTournament,
-  CreateDraftTournament,
   UpdateTournament
 };
