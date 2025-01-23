@@ -18,8 +18,8 @@ export const stringToBoolean = () =>
   );
 
 export const validUrlSlug = () =>
-  v.regex(
-    /^[a-z0-9_]+$/g,
+  v.custom<string>(
+    (value) => (typeof value === 'string' ? /^[a-z0-9_]+$/g.test(value) : false),
     'Invalid slug: Expected to only contain any of the following characters: abcdefghijkmnlopqrstuvwxyz0123456789_'
   );
 

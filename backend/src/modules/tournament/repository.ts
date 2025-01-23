@@ -1,18 +1,37 @@
 import { eq, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { Tournament } from '$src/schema';
-import type { DatabaseClient } from '$src/types';
+import { meilisearch } from '$src/singletons/meilisearch.ts';
+import { pick } from '$src/utils/query';
+import type { DatabaseClient, MeilisearchTournamentIndex, MeilisearchUserIndex } from '$src/types';
 import type { TournamentValidation } from './validation';
 
 async function createTournament(
   db: DatabaseClient,
   tournament: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>
 ) {
-  return db
+  const result = await db
     .insert(Tournament)
     .values(tournament)
-    .returning({ id: Tournament.id })
+    .returning(
+      pick(Tournament, {
+        id: true,
+        acronym: true,
+        name: true,
+        urlSlug: true
+      })
+    )
     .then((rows) => rows[0]);
+
+  syncTournament({
+    ...result,
+    deletedAt: null,
+    publishedAt: null
+  });
+
+  return {
+    id: result.id
+  };
 }
 
 async function updateTournament(
@@ -50,11 +69,18 @@ async function restoreTournament(db: DatabaseClient, tournamentId: number) {
   return db.update(Tournament).set({ deletedAt: null }).where(eq(Tournament.id, tournamentId));
 }
 
+async function syncTournament(tournament: MeilisearchTournamentIndex) {
+  const index = meilisearch.index<MeilisearchTournamentIndex>('tournaments');
+
+  await index.updateDocuments([tournament]);
+}
+
 export const tournamentRepository = {
   createTournament,
   updateTournament,
   changeTournamentType,
   changeTournamentHost,
   softDeleteTournament,
-  restoreTournament
+  restoreTournament,
+  syncTournament
 };
