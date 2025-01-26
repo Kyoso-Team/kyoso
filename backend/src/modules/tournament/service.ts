@@ -1,16 +1,31 @@
 import { HTTPException } from 'hono/http-exception';
+import * as v from 'valibot';
 import { Tournament } from '$src/schema';
+import { db } from '$src/singletons';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
 
-const createTournament = createServiceFnFromRepositoryQueryAndValidation(
+const createTournamentFn = createServiceFnFromRepositoryQueryAndValidation(
   TournamentValidation.CreateTournament,
   tournamentRepository.createTournament,
   'tournament',
   'Failed to create tournament'
 );
+
+async function createTournament(body: v.InferOutput<typeof TournamentValidation.CreateTournament>) {
+  const tournament = await createTournamentFn(db, body);
+
+  tournamentRepository.syncTournament({
+    ...body,
+    id: tournament.id,
+    publishedAt: null,
+    deletedAt: null
+  });
+
+  return tournament;
+}
 
 function handleTournamentCreationError(
   tournament: { name: string; urlSlug: string },

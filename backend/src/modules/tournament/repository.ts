@@ -3,35 +3,22 @@ import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { meilisearch } from '$src/singletons/meilisearch.ts';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient, MeilisearchTournamentIndex, MeilisearchUserIndex } from '$src/types';
+import type { DatabaseClient, MeilisearchTournamentIndex } from '$src/types';
 import type { TournamentValidation } from './validation';
 
 async function createTournament(
   db: DatabaseClient,
   tournament: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>
 ) {
-  const result = await db
+  return await db
     .insert(Tournament)
     .values(tournament)
     .returning(
       pick(Tournament, {
-        id: true,
-        acronym: true,
-        name: true,
-        urlSlug: true
+        id: true
       })
     )
     .then((rows) => rows[0]);
-
-  syncTournament({
-    ...result,
-    deletedAt: null,
-    publishedAt: null
-  });
-
-  return {
-    id: result.id
-  };
 }
 
 async function updateTournament(
