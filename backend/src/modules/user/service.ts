@@ -1,12 +1,12 @@
-import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
+import { ServiceFactory } from '$src/utils/factories';
 import { userRepository } from './repository';
 import { UserValidation } from './validation';
 
-export const createUser = createServiceFnFromRepositoryQueryAndValidation(
-  UserValidation.CreateUser,
-  userRepository.createUser,
-  'user',
-  'Failed to create user'
-);
+class UserService {
+  public createUser = new ServiceFactory(
+    userRepository.createUser,
+    'Failed to create user'
+  ).createWithValidation(UserValidation.CreateUser, 'user');
+}
 
-export const userService = { createUser };
+export const userService = new UserService();

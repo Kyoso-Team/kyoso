@@ -1,13 +1,12 @@
 import * as v from 'valibot';
 
-const CreateUser = v.object({
-  admin: v.boolean(),
-  approvedHost: v.boolean()
-});
+export abstract class UserValidation {
+  public static CreateUser = v.object({
+    admin: v.boolean(),
+    approvedHost: v.boolean()
+  });
 
-const UpdateUser = CreateUser;
+  public static UpdateUser = this.CreateUser;
+}
 
-export const UserValidation = {
-  CreateUser,
-  UpdateUser
-};
+export type UserValidationT = typeof UserValidation;
