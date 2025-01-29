@@ -1,31 +1,31 @@
 import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { Tournament } from '$src/schema';
+import { db } from '$src/singletons';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
 
-const createSoloTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateSoloTournament,
-  tournamentRepository.createSoloTournament,
+const createTournamentFn = createServiceFnFromRepositoryQueryAndValidation(
+  TournamentValidation.CreateTournament,
+  tournamentRepository.createTournament,
   'tournament',
-  'Failed to create solo tournament'
+  'Failed to create tournament'
 );
 
-const createTeamsTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateTeamsTournament,
-  tournamentRepository.createTeamsTournament,
-  'tournament',
-  'Failed to create teams tournament'
-);
+async function createTournament(body: v.InferOutput<typeof TournamentValidation.CreateTournament>) {
+  const tournament = await createTournamentFn(db, body);
 
-const createDraftTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateDraftTournament,
-  tournamentRepository.createDraftTournament,
-  'tournament',
-  'Failed to create draft tournament'
-);
+  tournamentRepository.syncTournament({
+    ...body,
+    id: tournament.id,
+    publishedAt: null,
+    deletedAt: null
+  });
+
+  return tournament;
+}
 
 function handleTournamentCreationError(
   tournament: { name: string; urlSlug: string },
@@ -50,8 +50,6 @@ function handleTournamentCreationError(
 }
 
 export const tournamentService = {
-  createSoloTournament,
-  createTeamsTournament,
-  createDraftTournament,
+  createTournament,
   handleTournamentCreationError
 };
