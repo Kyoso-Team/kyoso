@@ -14,7 +14,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
 import type * as v from 'valibot';
-import type { AuthenticationValidation } from '$src/modules/authentication/validation';
+import type { AuthenticationValidationT } from '$src/modules/authentication/validation';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -52,7 +52,7 @@ export const OsuUser = pgTable(
     globalManiaRank: integer(),
     token: jsonb()
       .notNull()
-      .$type<v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>>(),
+      .$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>(),
     countryCode: char('country_code', {
       length: 2
     })
@@ -109,7 +109,7 @@ export const DiscordUser = pgTable('discord_user', {
   updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<v.InferOutput<(typeof AuthenticationValidation)['OAuthToken']>>()
+  token: jsonb().notNull().$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>()
 });
 
 export const Session = pgTable('session', {

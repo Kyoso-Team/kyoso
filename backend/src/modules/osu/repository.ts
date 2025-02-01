@@ -1,28 +1,28 @@
 import type { RedisClient } from '$src/types';
 
-async function temporarilyStoreTokens(
-  redis: RedisClient,
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-    tokenIssuedAt: number;
-  },
-  state: string,
-  timeMs: number
-) {
-  return redis.set(`temp_osu_tokens:${state}`, JSON.stringify(tokens), 'PX', timeMs);
+class OsuRepository {
+  private tempOsuTokensKeyBase = 'temp_osu_tokens';
+
+  public async temporarilyStoreTokens(
+    redis: RedisClient,
+    tokens: {
+      accessToken: string;
+      refreshToken: string;
+      tokenIssuedAt: number;
+    },
+    state: string,
+    timeMs: number
+  ) {
+    return redis.set(`${this.tempOsuTokensKeyBase}:${state}`, JSON.stringify(tokens), 'PX', timeMs);
+  }
+  
+  public async getTemporarilyStoredTokens(redis: RedisClient, state: string) {
+    return redis.get(`${this.tempOsuTokensKeyBase}:${state}`);
+  }
+  
+  public async deleteTemporarilyStoredTokens(redis: RedisClient, state: string) {
+    return redis.del(`${this.tempOsuTokensKeyBase}:${state}`);
+  }
 }
 
-async function getTemporarilyStoredTokens(redis: RedisClient, state: string) {
-  return redis.get(`temp_osu_tokens:${state}`);
-}
-
-async function deleteTemporarilyStoredTokens(redis: RedisClient, state: string) {
-  return redis.del(`temp_osu_tokens:${state}`);
-}
-
-export const osuRepository = {
-  temporarilyStoreTokens,
-  getTemporarilyStoredTokens,
-  deleteTemporarilyStoredTokens
-};
+export const osuRepository = new OsuRepository();

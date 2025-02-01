@@ -1,12 +1,12 @@
 import type { Table } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase, PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
-import type { ChainableCommander } from 'ioredis';
 import type Redis from 'ioredis';
+import type * as v from 'valibot';
 
 export type DatabaseClient = PostgresJsDatabase | PgTransaction<PostgresJsQueryResultHKT>;
 
-export type RedisClient = Redis | ChainableCommander;
+export type RedisClient = Redis;
 
 export type Selection<TTable extends Table> = {
   [K in keyof TTable['_']['columns']]?: true;
@@ -22,6 +22,9 @@ export type Simplify<T> =
 export type PickColumns<TTable extends Table, TColumns extends string | number | symbol> = Simplify<
   Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>
 >;
+
+export type MapOutput<T> = { [K in keyof T]: T[K] extends v.GenericSchema ? v.InferOutput<T[K]> : T[K] };
+export type MapInput<T> = { [K in keyof T]: T[K] extends v.GenericSchema ? v.InferInput<T[K]> : T[K] };
 
 // Meilisearch index types
 

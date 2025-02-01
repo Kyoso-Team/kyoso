@@ -1,8 +1,12 @@
+import type { MapInput, MapOutput } from '$src/types';
 import * as v from 'valibot';
 
-const DiscordUserResponse = v.object({
-  id: v.string(),
-  username: v.string()
-});
+export abstract class DiscordValidation {
+  public static DiscordUserResponse = v.object({
+    id: v.string(),
+    username: v.string()
+  });
+}
 
-export const DiscordValidation = { DiscordUserResponse };
+export type DiscordValidationOutput = MapOutput<typeof DiscordValidation>;
+export type DiscordValidationInput = MapInput<typeof DiscordValidation>;
