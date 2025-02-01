@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fadeUi } from '$lib/fade-ui.svelte';
-    import { fade } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
 </script>
 
 {#if fadeUi.faded}

@@ -131,7 +131,8 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
       '@apply block px-4 py-[6px] text-sm leading-normal duration-150 font-medium rounded-md': {}
     },
     '.btn-md-avatar': {
-      '@apply w-[34.6px] h-[34.6px] border-2 dark:border-white border-black rounded-full overflow-hidden duration-150 hover:opacity-90': {}
+      '@apply w-[34.6px] h-[34.6px] border-2 dark:border-white border-black rounded-full overflow-hidden duration-150 hover:opacity-90':
+        {}
     },
     '.btn-md-surface-soft': {
       '@apply btn-md bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border':

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { loginUrl } from '$lib/api';
   import { c } from '$lib/common.svelte';
+  import { loginUrl } from '$lib/api';
 
   const links: {
     label: string;
@@ -38,7 +38,7 @@
       <div class="flex gap-2">
         {#if c.session}
           <button class="btn-md-avatar">
-            <img src={`https://a.ppy.sh/${c.session.osu.osuUserId.toString()}`} alt="">
+            <img src={`https://a.ppy.sh/${c.session.osu.osuUserId.toString()}`} alt="" />
           </button>
         {:else}
           <a href={loginUrl} class="btn-md-contrast">Login</a>
