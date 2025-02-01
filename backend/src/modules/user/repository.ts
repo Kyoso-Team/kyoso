@@ -1,12 +1,11 @@
-import { eq } from 'drizzle-orm';
-import * as v from 'valibot';
-import { User } from '$src/schema';
+import { eq, sql } from 'drizzle-orm';
+import { Country, DiscordUser, OsuUser, User } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient, Selection } from '$src/types';
-import type { UserValidationT } from './validation';
+import type { UserValidationOutput } from './validation';
 
 class UserRepository {
-  public async createUser(db: DatabaseClient, user: v.InferOutput<UserValidationT['CreateUser']>) {
+  public async createUser(db: DatabaseClient, user: UserValidationOutput['CreateUser']) {
     return db
       .insert(User)
       .values(user)
@@ -28,6 +27,69 @@ class UserRepository {
       .from(User)
       .where(eq(User.id, userId))
       .then((rows) => rows[0]);
+  }
+
+  public async createCountry(
+    db: DatabaseClient,
+    country: UserValidationOutput['CreateCountry']
+  ) {
+    return db.insert(Country).values(country).onConflictDoNothing({
+      target: Country.code
+    });
+  }
+
+  public async createOsuUser(
+    db: DatabaseClient,
+    user: UserValidationOutput['CreateOsuUser']
+  ) {
+    return db.insert(OsuUser).values(user);
+  }
+  
+  public async updateOsuUser(
+    db: DatabaseClient,
+    user: UserValidationOutput['UpdateOsuUser'],
+    osuUserId: number
+  ) {
+    return db
+      .update(OsuUser)
+      .set({
+        updatedAt: sql`now()`,
+        ...user
+      })
+      .where(eq(OsuUser.osuUserId, osuUserId));
+  }
+  
+  public async getOsuUser<T extends Selection<typeof OsuUser>>(
+    db: DatabaseClient,
+    osuUserId: number,
+    select: T
+  ) {
+    return db
+      .select(pick(OsuUser, select))
+      .from(OsuUser)
+      .where(eq(OsuUser.osuUserId, osuUserId))
+      .then((rows) => rows.at(0));
+  }
+
+  public async createDiscordUser(
+    db: DatabaseClient,
+    user: UserValidationOutput['CreateDiscordUser']
+  ) {
+    return db.insert(DiscordUser).values(user);
+  }
+  
+  public async updateDiscordUser(
+    db: DatabaseClient,
+    user: UserValidationOutput['UpdateDiscordUser'],
+    discordUserId: bigint
+  ) {
+    return db
+      .update(DiscordUser)
+      .set({
+        updatedAt: sql`now()`,
+        ...user
+      })
+      .where(eq(DiscordUser.discordUserId, discordUserId));
   }
 }
 

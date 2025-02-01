@@ -1,20 +1,21 @@
-import * as v from 'valibot';
-import { unknownError, validationError } from '$src/utils/error';
 import { DiscordValidation } from './validation';
+import { Service } from '$src/utils/service';
 
-async function getDiscordSelf(accessToken: string) {
-  const user = await fetch('https://discord.com/api/users/@me', {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`
-    }
-  })
-    .then(async (res) => res.json() as Record<string, any>)
-    .catch(unknownError('Failed to get discord user data'));
-
-  const parsed = await v
-    .parseAsync(DiscordValidation.DiscordUserResponse, user)
-    .catch(validationError('Failed to parse discord user data', 'discordUser'));
-  return parsed;
+class DiscordService extends Service {
+  public async getDiscordSelf(accessToken: string) {
+    return this.fetch(
+      'https://discord.com/api/users/@me',
+      'GET',
+      'Failed to get discord user data',
+      DiscordValidation.DiscordUserResponse,
+      'discordUser',
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+  }
 }
 
-export const discordService = { getDiscordSelf };
+export const discordService = new DiscordService();

@@ -1,20 +1,24 @@
-import * as v from 'valibot';
-import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
-import { tournamentTeamSettingsRepository } from './repository';
-import { TournamentTeamSettingsValidation } from './validation';
+// import type { DatabaseClient } from '$src/types';
+// import { Service } from '$src/utils/service';
+// import { tournamentTeamSettingsRepository } from './repository';
+// import { TournamentTeamSettingsValidation } from './validation';
 
-const createTeamSettings = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentTeamSettingsValidation.CreateTeamSettings,
-  tournamentTeamSettingsRepository.createTeamSettings,
-  'teamSettings',
-  'Failed to create tournament team settings'
-);
+// class TournamentTeamSettingsService extends Service {
+//   public createTeamSettings = new ServiceFactory(
+//     tournamentTeamSettingsRepository.createTeamSettings,
+//     'Failed to create tournament team settings'
+//   ).createWithValidation(
+//     TournamentTeamSettingsValidation.CreateTeamSettings,
+//     'teamSettings'
+//   );
 
-const updateTeamSettings = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentTeamSettingsValidation.UpdateTeamSettings,
-  tournamentTeamSettingsRepository.updateTeamSettings,
-  'teamSettings',
-  'Failed to update tournament team settings'
-);
+//   public updateTeamSettings = new ServiceFactory(
+//     tournamentTeamSettingsRepository.updateTeamSettings,
+//     'Failed to update tournament team settings'
+//   ).createWithValidation(
+//     TournamentTeamSettingsValidation.UpdateTeamSettings,
+//     'teamSettings'
+//   );
+// }
 
-export const tournamentTeamSettingsService = { createTeamSettings, updateTeamSettings };
+// export const tournamentTeamSettingsService = new TournamentTeamSettingsService();
