@@ -1,7 +1,7 @@
-import type { MapInput, MapOutput } from '$src/types';
 import * as v from 'valibot';
 import * as s from '$src/utils/validation';
 import { AuthenticationValidation } from '../authentication/validation';
+import type { MapInput, MapOutput } from '$src/types';
 
 export abstract class UserValidation {
   public static CreateUser = v.object({
@@ -28,7 +28,7 @@ export abstract class UserValidation {
     token: AuthenticationValidation.OAuthToken,
     countryCode: v.pipe(v.string(), v.length(2), v.toUpperCase())
   });
-  
+
   public static UpdateOsuUser = v.partial(v.omit(this.CreateOsuUser, ['userId', 'osuUserId']));
 
   public static CreateDiscordUser = v.object({
@@ -37,8 +37,10 @@ export abstract class UserValidation {
     username: v.pipe(v.string(), v.minLength(1), v.maxLength(32)),
     token: AuthenticationValidation.OAuthToken
   });
-  
-  public static UpdateDiscordUser = v.partial(v.omit(this.CreateDiscordUser, ['userId', 'discordUserId']));
+
+  public static UpdateDiscordUser = v.partial(
+    v.omit(this.CreateDiscordUser, ['userId', 'discordUserId'])
+  );
 }
 
 export type UserValidationOutput = MapOutput<typeof UserValidation>;

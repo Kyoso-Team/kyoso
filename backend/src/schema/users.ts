@@ -50,9 +50,7 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb()
-      .notNull()
-      .$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>(),
+    token: jsonb().notNull().$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>(),
     countryCode: char('country_code', {
       length: 2
     })

@@ -29,22 +29,16 @@ class UserRepository {
       .then((rows) => rows[0]);
   }
 
-  public async createCountry(
-    db: DatabaseClient,
-    country: UserValidationOutput['CreateCountry']
-  ) {
+  public async createCountry(db: DatabaseClient, country: UserValidationOutput['CreateCountry']) {
     return db.insert(Country).values(country).onConflictDoNothing({
       target: Country.code
     });
   }
 
-  public async createOsuUser(
-    db: DatabaseClient,
-    user: UserValidationOutput['CreateOsuUser']
-  ) {
+  public async createOsuUser(db: DatabaseClient, user: UserValidationOutput['CreateOsuUser']) {
     return db.insert(OsuUser).values(user);
   }
-  
+
   public async updateOsuUser(
     db: DatabaseClient,
     user: UserValidationOutput['UpdateOsuUser'],
@@ -58,7 +52,7 @@ class UserRepository {
       })
       .where(eq(OsuUser.osuUserId, osuUserId));
   }
-  
+
   public async getOsuUser<T extends Selection<typeof OsuUser>>(
     db: DatabaseClient,
     osuUserId: number,
@@ -77,7 +71,7 @@ class UserRepository {
   ) {
     return db.insert(DiscordUser).values(user);
   }
-  
+
   public async updateDiscordUser(
     db: DatabaseClient,
     user: UserValidationOutput['UpdateDiscordUser'],

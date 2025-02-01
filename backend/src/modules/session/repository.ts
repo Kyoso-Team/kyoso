@@ -2,10 +2,10 @@ import { eq, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { DiscordUser, OsuUser, Session, User } from '$src/schema';
 import { pick } from '$src/utils/query';
+import { Service } from '$src/utils/service';
 import type { DatabaseClient, PickColumns, Simplify } from '$src/types';
 import type { SessionSelection } from './types';
 import type { SessionValidation } from './validation';
-import { Service } from '$src/utils/service';
 
 class SessionRepository extends Service {
   public async createSession(
@@ -17,7 +17,7 @@ class SessionRepository extends Service {
       ...session
     });
   }
-  
+
   public async getSession<T extends SessionSelection>(
     db: DatabaseClient,
     sessionId: string,
@@ -38,7 +38,7 @@ class SessionRepository extends Service {
     >
   > {
     const selection: Record<string, any> = pick(Session, select);
-  
+
     if (select.user) {
       selection.user = pick(User, select.user);
     }
@@ -48,9 +48,9 @@ class SessionRepository extends Service {
     if (select.user?.discord) {
       selection.discord = pick(DiscordUser, select.user.discord);
     }
-  
+
     const qb = db.select(selection).from(Session).$dynamic().where(eq(Session.id, sessionId));
-  
+
     if (select.user) {
       qb.innerJoin(User, eq(User.id, Session.userId));
     }
@@ -60,14 +60,14 @@ class SessionRepository extends Service {
     if (select.user?.discord) {
       qb.innerJoin(DiscordUser, eq(DiscordUser.userId, User.id));
     }
-  
+
     return qb.limit(1).then((rows) => rows.at(0)) as any;
   }
-  
+
   public async deleteSession(db: DatabaseClient, sessionId: string) {
     return db.delete(Session).where(eq(Session.id, sessionId));
   }
-  
+
   public async resetExpiresAt(db: DatabaseClient, sessionId: string) {
     return db
       .update(Session)

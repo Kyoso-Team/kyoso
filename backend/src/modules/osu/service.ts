@@ -1,9 +1,10 @@
 import { Client } from 'osu-web.js';
 import { unknownError } from '$src/utils/error';
-import { osuRepository } from './repository';
 import { Service } from '$src/utils/service';
+import { AuthenticationValidation } from '../authentication/validation';
+import { osuRepository } from './repository';
 import type { RedisClient } from '$src/types';
-import { AuthenticationValidation, type AuthenticationValidationInput } from '../authentication/validation';
+import type { AuthenticationValidationInput } from '../authentication/validation';
 
 class OsuService extends Service {
   public async getOsuSelf(accessToken: string) {
@@ -30,18 +31,13 @@ class OsuService extends Service {
     timeMs: number
   ) {
     const fn = this.createServiceFunction('Failed to temporarily store osu! tokens');
-    const tokens = await fn.validate(
-      AuthenticationValidation.OAuthToken,
-      'tokens',
-      tokensInput
+    const tokens = await fn.validate(AuthenticationValidation.OAuthToken, 'tokens', tokensInput);
+    return await fn.handleRedisQuery(
+      osuRepository.temporarilyStoreTokens(redis, tokens, state, timeMs)
     );
-    return await fn.handleRedisQuery(osuRepository.temporarilyStoreTokens(redis, tokens, state, timeMs));
   }
 
-  public async getTemporarilyStoredTokens(
-    redis: RedisClient,
-    state: string
-  ) {
+  public async getTemporarilyStoredTokens(redis: RedisClient, state: string) {
     const fn = this.createServiceFunction('Failed to get temporarily store osu! tokens');
     const result = await fn.handleRedisQuery(
       osuRepository.getTemporarilyStoredTokens(redis, state)

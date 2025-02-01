@@ -4,7 +4,7 @@ import { unknownError, validationError } from './error';
 export abstract class Service {
   protected createServiceFunction(errorMessage: string) {
     return new ServiceFunction(errorMessage);
-  };
+  }
 
   protected async fetch<T extends v.GenericSchema>(
     url: string | URL,
@@ -22,15 +22,13 @@ export abstract class Service {
       body: options?.body ? JSON.stringify(options.body) : undefined,
       headers: options?.headers
     }).catch(unknownError(errorMessage));
-    
+
     if (!resp.ok) {
       throw new Error('TODO: Handle non-200 responses from fetch');
     }
 
     const data = await resp.json().catch(unknownError(errorMessage));
-    const parsed = await v
-      .parseAsync(schema, data)
-      .catch(validationError(errorMessage, item));
+    const parsed = await v.parseAsync(schema, data).catch(validationError(errorMessage, item));
     return parsed;
   }
 }
@@ -38,10 +36,12 @@ export abstract class Service {
 class ServiceFunction {
   constructor(private errorMessage: string) {}
 
-  public async validate<T extends v.GenericSchema>(schema: T, item: string, data: any): Promise<v.InferOutput<T>> {
-    return await v
-      .parseAsync(schema, data)
-      .catch(validationError(this.errorMessage, item));
+  public async validate<T extends v.GenericSchema>(
+    schema: T,
+    item: string,
+    data: any
+  ): Promise<v.InferOutput<T>> {
+    return await v.parseAsync(schema, data).catch(validationError(this.errorMessage, item));
   }
 
   public async handleDbQuery<T>(query: Promise<T>): Promise<T> {

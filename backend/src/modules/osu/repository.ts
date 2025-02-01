@@ -15,11 +15,11 @@ class OsuRepository {
   ) {
     return redis.set(`${this.tempOsuTokensKeyBase}:${state}`, JSON.stringify(tokens), 'PX', timeMs);
   }
-  
+
   public async getTemporarilyStoredTokens(redis: RedisClient, state: string) {
     return redis.get(`${this.tempOsuTokensKeyBase}:${state}`);
   }
-  
+
   public async deleteTemporarilyStoredTokens(redis: RedisClient, state: string) {
     return redis.del(`${this.tempOsuTokensKeyBase}:${state}`);
   }

@@ -1,5 +1,6 @@
+import { sql } from 'drizzle-orm';
+import type { SQL, Table } from 'drizzle-orm';
 import type { DatabaseClient } from '$src/types';
-import { sql, type SQL, type Table } from 'drizzle-orm';
 
 class EntityRepository {
   public async exists(db: DatabaseClient, table: Table, where: SQL | undefined) {

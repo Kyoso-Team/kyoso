@@ -7,7 +7,7 @@
 //       !input.upper || (!!input.upper && input.lower <= input.upper),
 //     'Invalid rank range: Expected the upper rank range limit to be greater than the lower rank range limit'
 //   ] as const;
-  
+
 //   public static CreateRankRange = v.pipe(
 //     v.object({
 //       tournamentId: s.integerId(),
@@ -16,7 +16,7 @@
 //     }),
 //     v.check(...this.rankRangecheck)
 //   );
-  
+
 //   public static UpdateRankRange = v.pipe(
 //     v.omit(this.CreateRankRange.pipe[0], ['tournamentId']),
 //     v.check(...this.rankRangecheck)

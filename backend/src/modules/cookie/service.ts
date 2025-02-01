@@ -15,7 +15,7 @@ class CookieService {
       sameSite: 'lax'
     });
   }
-  
+
   public getOAuthState(c: Context, forOAuth: 'osu' | 'discord') {
     const cookieName = `${forOAuth}_oauth_state`;
     const cookie = getCookie(c, cookieName);
@@ -26,7 +26,7 @@ class CookieService {
     }
     return cookie;
   }
-  
+
   public setSession(c: Context, sessionToken: string) {
     setCookie(c, 'session', sessionToken, {
       path: '/',
@@ -35,15 +35,15 @@ class CookieService {
       sameSite: 'lax'
     });
   }
-  
+
   public deleteSession(c: Context) {
     deleteCookie(c, 'session');
   }
-  
+
   public getSession(c: Context) {
     return getCookie(c, 'session');
   }
-  
+
   public setRedirectPath(c: Context, redirectPath: string) {
     setCookie(c, 'redirect_path', redirectPath, {
       path: '/',
@@ -52,11 +52,11 @@ class CookieService {
       sameSite: 'lax'
     });
   }
-  
+
   public deleteRedirectPath(c: Context) {
     deleteCookie(c, 'redirect_path');
   }
-  
+
   public getRedirectPath(c: Context) {
     return getCookie(c, 'redirect_path');
   }

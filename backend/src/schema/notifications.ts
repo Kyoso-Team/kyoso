@@ -1,7 +1,17 @@
-import { pgTable, timestamp, primaryKey, text, integer, uuid, pgView, PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
+import { eq, getTableName, SQL, sql } from 'drizzle-orm';
+import {
+  integer,
+  pgTable,
+  PgTable,
+  pgView,
+  primaryKey,
+  QueryBuilder,
+  text,
+  timestamp,
+  uuid
+} from 'drizzle-orm/pg-core';
 import { User } from './users';
 import { timestampConfig } from './utils';
-import { eq, getTableName, SQL, sql } from 'drizzle-orm';
 
 export const Notification = pgTable('notification', {
   id: uuid().primaryKey().defaultRandom(),
@@ -23,21 +33,23 @@ export const UpdatedUserNotification = pgTable('updated_user_notification', {
   status: text({ enum: ['granted', 'removed'] }).notNull()
 });
 
-export const UserNotification = pgTable('user_notification', {
-  userId: integer()
-    .references(() => User.id, {
+export const UserNotification = pgTable(
+  'user_notification',
+  {
+    userId: integer().references(() => User.id, {
       onDelete: 'cascade'
     }),
-  notificationId: text()
-    .references(() => Notification.id, {
+    notificationId: text().references(() => Notification.id, {
       onDelete: 'cascade'
     }),
-  seenAt: timestamp(timestampConfig)
-}, (table) => [
-  primaryKey({
-    columns: [table.userId, table.notificationId]
-  })
-]);
+    seenAt: timestamp(timestampConfig)
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.notificationId]
+    })
+  ]
+);
 
 type MapNotificationData<T extends PgTable[]> = {
   [K in keyof T]: {
@@ -48,34 +60,31 @@ type MapNotificationData<T extends PgTable[]> = {
 type SelectNotification = {
   id: typeof Notification.id;
   sentAt: typeof Notification.sentAt;
-  data: SQL.Aliased<MapNotificationData<[typeof BasicNotification, typeof UpdatedUserNotification]>>
-}
+  data: SQL.Aliased<
+    MapNotificationData<[typeof BasicNotification, typeof UpdatedUserNotification]>
+  >;
+};
 
 function buildNotificationQuery(qb: QueryBuilder, table: PgTable, data: SQL) {
   return qb
     .select({
       id: Notification.id,
       sentAt: Notification.sentAt,
-      data: sql`json_build_object('type', '${
-        getTableName(table).replace('_notification', '')
-      }${data}')::jsonb`.as('data')
+      data: sql`json_build_object('type', '${getTableName(table).replace(
+        '_notification',
+        ''
+      )}${data}')::jsonb`.as('data')
     } as SelectNotification)
     .from(Notification)
     .innerJoin(table, eq((table as any).id, Notification.id));
-};
+}
 
-export const EveryNotification = pgView('every_notification')
-  .as(
-    (qb) => buildNotificationQuery(
+export const EveryNotification = pgView('every_notification').as((qb) =>
+  buildNotificationQuery(qb, BasicNotification, sql`'event', ${BasicNotification.event}`).unionAll(
+    buildNotificationQuery(
       qb,
-      BasicNotification,
-      sql`'event', ${BasicNotification.event}`
+      UpdatedUserNotification,
+      sql`'updated', ${UpdatedUserNotification.updated}, 'status', ${UpdatedUserNotification.status}`
     )
-    .unionAll(
-      buildNotificationQuery(
-        qb,
-        UpdatedUserNotification,
-        sql`'updated', ${UpdatedUserNotification.updated}, 'status', ${UpdatedUserNotification.status}`
-      )
-    )
-  );
+  )
+);

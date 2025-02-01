@@ -6,7 +6,7 @@ export abstract class TournamentRefereeSettingsValidation {
   public static CreateRefereeSettings = v.object({
     tournamentId: s.integerId()
   });
-  
+
   public static UpdateRefereeSettings = v.partial(
     v.object({
       timers: v.record(

@@ -1,5 +1,5 @@
-import { DiscordValidation } from './validation';
 import { Service } from '$src/utils/service';
+import { DiscordValidation } from './validation';
 
 class DiscordService extends Service {
   public async getDiscordSelf(accessToken: string) {
@@ -11,7 +11,7 @@ class DiscordService extends Service {
       'discordUser',
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     );

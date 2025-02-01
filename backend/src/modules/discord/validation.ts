@@ -1,5 +1,5 @@
-import type { MapInput, MapOutput } from '$src/types';
 import * as v from 'valibot';
+import type { MapInput, MapOutput } from '$src/types';
 
 export abstract class DiscordValidation {
   public static DiscordUserResponse = v.object({

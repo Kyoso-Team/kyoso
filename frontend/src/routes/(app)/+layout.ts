@@ -1,5 +1,5 @@
-import { api } from '$lib/api';
 import { error } from '@sveltejs/kit';
+import { api } from '$lib/api';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async () => {

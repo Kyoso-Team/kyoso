@@ -10,7 +10,7 @@
 //   ) {
 //     return db.insert(TournamentRankRange).values(rankRange);
 //   }
-  
+
 //   public async updateRankRange(
 //     db: DatabaseClient,
 //     rankRange: v.InferOutput<TournamentRankRangeValidationT['UpdateRankRange']>

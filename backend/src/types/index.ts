@@ -23,8 +23,12 @@ export type PickColumns<TTable extends Table, TColumns extends string | number |
   Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>
 >;
 
-export type MapOutput<T> = { [K in keyof T]: T[K] extends v.GenericSchema ? v.InferOutput<T[K]> : T[K] };
-export type MapInput<T> = { [K in keyof T]: T[K] extends v.GenericSchema ? v.InferInput<T[K]> : T[K] };
+export type MapOutput<T> = {
+  [K in keyof T]: T[K] extends v.GenericSchema ? v.InferOutput<T[K]> : T[K];
+};
+export type MapInput<T> = {
+  [K in keyof T]: T[K] extends v.GenericSchema ? v.InferInput<T[K]> : T[K];
+};
 
 // Meilisearch index types
 

@@ -16,7 +16,7 @@ class DatabaseRepository {
     await db.execute('drop schema if exists "drizzle" cascade');
     await db.execute('create schema "drizzle"');
   }
-  
+
   public async prePushDatabase(db: DatabaseClient) {
     this.checkProd();
     await db.execute('create extension "pg_trgm"');

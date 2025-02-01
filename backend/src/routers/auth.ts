@@ -159,33 +159,34 @@ const authRouter = new Hono()
       return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
     }
   )
-  .get(
-    '/session',
-    async (c) => {
-      const session = await authenticationService.validateSession(c, db, {
-        user: {
-          id: true,
-          osu: {
-            osuUserId: true,
-            username: true
-          },
-          discord: {
-            discordUserId: true,
-            username: true
-          }
-        }
-      });
-
-      return c.json(session ? {
-        id: session.id,
-        user: session.user,
-        osu: session.osu,
+  .get('/session', async (c) => {
+    const session = await authenticationService.validateSession(c, db, {
+      user: {
+        id: true,
+        osu: {
+          osuUserId: true,
+          username: true
+        },
         discord: {
-          id: session.discord.discordUserId.toString(),
-          username: session.discord.username
+          discordUserId: true,
+          username: true
         }
-      } : null);
-    }
-  );
+      }
+    });
+
+    return c.json(
+      session
+        ? {
+            id: session.id,
+            user: session.user,
+            osu: session.osu,
+            discord: {
+              id: session.discord.discordUserId.toString(),
+              username: session.discord.username
+            }
+          }
+        : null
+    );
+  });
 
 export { authRouter };

@@ -18,7 +18,7 @@ class OsuBadgeRepository {
         }
       });
   }
-  
+
   public async createOsuUserAwardedBadges(
     db: DatabaseClient,
     badges: OsuBadgeValidationOutput['CreateOsuUserAwardedBadge'][],

@@ -1,19 +1,20 @@
-import type { DatabaseClient } from '$src/types';
 import { Service } from '$src/utils/service';
 import { userRepository } from './repository';
-import { UserValidation, type UserValidationInput } from './validation';
+import { UserValidation } from './validation';
+import type { DatabaseClient } from '$src/types';
+import type { UserValidationInput } from './validation';
 
 class UserService extends Service {
-  public async createUser(
-    db: DatabaseClient,
-    userInput: UserValidationInput['CreateUser']
-  ) {
+  public async createUser(db: DatabaseClient, userInput: UserValidationInput['CreateUser']) {
     const fn = this.createServiceFunction('Failed to create user');
     const user = await fn.validate(UserValidation.CreateUser, 'user', userInput);
     return await fn.handleDbQuery(userRepository.createUser(db, user));
   }
 
-  public async createCountry(db: DatabaseClient, countryInput: UserValidationInput['CreateCountry']) {
+  public async createCountry(
+    db: DatabaseClient,
+    countryInput: UserValidationInput['CreateCountry']
+  ) {
     const fn = this.createServiceFunction('Failed to create country');
     const country = await fn.validate(UserValidation.CreateCountry, 'country', countryInput);
     return await fn.handleDbQuery(userRepository.createCountry(db, country));
@@ -43,7 +44,11 @@ class UserService extends Service {
     discordUserInput: UserValidationInput['CreateDiscordUser']
   ) {
     const fn = this.createServiceFunction('Failed to create Discord user');
-    const discordUser = await fn.validate(UserValidation.CreateDiscordUser, 'discordUser', discordUserInput);
+    const discordUser = await fn.validate(
+      UserValidation.CreateDiscordUser,
+      'discordUser',
+      discordUserInput
+    );
     return await fn.handleDbQuery(userRepository.createDiscordUser(db, discordUser));
   }
 
@@ -53,7 +58,11 @@ class UserService extends Service {
     discordUserId: bigint
   ) {
     const fn = this.createServiceFunction('Failed to update Discord user');
-    const discordUser = await fn.validate(UserValidation.UpdateDiscordUser, 'discordUser', discordUserInput);
+    const discordUser = await fn.validate(
+      UserValidation.UpdateDiscordUser,
+      'discordUser',
+      discordUserInput
+    );
     return await fn.handleDbQuery(userRepository.updateDiscordUser(db, discordUser, discordUserId));
   }
 }

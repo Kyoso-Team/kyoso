@@ -7,7 +7,7 @@ export abstract class TournamentValidation {
     v.union([v.literal('x'), v.literal('y'), v.literal('z')]),
     v.pipe(v.number(), v.notValue(0), v.minValue(-10), v.maxValue(10))
   );
-  
+
   public static CreateTournament = v.object({
     name: v.pipe(v.string(), v.minLength(2), v.maxLength(50)),
     urlSlug: v.pipe(v.string(), v.minLength(2), v.maxLength(16), s.validUrlSlug()),
@@ -15,7 +15,7 @@ export abstract class TournamentValidation {
     type: v.picklist(TournamentType.enumValues),
     hostUserId: s.integerId()
   });
-  
+
   public static UpdateTournament = v.partial(v.omit(this.CreateTournament, ['type', 'hostUserId']));
 }
 
