@@ -12,7 +12,12 @@ class TournamentService extends Service {
     db: DatabaseClient,
     n: number,
     hostUserId: number,
-    type: TournamentValidationInput['CreateTournament']['type']
+    type: TournamentValidationInput['CreateTournament']['type'],
+    teamSettings?: {
+      minSize: number;
+      maxSize: number;
+      useBanners?: boolean;
+    }
   ) {
     this.checkTest();
     return this.createTournament(db, {
@@ -20,8 +25,15 @@ class TournamentService extends Service {
       name: `Tournament ${n}`,
       urlSlug: `t${n}`,
       hostUserId,
-      type
-    });
+      type,
+      teamSize: teamSettings
+        ? {
+            min: teamSettings.minSize,
+            max: teamSettings.maxSize
+          }
+        : undefined,
+      useTeamBanners: teamSettings?.useBanners
+    } as any);
   }
 
   public async createTournament(

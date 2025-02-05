@@ -29,7 +29,7 @@ describe('post /tournament', () => {
       json: {
         name: 'test',
         urlSlug: 'test',
-        type: 'teams',
+        type: 'solo',
         acronym: 'test'
       }
     });
@@ -46,7 +46,7 @@ describe('post /tournament', () => {
       json: {
         name: 'test',
         urlSlug: 'test',
-        type: 'teams',
+        type: 'solo',
         acronym: 'test'
       }
     });

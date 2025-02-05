@@ -14,8 +14,7 @@ import {
 import { DraftOrderType, TournamentType, WinCondition } from './enums';
 import { User } from './users';
 import { timestampConfig } from './utils';
-import type * as v from 'valibot';
-import type { TournamentValidation } from '$src/modules/tournament/validation';
+import type { TournamentValidationOutput } from '$src/modules/tournament/validation';
 
 export const Tournament = pgTable(
   'tournament',
@@ -33,7 +32,7 @@ export const Tournament = pgTable(
     }).notNull(),
     type: TournamentType().notNull(),
     rules: text(),
-    bwsValues: jsonb().$type<v.InferOutput<(typeof TournamentValidation)['BwsValues']>>(),
+    bws: jsonb().$type<TournamentValidationOutput['Bws']>(),
     hostUserId: integer().references(() => User.id, { onDelete: 'set null' }),
     lowerRankRange: integer(),
     upperRankRange: integer(),

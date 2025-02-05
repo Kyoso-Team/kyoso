@@ -1,6 +1,5 @@
 import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
-import * as v from 'valibot';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { tournamentService } from '$src/modules/tournament/service.ts';
 import { TournamentValidation } from '$src/modules/tournament/validation.ts';
@@ -11,7 +10,7 @@ const tournamentRouter = new Hono().basePath('/tournament').post(
   sessionMiddleware({
     approvedHost: true
   }),
-  vValidator('json', v.omit(TournamentValidation.CreateTournament, ['hostUserId'])),
+  vValidator('json', TournamentValidation.CreateTournamentOmitHost),
   async (c) => {
     const body = c.req.valid('json');
     const result = await tournamentService.createTournament(db, {
