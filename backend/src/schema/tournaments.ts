@@ -34,34 +34,18 @@ export const Tournament = pgTable(
     type: TournamentType().notNull(),
     rules: text(),
     bwsValues: jsonb().$type<v.InferOutput<(typeof TournamentValidation)['BwsValues']>>(),
-    hostUserId: integer().references(() => User.id, { onDelete: 'set null' })
+    hostUserId: integer().references(() => User.id, { onDelete: 'set null' }),
+    lowerRankRange: integer(),
+    upperRankRange: integer(),
+    minTeamSize: smallint(),
+    maxTeamSize: smallint(),
+    useTeamBanners: boolean().notNull().default(false)
   },
   (table) => [
     unique('tournament_name_uni').on(table.name),
     unique('tournament_url_slug_uni').on(table.urlSlug)
   ]
 );
-
-export const TournamentRankRange = pgTable('tournament_rank_range', {
-  tournamentId: integer()
-    .primaryKey()
-    .references(() => Tournament.id, {
-      onDelete: 'cascade'
-    }),
-  lower: integer().notNull(),
-  upper: integer()
-});
-
-export const TournamentTeamSettings = pgTable('tournament_team_settings', {
-  tournamentId: integer()
-    .primaryKey()
-    .references(() => Tournament.id, {
-      onDelete: 'cascade'
-    }),
-  minTeamSize: smallint().notNull(),
-  maxTeamSize: smallint().notNull(),
-  useTeamBanners: boolean().notNull().default(false)
-});
 
 // All timers are in seconds
 export const TournamentRefereeSettings = pgTable('tournament_referee_settings', {

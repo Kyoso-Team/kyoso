@@ -1,6 +1,7 @@
 import * as v from 'valibot';
 import { TournamentType } from '$src/schema';
 import * as s from '$src/utils/validation';
+import type { MapInput, MapOutput } from '$src/types';
 
 export abstract class TournamentValidation {
   public static BwsValues = v.record(
@@ -19,4 +20,5 @@ export abstract class TournamentValidation {
   public static UpdateTournament = v.partial(v.omit(this.CreateTournament, ['type', 'hostUserId']));
 }
 
-export type TournamentValidationT = typeof TournamentValidation;
+export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
+export type TournamentValidationInput = MapInput<typeof TournamentValidation>;

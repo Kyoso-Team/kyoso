@@ -116,7 +116,8 @@ class AuthenticationService extends Service {
   public async createSession(c: Context, db: DatabaseClient, userId: number) {
     const fn = this.createServiceFunction('Failed to create session');
     const token = this.generateSessionToken();
-    const ip = getConnInfo(c).remote.address ?? '127.0.0.1';
+    const ip =
+      env.NODE_ENV === 'test' ? '127.0.0.1' : (getConnInfo(c).remote.address ?? '127.0.0.1');
     const ipMetadata = await ipInfoService.getIpMetadata(ip);
     const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
@@ -125,7 +126,7 @@ class AuthenticationService extends Service {
       userId,
       id: sessionId,
       ipAddress: ip,
-      userAgent: c.req.header('user-agent')
+      userAgent: env.NODE_ENV !== 'production' ? 'test' : c.req.header('user-agent')
     });
     await fn.handleDbQuery(sessionRepository.createSession(db, session));
     cookieService.setSession(c, token);
@@ -133,7 +134,12 @@ class AuthenticationService extends Service {
   }
 
   public async deleteSession(c: Context, db: DatabaseClient) {
-    const token = cookieService.getSession(c);
+    let token = cookieService.getSession(c);
+
+    if (env.NODE_ENV === 'test') {
+      token = await Bun.file(`${process.cwd()}/test-tokens/session.txt`).text();
+    }
+
     if (!token) {
       throw new HTTPException(403, {
         message: 'Not logged in'
@@ -150,7 +156,12 @@ class AuthenticationService extends Service {
     db: DatabaseClient,
     select: T
   ) {
-    const token = cookieService.getSession(c);
+    let token = cookieService.getSession(c);
+
+    if (env.NODE_ENV === 'test') {
+      token = await Bun.file(`${process.cwd()}/test-tokens/session.txt`).text();
+    }
+
     if (!token) {
       return undefined;
     }
