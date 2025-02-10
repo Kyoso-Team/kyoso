@@ -20,8 +20,16 @@ export const Tournament = pgTable(
   'tournament',
   {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
+    // Dates
     createdAt: timestamp(timestampConfig).notNull().defaultNow(),
     deletedAt: timestamp(timestampConfig),
+    publishedAt: timestamp(timestampConfig),
+    concludedAt: timestamp(timestampConfig),
+    playerRegsOpenedAt: timestamp(timestampConfig),
+    playerRegsClosedAt: timestamp(timestampConfig),
+    staffRegsOpenedAt: timestamp(timestampConfig),
+    staffRegsClosedAt: timestamp(timestampConfig),
+    // Branding
     name: varchar({ length: 50 }).notNull(),
     description: varchar({ length: 150 }),
     urlSlug: varchar('url_slug', {
@@ -30,58 +38,38 @@ export const Tournament = pgTable(
     acronym: varchar('acronym', {
       length: 8
     }).notNull(),
+    // Format and team settings
     type: TournamentType().notNull(),
-    rules: text(),
     bws: jsonb().$type<TournamentValidationOutput['Bws']>(),
-    hostUserId: integer().references(() => User.id, { onDelete: 'set null' }),
     lowerRankRange: integer(),
     upperRankRange: integer(),
     minTeamSize: smallint(),
     maxTeamSize: smallint(),
-    useTeamBanners: boolean().notNull().default(false)
+    useTeamBanners: boolean().notNull().default(false),
+    // Referee settings (all timers are in seconds)
+    rules: text(),
+    pickTimerLength: smallint().notNull().default(120),
+    banTimerLength: smallint().notNull().default(120),
+    protectTimerLength: smallint().notNull().default(120),
+    readyTimerLength: smallint().notNull().default(120),
+    startTimerLength: smallint().notNull().default(10),
+    allowDoublePick: boolean().notNull().default(false),
+    allowDoubleBan: boolean().notNull().default(false),
+    allowDoubleProtect: boolean().notNull().default(false),
+    banOrder: DraftOrderType().notNull().default('linear'),
+    pickOrder: DraftOrderType().notNull().default('linear'),
+    protectOrder: DraftOrderType().notNull().default('linear'),
+    forceNoFail: boolean().notNull().default(true),
+    banAndProtectCancelOut: boolean().notNull().default(false),
+    winCondition: WinCondition().notNull().default('score'),
+    // Relations
+    hostUserId: integer().references(() => User.id, { onDelete: 'set null' })
   },
   (table) => [
     unique('tournament_name_uni').on(table.name),
     unique('tournament_url_slug_uni').on(table.urlSlug)
   ]
 );
-
-// All timers are in seconds
-export const TournamentRefereeSettings = pgTable('tournament_referee_settings', {
-  tournamentId: integer()
-    .primaryKey()
-    .references(() => Tournament.id, {
-      onDelete: 'cascade'
-    }),
-  pickTimerLength: smallint().notNull().default(120),
-  banTimerLength: smallint().notNull().default(120),
-  protectTimerLength: smallint().notNull().default(120),
-  readyTimerLength: smallint().notNull().default(120),
-  startTimerLength: smallint().notNull().default(10),
-  allowDoublePick: boolean().notNull().default(false),
-  allowDoubleBan: boolean().notNull().default(false),
-  allowDoubleProtect: boolean().notNull().default(false),
-  banOrder: DraftOrderType().notNull().default('linear'),
-  pickOrder: DraftOrderType().notNull().default('linear'),
-  protectOrder: DraftOrderType().notNull().default('linear'),
-  forceNoFail: boolean().notNull().default(true),
-  banAndProtectCancelOut: boolean().notNull().default(false),
-  winCondition: WinCondition().notNull().default('score')
-});
-
-export const TournamentDates = pgTable('tournament_dates', {
-  tournamentId: integer()
-    .primaryKey()
-    .references(() => Tournament.id, {
-      onDelete: 'cascade'
-    }),
-  publishedAt: timestamp(timestampConfig),
-  concludedAt: timestamp(timestampConfig),
-  playerRegsOpenedAt: timestamp(timestampConfig),
-  playerRegsClosedAt: timestamp(timestampConfig),
-  staffRegsOpenedAt: timestamp(timestampConfig),
-  staffRegsClosedAt: timestamp(timestampConfig)
-});
 
 export const TournamentDate = pgTable('tournament_date', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
