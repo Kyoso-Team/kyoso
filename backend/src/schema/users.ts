@@ -13,8 +13,7 @@ import {
   varchar
 } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
-import type * as v from 'valibot';
-import type { AuthenticationValidationT } from '$src/modules/authentication/validation';
+import type { AuthenticationValidationOutput } from '$src/modules/authentication/validation';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -50,7 +49,7 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb().notNull().$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>(),
+    token: jsonb().notNull().$type<AuthenticationValidationOutput['OAuthToken']>(),
     countryCode: char('country_code', {
       length: 2
     })
@@ -85,10 +84,14 @@ export const OsuUserAwardedBadge = pgTable(
   {
     osuUserId: integer()
       .notNull()
-      .references(() => OsuUser.osuUserId),
+      .references(() => OsuUser.osuUserId, {
+        onDelete: 'cascade'
+      }),
     osuBadgeId: integer()
       .notNull()
-      .references(() => OsuBadge.id),
+      .references(() => OsuBadge.id, {
+        onDelete: 'cascade'
+      }),
     awardedAt: timestamp(timestampConfig).notNull()
   },
   (table) => [
@@ -107,7 +110,7 @@ export const DiscordUser = pgTable('discord_user', {
   updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<v.InferOutput<AuthenticationValidationT['OAuthToken']>>()
+  token: jsonb().notNull().$type<AuthenticationValidationOutput['OAuthToken']>()
 });
 
 export const Session = pgTable('session', {

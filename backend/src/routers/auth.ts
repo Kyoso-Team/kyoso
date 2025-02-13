@@ -1,3 +1,4 @@
+import { existsSync, unlinkSync } from 'fs';
 import { vValidator } from '@hono/valibot-validator';
 import { generateState } from 'arctic';
 import { and, eq } from 'drizzle-orm';
@@ -6,16 +7,18 @@ import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { authenticationService } from '$src/modules/authentication/service';
 import { cookieService } from '$src/modules/cookie/service';
-import { databaseRepository } from '$src/modules/database/repository';
-import { osuUserRepository } from '$src/modules/osu-user/repository';
+import { entityRepository } from '$src/modules/entity/repository';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
+import { userRepository } from '$src/modules/user/repository';
 import { User } from '$src/schema';
 import { db, redis } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
+
+const sessionPath = `${process.cwd()}/test-tokens/session.txt`;
 
 const authRouter = new Hono()
   .basePath('/auth')
@@ -28,13 +31,6 @@ const authRouter = new Hono()
       })
     ),
     async (c) => {
-      const session = cookieService.getSession(c);
-      if (session) {
-        throw new HTTPException(403, {
-          message: 'Already logged in'
-        });
-      }
-
       const { redirect_path } = c.req.valid('query');
       if (redirect_path) {
         cookieService.setRedirectPath(c, redirect_path);
@@ -67,12 +63,12 @@ const authRouter = new Hono()
         .catch(unknownError('Failed to validate osu! authorization code'));
       const accessToken = tokens.accessToken();
       const osuUserId = osuService.getOsuUserIdFromAccessToken(accessToken);
-      const osuUser = await osuUserRepository.getOsuUser(db, osuUserId, {
+      const osuUser = await userRepository.getOsuUser(db, osuUserId, {
         userId: true
       });
 
       if (osuUser) {
-        const banned = await databaseRepository.exists(
+        const banned = await entityRepository.exists(
           db,
           User,
           and(eq(User.id, osuUser.userId), eq(User.banned, true))
@@ -121,7 +117,7 @@ const authRouter = new Hono()
         });
       }
 
-      const discordTokens = await mainDiscordOAuth
+      const unparsedDiscordTokens = await mainDiscordOAuth
         .validateAuthorizationCode(code)
         .catch(unknownError('Failed to validate Discord authorization code'));
       const osuTokens = await osuService.getTemporarilyStoredTokens(redis, state);
@@ -133,10 +129,15 @@ const authRouter = new Hono()
       }
 
       await osuService.deleteTemporarilyStoredTokens(redis, state);
-      const user = await authenticationService.registerUser(
-        osuTokens,
-        authenticationService.transformArcticToken(discordTokens)
-      );
+      const discordTokens = authenticationService.transformArcticToken(unparsedDiscordTokens);
+
+      // Necessary for test environment
+      if (env.NODE_ENV !== 'production') {
+        await Bun.write(`${process.cwd()}/test-tokens/discord.json`, JSON.stringify(discordTokens));
+        await Bun.write(`${process.cwd()}/test-tokens/osu.json`, JSON.stringify(osuTokens));
+      }
+
+      const user = await authenticationService.registerUser(osuTokens, discordTokens);
 
       await authenticationService.createSession(c, db, user.id);
 
@@ -187,6 +188,34 @@ const authRouter = new Hono()
           }
         : null
     );
+  })
+  .post('/login/test', vValidator('json', v.object({ userId: v.number() })), async (c) => {
+    if (env.NODE_ENV === 'production') {
+      throw new HTTPException(403, {
+        message: 'Not allowed in production'
+      });
+    }
+
+    const sessionExists = existsSync(sessionPath);
+    if (sessionExists) {
+      await authenticationService.deleteSession(c, db);
+    }
+
+    const body = c.req.valid('json');
+    const sessionToken = await authenticationService.createSession(c, db, body.userId);
+    await Bun.write(sessionPath, sessionToken);
+    return c.json(null);
+  })
+  .post('/logout/test', async (c) => {
+    if (env.NODE_ENV === 'production') {
+      throw new HTTPException(403, {
+        message: 'Not allowed in production'
+      });
+    }
+
+    await authenticationService.deleteSession(c, db);
+    unlinkSync(sessionPath);
+    return c.json(null);
   });
 
 export { authRouter };

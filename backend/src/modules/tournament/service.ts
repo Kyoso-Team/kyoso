@@ -1,15 +1,45 @@
 import { HTTPException } from 'hono/http-exception';
-import * as v from 'valibot';
 import { Tournament } from '$src/schema';
-import { db } from '$src/singletons';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
-import type { TournamentValidationT } from './validation';
+import type { DatabaseClient } from '$src/types';
+import type { TournamentValidationInput } from './validation';
 
 class TournamentService extends Service {
-  public async createTournament(input: v.InferInput<TournamentValidationT['CreateTournament']>) {
+  public async createDummyTournament(
+    db: DatabaseClient,
+    n: number,
+    hostUserId: number,
+    type: TournamentValidationInput['CreateTournament']['type'],
+    teamSettings?: {
+      minSize: number;
+      maxSize: number;
+      useBanners?: boolean;
+    }
+  ) {
+    this.checkTest();
+    return this.createTournament(db, {
+      acronym: `T${n}`,
+      name: `Tournament ${n}`,
+      urlSlug: `t${n}`,
+      hostUserId,
+      type,
+      teamSize: teamSettings
+        ? {
+            min: teamSettings.minSize,
+            max: teamSettings.maxSize
+          }
+        : undefined,
+      useTeamBanners: teamSettings?.useBanners
+    } as any);
+  }
+
+  public async createTournament(
+    db: DatabaseClient,
+    input: TournamentValidationInput['CreateTournament']
+  ) {
     const fn = this.createServiceFunction('Failed to create tournament');
     const data = await fn.validate(TournamentValidation.CreateTournament, 'tournament', input);
     const tournament = await fn.handleDbQuery(tournamentRepository.createTournament(db, data));

@@ -1,7 +1,14 @@
 import * as v from 'valibot';
+import { env } from './env';
 import { unknownError, validationError } from './error';
 
 export abstract class Service {
+  protected checkTest() {
+    if (env.NODE_ENV !== 'test') {
+      throw new Error('Operation only allowed in test environment');
+    }
+  }
+
   protected createServiceFunction(errorMessage: string) {
     return new ServiceFunction(errorMessage);
   }
