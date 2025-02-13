@@ -2,12 +2,11 @@ import { eq, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { DiscordUser, OsuUser, Session, User } from '$src/schema';
 import { pick } from '$src/utils/query';
-import { Service } from '$src/utils/service';
 import type { DatabaseClient, PickColumns, Simplify } from '$src/types';
 import type { SessionSelection } from './types';
 import type { SessionValidation } from './validation';
 
-class SessionRepository extends Service {
+class SessionRepository {
   public async createSession(
     db: DatabaseClient,
     session: v.InferOutput<(typeof SessionValidation)['CreateSession']>

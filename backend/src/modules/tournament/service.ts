@@ -42,7 +42,13 @@ class TournamentService extends Service {
   ) {
     const fn = this.createServiceFunction('Failed to create tournament');
     const data = await fn.validate(TournamentValidation.CreateTournament, 'tournament', input);
-    const tournament = await fn.handleDbQuery(tournamentRepository.createTournament(db, data));
+    const tournament = await fn.handleDbQuery(
+      tournamentRepository.createTournament(db, data),
+      this.handleTournamentCreationError({
+        name: data.name,
+        urlSlug: data.urlSlug
+      }, fn.errorMessage)
+    );
     await fn.handleSearchQuery(
       tournamentRepository.syncTournament({
         acronym: data.acronym,
@@ -56,7 +62,7 @@ class TournamentService extends Service {
     return tournament;
   }
 
-  public handleTournamentCreationError(
+  private handleTournamentCreationError(
     tournament: { name: string; urlSlug: string },
     descriptionIfUnknownError: string
   ) {
