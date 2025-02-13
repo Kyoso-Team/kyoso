@@ -28,8 +28,7 @@ export abstract class Service {
     }
 
     const data = await resp.json().catch(unknownError(errorMessage));
-    const parsed = await v.parseAsync(schema, data).catch(validationError(errorMessage, item));
-    return parsed;
+    return await v.parseAsync(schema, data).catch(validationError(errorMessage, item));
   }
 }
 

@@ -6,13 +6,20 @@ import type { Context } from 'hono';
 
 class DevService {
   public async impersonate(c: Context, userId: number) {
-    const userExists = await userRepository.getUser(db, userId, {
-      id: true
+    const user = await userRepository.getUser(db, userId, {
+      id: true,
+      banned: true
     });
 
-    if (!userExists) {
+    if (!user) {
       throw new HTTPException(404, {
         message: "The user you want to impersonate doesn't exist"
+      });
+    }
+
+    if (user.banned) {
+      throw new HTTPException(403, {
+        message: 'The user you want to impersonate is banned'
       });
     }
 
