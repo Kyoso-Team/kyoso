@@ -10,10 +10,12 @@ import {
   text,
   timestamp,
   unique,
+  uuid,
   varchar
 } from 'drizzle-orm/pg-core';
 import { timestampConfig } from './utils';
 import type { AuthenticationValidationOutput } from '$src/modules/authentication/validation';
+import { Tournament } from './tournaments';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -133,3 +135,22 @@ export const Session = pgTable('session', {
       onDelete: 'cascade'
     })
 });
+
+export const Notification = pgTable('notification', {
+  id: uuid().primaryKey().defaultRandom(),
+  createdAt: timestamp(timestampConfig).notNull().defaultNow(),
+  sentAt: timestamp(timestampConfig).notNull(),
+  type: text({ enum: ['tournament_regs_open', 'round_schdule_published'] }),
+  userId: integer().references(() => User.id, { onDelete: 'set null' }),
+  tournamentId: integer().references(() => Tournament.id, { onDelete: 'set null' })
+  //roundId: integer().references(() => Round.id, { onDelete: 'set null' })
+});
+
+export const UserNotification = pgTable('user_notification', {
+  userId: integer().notNull().references(() => User.id, { onDelete: 'cascade' }),
+  notificationId: uuid().notNull().references(() => Notification.id, { onDelete: 'cascade' })
+}, (table) => [
+  primaryKey({
+    columns: [table.userId, table.notificationId]
+  })
+]);

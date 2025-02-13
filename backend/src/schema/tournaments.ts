@@ -22,6 +22,7 @@ export const Tournament = pgTable(
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     // Dates
     createdAt: timestamp(timestampConfig).notNull().defaultNow(),
+    updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
     deletedAt: timestamp(timestampConfig),
     publishedAt: timestamp(timestampConfig),
     concludedAt: timestamp(timestampConfig),
