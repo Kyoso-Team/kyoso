@@ -10,6 +10,7 @@
     "build": "bun run ./scripts/build.ts",
     "db:push": "bun ./scripts/db/push.ts",
     "db:reset": "bun ./scripts/db/reset.ts",
+    "meilisearch:setup": "bun ./scripts/meilisearch/setup.ts",
     "new:module": "bun ./scripts/modules/new-module.ts",
     "new:service": "bun ./scripts/modules/new-service.ts",
     "new:repository": "bun ./scripts/modules/new-repository.ts",
@@ -25,10 +26,11 @@
     "drizzle-orm": "^0.36.3",
     "hono": "^4.6.10",
     "ioredis": "^5.4.1",
+    "meilisearch": "^0.46.0",
     "osu-web.js": "^2.5.0",
     "postgres": "^3.4.5",
     "superjson": "^2.2.1",
-    "valibot": "^1.0.0-beta.3"
+    "valibot": "^1.0.0-beta.14"
   },
   "devDependencies": {
     "@clack/prompts": "^0.8.1",

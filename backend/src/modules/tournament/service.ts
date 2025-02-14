@@ -1,57 +1,88 @@
 import { HTTPException } from 'hono/http-exception';
-import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
-import { createServiceFnFromRepositoryQueryAndValidation } from '$src/utils/factories';
+import { Service } from '$src/utils/service';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
+import type { DatabaseClient } from '$src/types';
+import type { TournamentValidationInput } from './validation';
 
-const createSoloTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateSoloTournament,
-  tournamentRepository.createSoloTournament,
-  'tournament',
-  'Failed to create solo tournament'
-);
-
-const createTeamsTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateTeamsTournament,
-  tournamentRepository.createTeamsTournament,
-  'tournament',
-  'Failed to create teams tournament'
-);
-
-const createDraftTournament = createServiceFnFromRepositoryQueryAndValidation(
-  TournamentValidation.CreateDraftTournament,
-  tournamentRepository.createDraftTournament,
-  'tournament',
-  'Failed to create draft tournament'
-);
-
-function handleTournamentCreationError(
-  tournament: { name: string; urlSlug: string },
-  descriptionIfUnknownError: string
-) {
-  return (err: unknown): never => {
-    if (isUniqueConstraintViolationError(err, [Tournament.name])) {
-      throw new HTTPException(409, {
-        message: `Tournament with name ${tournament.name} already exists`
-      });
+class TournamentService extends Service {
+  public async createDummyTournament(
+    db: DatabaseClient,
+    n: number,
+    hostUserId: number,
+    type: TournamentValidationInput['CreateTournament']['type'],
+    teamSettings?: {
+      minSize: number;
+      maxSize: number;
+      useBanners?: boolean;
     }
+  ) {
+    this.checkTest();
+    return this.createTournament(db, {
+      acronym: `T${n}`,
+      name: `Tournament ${n}`,
+      urlSlug: `t${n}`,
+      hostUserId,
+      type,
+      teamSize: teamSettings
+        ? {
+            min: teamSettings.minSize,
+            max: teamSettings.maxSize
+          }
+        : undefined,
+      useTeamBanners: teamSettings?.useBanners
+    } as any);
+  }
 
-    if (isUniqueConstraintViolationError(err, [Tournament.urlSlug])) {
-      throw new HTTPException(409, {
-        message: `Tournament with URL slug ${tournament.urlSlug} already exists`
-      });
-    }
+  public async createTournament(
+    db: DatabaseClient,
+    input: TournamentValidationInput['CreateTournament']
+  ) {
+    const fn = this.createServiceFunction('Failed to create tournament');
+    const data = await fn.validate(TournamentValidation.CreateTournament, 'tournament', input);
+    const tournament = await fn.handleDbQuery(
+      tournamentRepository.createTournament(db, data),
+      this.handleTournamentCreationError({
+        name: data.name,
+        urlSlug: data.urlSlug
+      }, fn.errorMessage)
+    );
+    await fn.handleSearchQuery(
+      tournamentRepository.syncTournament({
+        acronym: data.acronym,
+        deletedAt: null,
+        id: tournament.id,
+        name: data.name,
+        publishedAt: null,
+        urlSlug: data.urlSlug
+      })
+    );
+    return tournament;
+  }
 
-    unknownError(descriptionIfUnknownError)(err);
-    return undefined as never;
-  };
+  private handleTournamentCreationError(
+    tournament: { name: string; urlSlug: string },
+    descriptionIfUnknownError: string
+  ) {
+    return (err: unknown): never => {
+      if (isUniqueConstraintViolationError(err, [Tournament.name])) {
+        throw new HTTPException(409, {
+          message: `Tournament with name ${tournament.name} already exists`
+        });
+      }
+
+      if (isUniqueConstraintViolationError(err, [Tournament.urlSlug])) {
+        throw new HTTPException(409, {
+          message: `Tournament with URL slug ${tournament.urlSlug} already exists`
+        });
+      }
+
+      unknownError(descriptionIfUnknownError)(err);
+      return undefined as never;
+    };
+  }
 }
 
-export const tournamentService = {
-  createSoloTournament,
-  createTeamsTournament,
-  createDraftTournament,
-  handleTournamentCreationError
-};
+export const tournamentService = new TournamentService();

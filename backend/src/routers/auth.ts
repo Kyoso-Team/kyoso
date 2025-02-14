@@ -1,3 +1,4 @@
+import { existsSync, unlinkSync } from 'fs';
 import { vValidator } from '@hono/valibot-validator';
 import { generateState } from 'arctic';
 import { and, eq } from 'drizzle-orm';
@@ -6,19 +7,18 @@ import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { authenticationService } from '$src/modules/authentication/service';
 import { cookieService } from '$src/modules/cookie/service';
-import { databaseRepository } from '$src/modules/database/repository';
-import { discordUserService } from '$src/modules/discord-user/service.ts';
-import { discordService } from '$src/modules/discord/service.ts';
-import { osuUserRepository } from '$src/modules/osu-user/repository';
-import { osuUserService } from '$src/modules/osu-user/service';
+import { entityRepository } from '$src/modules/entity/repository';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
+import { userRepository } from '$src/modules/user/repository';
 import { User } from '$src/schema';
 import { db, redis } from '$src/singletons';
-import { changeAccountDiscordOAuth, mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
+
+const sessionPath = `${process.cwd()}/test-tokens/session.txt`;
 
 const authRouter = new Hono()
   .basePath('/auth')
@@ -31,13 +31,6 @@ const authRouter = new Hono()
       })
     ),
     async (c) => {
-      const session = cookieService.getSession(c);
-      if (session) {
-        throw new HTTPException(403, {
-          message: 'Already logged in'
-        });
-      }
-
       const { redirect_path } = c.req.valid('query');
       if (redirect_path) {
         cookieService.setRedirectPath(c, redirect_path);
@@ -70,12 +63,12 @@ const authRouter = new Hono()
         .catch(unknownError('Failed to validate osu! authorization code'));
       const accessToken = tokens.accessToken();
       const osuUserId = osuService.getOsuUserIdFromAccessToken(accessToken);
-      const osuUser = await osuUserRepository.getOsuUser(db, osuUserId, {
+      const osuUser = await userRepository.getOsuUser(db, osuUserId, {
         userId: true
       });
 
       if (osuUser) {
-        const banned = await databaseRepository.exists(
+        const banned = await entityRepository.exists(
           db,
           User,
           and(eq(User.id, osuUser.userId), eq(User.banned, true))
@@ -124,7 +117,7 @@ const authRouter = new Hono()
         });
       }
 
-      const discordTokens = await mainDiscordOAuth
+      const unparsedDiscordTokens = await mainDiscordOAuth
         .validateAuthorizationCode(code)
         .catch(unknownError('Failed to validate Discord authorization code'));
       const osuTokens = await osuService.getTemporarilyStoredTokens(redis, state);
@@ -136,10 +129,15 @@ const authRouter = new Hono()
       }
 
       await osuService.deleteTemporarilyStoredTokens(redis, state);
-      const user = await authenticationService.registerUser(
-        osuTokens,
-        authenticationService.transformArcticToken(discordTokens)
-      );
+      const discordTokens = authenticationService.transformArcticToken(unparsedDiscordTokens);
+
+      // Necessary for test environment
+      if (env.NODE_ENV !== 'production') {
+        await Bun.write(`${process.cwd()}/test-tokens/discord.json`, JSON.stringify(discordTokens));
+        await Bun.write(`${process.cwd()}/test-tokens/osu.json`, JSON.stringify(osuTokens));
+      }
+
+      const user = await authenticationService.registerUser(osuTokens, discordTokens);
 
       await authenticationService.createSession(c, db, user.id);
 
@@ -148,94 +146,6 @@ const authRouter = new Hono()
       return c.redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
     }
   )
-  .get(
-    '/callback/discord/change',
-    vValidator(
-      'query',
-      v.object({
-        code: s.nonEmptyString(),
-        state: s.nonEmptyString()
-      })
-    ),
-    async (c) => {
-      const session = await authenticationService.validateSession(c, db, {
-        user: { discord: { discordUserId: true } }
-      });
-
-      if (!session) {
-        throw new HTTPException(403, {
-          message: 'Must be logged in'
-        });
-      }
-
-      const { code } = c.req.valid('query');
-
-      const discordTokens = await changeAccountDiscordOAuth
-        .validateAuthorizationCode(code)
-        .catch(unknownError('Failed to validate Discord authorization code'));
-
-      const transformedDiscordToken = authenticationService.transformArcticToken(discordTokens);
-
-      const discordUser = await discordService.getDiscordSelf(transformedDiscordToken.accessToken);
-      await discordUserService.updateDiscordUser(
-        db,
-        {
-          username: discordUser.username,
-          token: transformedDiscordToken
-        },
-        session.discord.discordUserId
-      );
-      return c.redirect(`${env.FRONTEND_URL}/`, 302);
-    }
-  )
-  .get('/refresh-tokens', async (c) => {
-    const session = await authenticationService.validateSession(c, db, {
-      user: {
-        osu: {
-          osuUserId: true,
-          token: true
-        },
-        discord: {
-          discordUserId: true,
-          token: true
-        }
-      }
-    });
-
-    if (!session) {
-      throw new HTTPException(403, {
-        message: 'Must be logged in'
-      });
-    }
-
-    const { osu, discord } = session;
-
-    const [updatedOsuTokens, updatedDiscordTokens] = await Promise.all([
-      osuOAuth.refreshAccessToken(osu.token.refreshToken),
-      mainDiscordOAuth.refreshAccessToken(discord.token.refreshToken)
-    ]);
-
-    await Promise.all([
-      osuUserService.updateOsuUser(
-        db,
-        {
-          token: authenticationService.transformArcticToken(updatedOsuTokens)
-        },
-        osu.osuUserId
-      ),
-      discordUserService.updateDiscordUser(
-        db,
-        {
-          token: authenticationService.transformArcticToken(updatedDiscordTokens)
-        },
-        discord.discordUserId
-      )
-    ]);
-
-    return c.json({
-      success: true
-    });
-  })
   .get(
     '/logout',
     vValidator(
@@ -278,6 +188,34 @@ const authRouter = new Hono()
           }
         : null
     );
+  })
+  .post('/login/test', vValidator('json', v.object({ userId: v.number() })), async (c) => {
+    if (env.NODE_ENV === 'production') {
+      throw new HTTPException(403, {
+        message: 'Not allowed in production'
+      });
+    }
+
+    const sessionExists = existsSync(sessionPath);
+    if (sessionExists) {
+      await authenticationService.deleteSession(c, db);
+    }
+
+    const body = c.req.valid('json');
+    const sessionToken = await authenticationService.createSession(c, db, body.userId);
+    await Bun.write(sessionPath, sessionToken);
+    return c.json(null);
+  })
+  .post('/logout/test', async (c) => {
+    if (env.NODE_ENV === 'production') {
+      throw new HTTPException(403, {
+        message: 'Not allowed in production'
+      });
+    }
+
+    await authenticationService.deleteSession(c, db);
+    unlinkSync(sessionPath);
+    return c.json(null);
   });
 
 export { authRouter };
