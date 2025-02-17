@@ -5,15 +5,18 @@ import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
+import { sessionMiddleware } from '$src/middlewares/session';
 import { authenticationService } from '$src/modules/authentication/service';
 import { cookieService } from '$src/modules/cookie/service';
+import { discordService } from '$src/modules/discord/service.ts';
 import { entityRepository } from '$src/modules/entity/repository';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
 import { userRepository } from '$src/modules/user/repository';
+import { userService } from '$src/modules/user/service.ts';
 import { User } from '$src/schema';
 import { db, redis } from '$src/singletons';
-import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { changeAccountDiscordOAuth, mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { unknownError } from '$src/utils/error';
 import * as s from '$src/utils/validation';
@@ -146,6 +149,52 @@ const authRouter = new Hono()
       return c.redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
     }
   )
+  .get(
+    '/callback/discord/change',
+    sessionMiddleware(),
+    vValidator(
+      'query',
+      v.object({
+        code: s.nonEmptyString(),
+        state: s.nonEmptyString(),
+        redirect_path: v.optional(s.nonEmptyString())
+      })
+    ),
+    async (c) => {
+      const { discord } = c.get('user');
+
+      const { code, redirect_path } = c.req.valid('query');
+
+      const discordTokens = await changeAccountDiscordOAuth
+        .validateAuthorizationCode(code)
+        .catch(unknownError('Failed to validate Discord authorization code'));
+
+      const transformedDiscordToken = authenticationService.transformArcticToken(discordTokens);
+
+      const discordUser = await discordService.getDiscordSelf(transformedDiscordToken.accessToken);
+      await userService.updateDiscordUser(
+        db,
+        {
+          username: discordUser.username,
+          token: transformedDiscordToken
+        },
+        discord.discordUserId
+      );
+      return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
+    }
+  )
+  .get('/refresh-tokens', sessionMiddleware(), async (c) => {
+    const { osu, discord } = c.get('user');
+
+    await authenticationService.refreshTokens({
+      osu,
+      discord
+    });
+
+    return c.json({
+      success: true
+    });
+  })
   .get(
     '/logout',
     vValidator(
