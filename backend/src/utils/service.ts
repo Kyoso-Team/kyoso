@@ -40,7 +40,7 @@ export abstract class Service {
 }
 
 class ServiceFunction {
-  constructor(private errorMessage: string) {}
+  constructor(public errorMessage: string) {}
 
   public async validate<T extends v.GenericSchema>(
     schema: T,
@@ -50,8 +50,8 @@ class ServiceFunction {
     return await v.parseAsync(schema, data).catch(validationError(this.errorMessage, item));
   }
 
-  public async handleDbQuery<T>(query: Promise<T>): Promise<T> {
-    return await query.catch(unknownError(this.errorMessage));
+  public async handleDbQuery<T>(query: Promise<T>, errorHandler?: (err: any) => never): Promise<T> {
+    return await query.catch(errorHandler ?? unknownError(this.errorMessage));
   }
 
   public async handleRedisQuery<T>(query: Promise<T>): Promise<T> {
