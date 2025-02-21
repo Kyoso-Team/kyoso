@@ -85,6 +85,22 @@ class UserRepository {
       })
       .where(eq(DiscordUser.discordUserId, discordUserId));
   }
+
+  public async updateUser(
+    db: DatabaseClient,
+    user: UserValidationOutput['UpdateUser'],
+    userId: number
+  ) {
+    const { admin, approvedHost } = user;
+
+    return db
+      .update(User)
+      .set({
+        admin,
+        approvedHost
+      })
+      .where(eq(User.id, userId));
+  }
 }
 
 export const userRepository = new UserRepository();

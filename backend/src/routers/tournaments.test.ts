@@ -5,6 +5,7 @@ import { userService } from '$src/modules/user/service';
 import { Tournament } from '$src/schema';
 import { db } from '$src/singletons';
 import { api, loginAs } from '$src/tests';
+import { tournamentService } from '$src/modules/tournament/service';
 
 describe('post /tournament', () => {
   beforeAll(async () => {
@@ -37,9 +38,33 @@ describe('post /tournament', () => {
     expect(resp.status).toBe(401);
   });
 
-  it.todo('duplicate name');
+  it('duplicate name', async () => {
+    await tournamentService.createDummyTournament(db, 1, 2, 'solo');
+    const resp = await api.tournament.$post({
+      json: {
+        name: 'Tournament 1',
+        urlSlug: 'test',
+        type: 'solo',
+        acronym: 'test'
+      }
+    });
 
-  it.todo('duplicate url slug');
+    expect(resp.status).toBe(409);
+  });
+
+  it.todo('duplicate url slug', async () => {
+    await tournamentService.createDummyTournament(db, 1, 2, 'solo');
+    const resp = await api.tournament.$post({
+      json: {
+        name: 'test',
+        urlSlug: 't1',
+        type: 'solo',
+        acronym: 'test'
+      }
+    });
+
+    expect(resp.status).toBe(409);
+  });
 
   it('create teams tournament', async () => {
     const resp = await api.tournament.$post({
@@ -62,7 +87,7 @@ describe('post /tournament', () => {
   it.todo('create draft tournament');
 });
 
-describe('patch /tournament/[...]', () => {
+describe('patch /tournament', () => {
   it.todo("not the tournament's host");
 
   it.todo('insufficient staff permissions'); // Implement when staff permissions, roles and mambers are implemented
@@ -72,21 +97,44 @@ describe('patch /tournament/[...]', () => {
   it.todo('duplicate url slug');
 
   it.todo(
-    "can't udpate bws values, rank range or team sizes after tournament's player regs. have opened"
+    "can't udpate 'publishedAt' or 'type' after tournament's published"
   );
-});
 
-describe('patch /tournament/teams', () => {
+  it.todo(
+    "can't udpate 'playerRegsOpenedAt' after tournament's player regs. have opened"
+  );
+
+  it.todo(
+    "can't udpate 'bws', 'lowerRankRange', 'upperRankRange', 'minTeamSize', 'maxTeamSize', 'useTeamBanners' or 'playerRegsClosedAt' after tournament's player regs. have closed"
+  );
+
+  it.todo(
+    "can't udpate 'staffRegsOpenedAt' after tournament's staff regs. have opened"
+  );
+
+  it.todo(
+    "can't udpate 'staffRegsClosedAt' after tournament's staff regs. have closed"
+  );
+
+  it.todo(
+    "can't udpate 'minTeamSize', 'maxTeamSize' or 'useTeamBanners' if it's a solo tournament"
+  );
+
+  it.todo(
+    "can't set a tournament date in the past"
+  );
+
+  it.todo(
+    "can't set a tournament date to a date before the one already set"
+  );
+
+  it.todo('team-based tournament can\'t unset team settings');
+
+  it.todo('solo tournament can\'t set team settings');
+
   it.todo('update tournament');
 });
 
-describe('patch /tournament/solo', () => {
-  it.todo('update tournament');
-});
-
-describe('patch /tournament/draft', () => {
-  it.todo('update tournament');
-});
 
 describe('put /tournament/change/type', () => {
   it.todo("not the tournament's host");
