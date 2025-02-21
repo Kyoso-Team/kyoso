@@ -2,13 +2,12 @@ import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
-import { authMiddleware } from '$src/middlewares/auth.ts';
+import { sessionMiddleware } from '$src/middlewares/session.ts';
 import { devService } from '$src/modules/dev/service.ts';
 import { integerId } from '$src/utils/validation.ts';
 
 export const devRouter = new Hono()
   .basePath('/dev')
-  .use(authMiddleware)
   .put(
     'impersonate',
     vValidator(
@@ -27,5 +26,25 @@ export const devRouter = new Hono()
       const body = c.req.valid('json');
 
       return devService.impersonate(c, body.userId);
+    }
+  )
+  .patch(
+    'change-permissions',
+    vValidator(
+      'json',
+      v.object({
+        admin: v.boolean(),
+        approvedHost: v.boolean()
+      })
+    ),
+    sessionMiddleware(),
+    async (c) => {
+      const body = c.req.valid('json');
+
+      const { id } = c.get('user');
+
+      await devService.changePermissions(body, id);
+
+      return c.text('Successfully updated user permissions');
     }
   );

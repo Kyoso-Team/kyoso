@@ -1,7 +1,10 @@
 import { HTTPException } from 'hono/http-exception';
 import { authenticationService } from '$src/modules/authentication/service.ts';
 import { userRepository } from '$src/modules/user/repository.ts';
+import { userService } from '$src/modules/user/service.ts';
+import { User } from '$src/schema';
 import { db } from '$src/singletons';
+import type { InferSelectModel } from 'drizzle-orm';
 import type { Context } from 'hono';
 
 class DevService {
@@ -26,6 +29,16 @@ class DevService {
     await authenticationService.createSession(c, db, userId);
 
     return c.text('Successfully impersonated user');
+  }
+
+  public async changePermissions(
+    permissions: Record<
+      keyof Pick<InferSelectModel<typeof User>, 'admin' | 'approvedHost'>,
+      boolean
+    >,
+    userId: number
+  ) {
+    await userService.updateUser(db, permissions, userId);
   }
 }
 
