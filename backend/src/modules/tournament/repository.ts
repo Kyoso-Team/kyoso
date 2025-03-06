@@ -3,10 +3,23 @@ import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { meilisearch } from '$src/singletons/meilisearch.ts';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient, MeilisearchTournamentIndex } from '$src/types';
+import type { DatabaseClient, MeilisearchTournamentIndex, Selection } from '$src/types';
 import type { TournamentValidation } from './validation';
 
 class TournamentRepository {
+  public async getTournament<T extends Selection<typeof Tournament>>(
+    db: DatabaseClient,
+    tournamentId: number,
+    select: T
+  ) {
+    return db
+      .select(pick(Tournament, select))
+      .from(Tournament)
+      .where(eq(Tournament.id, tournamentId))
+      .limit(1)
+      .then((rows) => rows[0]);
+  }
+
   public async createTournament(
     db: DatabaseClient,
     tournament: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>
@@ -51,7 +64,7 @@ class TournamentRepository {
 
   public async syncTournament(tournament: MeilisearchTournamentIndex) {
     const index = meilisearch.index<MeilisearchTournamentIndex>('tournaments');
-  
+
     await index.updateDocuments([tournament]);
   }
 }

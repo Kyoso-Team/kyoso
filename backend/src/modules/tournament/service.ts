@@ -5,7 +5,7 @@ import { Service } from '$src/utils/service';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
-import type { TournamentValidationInput } from './validation';
+import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
 class TournamentService extends Service {
   public async createDummyTournament(
@@ -44,10 +44,13 @@ class TournamentService extends Service {
     const data = await fn.validate(TournamentValidation.CreateTournament, 'tournament', input);
     const tournament = await fn.handleDbQuery(
       tournamentRepository.createTournament(db, data),
-      this.handleTournamentCreationError({
-        name: data.name,
-        urlSlug: data.urlSlug
-      }, fn.errorMessage)
+      this.handleTournamentCreationError(
+        {
+          name: data.name,
+          urlSlug: data.urlSlug
+        },
+        fn.errorMessage
+      )
     );
     await fn.handleSearchQuery(
       tournamentRepository.syncTournament({
@@ -60,6 +63,65 @@ class TournamentService extends Service {
       })
     );
     return tournament;
+  }
+
+  public async updateTournament(
+    db: DatabaseClient,
+    input: TournamentValidationInput['UpdateTournament'],
+    tournamentId: number
+  ) {
+    const fn = this.createServiceFunction('Failed to update tournament');
+    const data = await fn.validate(TournamentValidation.UpdateTournament, 'tournament', input);
+
+    const existingTournament = await tournamentRepository.getTournament(db, tournamentId, {
+      id: true,
+      playerRegsOpenedAt: true,
+      playerRegsClosedAt: true,
+      staffRegsOpenedAt: true,
+      staffRegsClosedAt: true
+    });
+
+    if (!existingTournament) {
+      throw new HTTPException(404, {
+        message: 'Tournament does not exist'
+      });
+    }
+
+    if (data.schedule) {
+      this.checkTournamentDates(existingTournament, data.schedule);
+    }
+
+    await fn.handleDbQuery(tournamentRepository.updateTournament(db, data, tournamentId));
+  }
+
+  public async deleteTournament(db: DatabaseClient, tournamentId: number) {
+    const fn = this.createServiceFunction('Failed to delete tournament');
+    const tournament = await fn.handleDbQuery(
+      tournamentRepository.getTournament(db, tournamentId, {
+        id: true
+      })
+    );
+
+    if (!tournament) {
+      throw new HTTPException(404, {
+        message: 'Tournament does not exist'
+      });
+    }
+
+    const deleteAt = new Date(new Date().setHours(new Date().getHours() + 24));
+
+    await fn.handleDbQuery(tournamentRepository.softDeleteTournament(db, tournamentId, deleteAt));
+  }
+
+  private checkTournamentDates(
+    tournamentDates: Pick<
+      typeof Tournament.$inferSelect,
+      'playerRegsOpenedAt' | 'staffRegsClosedAt' | 'playerRegsClosedAt' | 'staffRegsOpenedAt'
+    >,
+    newDates: TournamentValidationOutput['UpdateTournamentSchedule']
+  ) {
+    //TODO: implement date validation logic
+    return true;
   }
 
   private handleTournamentCreationError(
