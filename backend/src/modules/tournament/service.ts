@@ -2,6 +2,7 @@ import { HTTPException } from 'hono/http-exception';
 import { Tournament } from '$src/schema';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
+import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
 import { TournamentValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
@@ -68,8 +69,13 @@ class TournamentService extends Service {
   public async updateTournament(
     db: DatabaseClient,
     input: TournamentValidationInput['UpdateTournament'],
-    tournamentId: number
+    payload: {
+      tournamentId: number;
+      userId: number;
+    }
   ) {
+    const { tournamentId, userId } = payload;
+
     const fn = this.createServiceFunction('Failed to update tournament');
     const data = await fn.validate(TournamentValidation.UpdateTournament, 'tournament', input);
 
@@ -78,12 +84,19 @@ class TournamentService extends Service {
       playerRegsOpenedAt: true,
       playerRegsClosedAt: true,
       staffRegsOpenedAt: true,
-      staffRegsClosedAt: true
+      staffRegsClosedAt: true,
+      hostUserId: true
     });
 
     if (!existingTournament) {
       throw new HTTPException(404, {
         message: 'Tournament does not exist'
+      });
+    }
+
+    if (userId !== existingTournament.hostUserId) {
+      throw new HTTPException(403, {
+        message: 'Only host can update the tournament'
       });
     }
 
@@ -94,13 +107,50 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.updateTournament(db, data, tournamentId));
   }
 
+  public async delegateHost(db: DatabaseClient, tournamentId: number, hostId: number) {
+    const fn = this.createServiceFunction('Failed to delegate host');
+    const tournament = await tournamentRepository.getTournament(db, tournamentId, {
+      id: true,
+      hostUserId: true
+    });
+
+    if (!tournament) {
+      throw new HTTPException(404, {
+        message: 'Tournament does not exist'
+      });
+    }
+
+    if (tournament.hostUserId === hostId) {
+      throw new HTTPException(400, {
+        message: 'Cannot assign the same host'
+      });
+    }
+
+    const newHost = await userRepository.getUser(db, hostId, {
+      banned: true
+    });
+
+    if (!newHost) {
+      throw new HTTPException(404, {
+        message: 'User does not exist'
+      });
+    }
+
+    if (newHost.banned) {
+      throw new HTTPException(400, {
+        message: 'Cannot delegate to a banned user'
+      });
+    }
+
+    await fn.handleDbQuery(tournamentRepository.changeTournamentHost(db, hostId, tournamentId));
+  }
+
   public async deleteTournament(db: DatabaseClient, tournamentId: number) {
     const fn = this.createServiceFunction('Failed to delete tournament');
-    const tournament = await fn.handleDbQuery(
-      tournamentRepository.getTournament(db, tournamentId, {
-        id: true
-      })
-    );
+    const tournament = await tournamentRepository.getTournament(db, tournamentId, {
+      id: true,
+      hostUserId: true
+    });
 
     if (!tournament) {
       throw new HTTPException(404, {

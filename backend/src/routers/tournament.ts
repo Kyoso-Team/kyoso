@@ -1,5 +1,6 @@
 import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
+import * as v from 'valibot';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { tournamentService } from '$src/modules/tournament/service.ts';
 import { TournamentValidation } from '$src/modules/tournament/validation.ts';
@@ -26,33 +27,52 @@ const tournamentRouter = new Hono()
       });
     }
   )
-  .patch(
-    '/:tournamentId',
-    sessionMiddleware({
-      admin: true
-    }),
-    vValidator('param', s.integerId()),
-    async (c) => {
-      const { tournamentId } = c.req.param();
-      const body = await c.req.json();
+  .patch('/:tournamentId', sessionMiddleware(), vValidator('param', s.integerId()), async (c) => {
+    const { tournamentId } = c.req.param();
+    const body = await c.req.json();
 
-      await tournamentService.updateTournament(db, body, +tournamentId);
+    await tournamentService.updateTournament(db, body, {
+      tournamentId: parseInt(tournamentId),
+      userId: c.get('user').id
+    });
+
+    return c.json({
+      message: 'Tournament updated successfully'
+    });
+  })
+  .patch(
+    'delegate_host',
+    sessionMiddleware(),
+    vValidator(
+      'json',
+      v.object({
+        tournamentId: s.integerId(),
+        hostId: s.integerId()
+      })
+    ),
+    async (c) => {
+      const body = c.req.valid('json');
+
+      await tournamentService.delegateHost(db, body.tournamentId, body.hostId);
 
       return c.json({
-        message: 'Tournament updated successfully'
+        message: 'Host changed successfully'
       });
     }
   )
   .delete(
     '/:tournamentId',
-    sessionMiddleware({
-      admin: true
-    }),
-    vValidator('param', s.integerId()),
+    sessionMiddleware(),
+    vValidator(
+      'param',
+      v.object({
+        tournamentId: s.integerId()
+      })
+    ),
     async (c) => {
-      const { tournamentId } = c.req.param();
+      const { tournamentId } = c.req.valid('param');
 
-      await tournamentService.deleteTournament(db, +tournamentId);
+      await tournamentService.deleteTournament(db, tournamentId);
 
       return c.json({
         message: 'Tournament deleted successfully'
