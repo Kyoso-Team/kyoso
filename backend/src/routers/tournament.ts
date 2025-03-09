@@ -79,12 +79,21 @@ const tournamentRouter = new Hono()
         tournamentId: s.stringToInteger()
       })
     ),
+    vValidator(
+      'query',
+      v.optional(
+        v.object({
+          instantDelete: s.stringToBoolean()
+        })
+      )
+    ),
     async (c) => {
       const { tournamentId } = c.req.valid('param');
+      const query = c.req.valid('query');
 
       const userId = c.get('user').id;
 
-      await tournamentService.deleteTournament(db, tournamentId, userId);
+      await tournamentService.deleteTournament(db, tournamentId, userId, query?.instantDelete);
 
       return c.json({
         message: 'Tournament deleted successfully'

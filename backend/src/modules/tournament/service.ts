@@ -29,9 +29,9 @@ class TournamentService extends Service {
       type,
       teamSize: teamSettings
         ? {
-            min: teamSettings.minSize,
-            max: teamSettings.maxSize
-          }
+          min: teamSettings.minSize,
+          max: teamSettings.maxSize
+        }
         : undefined,
       useTeamBanners: teamSettings?.useBanners
     } as any);
@@ -145,7 +145,7 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.changeTournamentHost(db, hostId, tournamentId));
   }
 
-  public async deleteTournament(db: DatabaseClient, tournamentId: number, userId: number) {
+  public async deleteTournament(db: DatabaseClient, tournamentId: number, userId: number, deleteInstantly = false) {
     const fn = this.createServiceFunction('Failed to delete tournament');
     const tournament = await tournamentRepository.getTournament(db, tournamentId, {
       id: true,
@@ -164,7 +164,7 @@ class TournamentService extends Service {
       });
     }
 
-    const deleteAt = new Date(new Date().setHours(new Date().getHours() + 24));
+    const deleteAt = deleteInstantly ? undefined : new Date(new Date().setHours(new Date().getHours() + 24));
 
     await fn.handleDbQuery(tournamentRepository.softDeleteTournament(db, tournamentId, deleteAt));
   }
