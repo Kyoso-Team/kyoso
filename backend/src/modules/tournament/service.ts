@@ -145,7 +145,7 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.changeTournamentHost(db, hostId, tournamentId));
   }
 
-  public async deleteTournament(db: DatabaseClient, tournamentId: number) {
+  public async deleteTournament(db: DatabaseClient, tournamentId: number, userId: number) {
     const fn = this.createServiceFunction('Failed to delete tournament');
     const tournament = await tournamentRepository.getTournament(db, tournamentId, {
       id: true,
@@ -155,6 +155,12 @@ class TournamentService extends Service {
     if (!tournament) {
       throw new HTTPException(404, {
         message: 'Tournament does not exist'
+      });
+    }
+
+    if (tournament.hostUserId !== userId) {
+      throw new HTTPException(403, {
+        message: 'Only host can delete the tournament'
       });
     }
 

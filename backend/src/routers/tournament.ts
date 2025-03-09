@@ -27,19 +27,29 @@ const tournamentRouter = new Hono()
       });
     }
   )
-  .patch('/:tournamentId', sessionMiddleware(), vValidator('param', s.integerId()), async (c) => {
-    const { tournamentId } = c.req.param();
-    const body = await c.req.json();
+  .patch(
+    '/:tournamentId',
+    sessionMiddleware(),
+    vValidator(
+      'param',
+      v.object({
+        tournamentId: s.stringToInteger()
+      })
+    ),
+    async (c) => {
+      const { tournamentId } = c.req.param();
+      const body = await c.req.json();
 
-    await tournamentService.updateTournament(db, body, {
-      tournamentId: parseInt(tournamentId),
-      userId: c.get('user').id
-    });
+      await tournamentService.updateTournament(db, body, {
+        tournamentId: parseInt(tournamentId),
+        userId: c.get('user').id
+      });
 
-    return c.json({
-      message: 'Tournament updated successfully'
-    });
-  })
+      return c.json({
+        message: 'Tournament updated successfully'
+      });
+    }
+  )
   .patch(
     'delegate_host',
     sessionMiddleware(),
@@ -66,13 +76,15 @@ const tournamentRouter = new Hono()
     vValidator(
       'param',
       v.object({
-        tournamentId: s.integerId()
+        tournamentId: s.stringToInteger()
       })
     ),
     async (c) => {
       const { tournamentId } = c.req.valid('param');
 
-      await tournamentService.deleteTournament(db, tournamentId);
+      const userId = c.get('user').id;
+
+      await tournamentService.deleteTournament(db, tournamentId, userId);
 
       return c.json({
         message: 'Tournament deleted successfully'
