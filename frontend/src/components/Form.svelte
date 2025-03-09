@@ -2,7 +2,7 @@
   import { fadeUi } from '$lib/fade-ui.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { portal } from 'svelte-portal';
-  import { fade, fly } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
   import { focusTrap } from '$lib/focus-trap';
   import type { Snippet } from 'svelte';
   import type { Form } from '$lib/form.svelte';
@@ -35,8 +35,8 @@
   role="presentation"
   onkeydown={onKeyDown}
   onsubmit={form.submit}
-  transition:fly={{ duration: 150, y: 100 }}
-  use:portal={'#faded-bg'}
+  use:portal={'#faded-bg-content'}
+  transition:fade={{ duration: 150 }}
   use:focusTrap={true}
 >
   <h2>{form.title}</h2>
