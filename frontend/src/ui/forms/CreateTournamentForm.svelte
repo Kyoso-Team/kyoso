@@ -8,7 +8,7 @@
   import { page } from '$app/stores';
   import type { FormProps } from '$lib/types';
 
-  const { unmount }: FormProps = $props();
+  const { onCancel }: FormProps = $props();
 
   const form = new Form('Create Tournament', {
     name: new F.Text('Tournament name').gte(2).lte(50),
@@ -40,7 +40,7 @@
     .onSubmit(async (value) => {
       console.log(value);
     })
-    .onCancel(unmount);
+    .onCancel(onCancel);
 
   $effect(() => {
     const disable = form.fields.type.raw !== 'teams';

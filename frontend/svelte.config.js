@@ -14,7 +14,8 @@ const config = {
     adapter: adapter(),
     alias: {
       $components: './src/components',
-      $forms: './src/forms'
+      $forms: './src/forms',
+      $ui: './src/ui'
     }
   }
 };

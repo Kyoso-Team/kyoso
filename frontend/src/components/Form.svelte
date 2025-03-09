@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fadeUi } from '$lib/fade-ui.svelte';
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
   import { focusTrap } from '$lib/focus-trap';
@@ -21,10 +21,6 @@
     fadeUi.set(true);
   });
 
-  onDestroy(() => {
-    fadeUi.set(false);
-  });
-
   function onKeyDown(e: KeyboardEvent) {
     return e.key !== 'Enter';
   }
@@ -36,7 +32,7 @@
   onkeydown={onKeyDown}
   onsubmit={form.submit}
   use:portal={'#faded-bg-content'}
-  transition:fade={{ duration: 150 }}
+  transition:fade={{ duration: 75 }}
   use:focusTrap={true}
 >
   <h2>{form.title}</h2>
