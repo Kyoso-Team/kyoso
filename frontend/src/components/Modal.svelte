@@ -6,10 +6,11 @@
     import { portal } from 'svelte-portal';
     import { fade } from 'svelte/transition';
 
-  const { title, children, btnLabel = 'Ok', onBtnClick }: {
+  const { title, children, btnLabel = 'Ok', onBtnClick, unmount }: {
     title: string;
     children: Snippet;
-    onBtnClick: () => MaybePromise<void>;
+    unmount: () => MaybePromise<void>;
+    onBtnClick?: () => MaybePromise<void>;
     btnLabel?: string;
   } = $props();
 
@@ -18,7 +19,8 @@
   });
 
   async function click() {
-    await onBtnClick();
+    await onBtnClick?.();
+    await unmount();
     fadeUi.set(false);
   }
 </script>

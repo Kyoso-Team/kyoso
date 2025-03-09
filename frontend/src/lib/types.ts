@@ -1,14 +1,17 @@
 export type MaybePromise<T> = T | Promise<T>;
 
 export interface FormProps {
-  onCancel: () => MaybePromise<void>;
+  unmount: () => MaybePromise<void>;
+  onCancel?: () => MaybePromise<void>;
 }
 
 export interface ModalProps {
-  onOkay: () => MaybePromise<void>;
+  unmount: () => MaybePromise<void>;
+  onOkay?: () => MaybePromise<void>;
 }
 
 export interface ConfirmationModalProps {
+  unmount: () => MaybePromise<void>;
   onYes: () => MaybePromise<void>;
-  onNo: () => MaybePromise<void>;
+  onNo?: () => MaybePromise<void>;
 }
