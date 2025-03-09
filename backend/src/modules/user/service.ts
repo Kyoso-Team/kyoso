@@ -117,6 +117,16 @@ class UserService extends Service {
     );
     return await fn.handleDbQuery(userRepository.updateDiscordUser(db, discordUser, discordUserId));
   }
+
+  public async updateUser(
+    db: DatabaseClient,
+    userInput: UserValidationInput['UpdateUser'],
+    userId: number
+  ) {
+    const fn = this.createServiceFunction('Failed to update user');
+    const user = await fn.validate(UserValidation.UpdateUser, 'user', userInput);
+    return await fn.handleDbQuery(userRepository.updateUser(db, user, userId));
+  }
 }
 
 export const userService = new UserService();

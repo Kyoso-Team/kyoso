@@ -17,6 +17,7 @@ import { SessionValidation } from '../session/validation';
 import { userService } from '../user/service';
 import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
+import type { UserTokens } from '$src/middlewares/session.ts';
 import type { Session } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import type { SessionSelection } from '../session/types';
@@ -29,6 +30,34 @@ class AuthenticationService extends Service {
       refreshToken: token.refreshToken(),
       tokenIssuedAt: Date.now()
     };
+  }
+
+  public async refreshTokens({ osu, discord }: UserTokens) {
+    const now = new Date();
+
+    if (osu.token.tokenIssuedAt >= now.getTime()) {
+      const newOsuTokens = await osuOAuth.refreshAccessToken(osu.token.refreshToken);
+      await userService.updateOsuUser(
+        db,
+        {
+          token: authenticationService.transformArcticToken(newOsuTokens)
+        },
+        osu.osuUserId
+      );
+    }
+
+    if (discord.token.tokenIssuedAt >= now.getTime()) {
+      const newDiscordTokens = await mainDiscordOAuth.refreshAccessToken(
+        discord.token.refreshToken
+      );
+      await userService.updateDiscordUser(
+        db,
+        {
+          token: authenticationService.transformArcticToken(newDiscordTokens)
+        },
+        discord.discordUserId
+      );
+    }
   }
 
   private transformBadge(badge: UserBadge) {
