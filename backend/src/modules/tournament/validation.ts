@@ -1,12 +1,14 @@
 import * as v from 'valibot';
 import { DraftOrderType, Tournament, TournamentType, WinCondition } from '$src/schema';
 import * as s from '$src/utils/validation';
+import type { InferInsertModel } from 'drizzle-orm';
 import type { MapInput, MapOutput } from '$src/types';
 
 abstract class Common {
-  static errMsg1 = 'Invalid team settings: Can\'t set team settings for a solo tournament' as const;
-  static errMsg2 = 'Invalid team settings: Must set team settings for a team-based tournament' as const;
-} 
+  static errMsg1 = "Invalid team settings: Can't set team settings for a solo tournament" as const;
+  static errMsg2 =
+    'Invalid team settings: Must set team settings for a team-based tournament' as const;
+}
 
 export abstract class TournamentValidation {
   public static Bws = v.record(
@@ -18,6 +20,8 @@ export abstract class TournamentValidation {
     name: v.pipe(v.string(), v.minLength(2), v.maxLength(50)),
     urlSlug: v.pipe(v.string(), v.minLength(2), v.maxLength(16), s.validUrlSlug()),
     acronym: v.pipe(v.string(), v.minLength(2), v.maxLength(8)),
+    description: v.optional(v.string()),
+    type: v.picklist(TournamentType.enumValues),
     rankRange: v.optional(
       v.nullable(
         v.pipe(
@@ -54,8 +58,28 @@ export abstract class TournamentValidation {
       type: v.picklist(TournamentType.enumValues),
       hostUserId: s.integerId()
     }),
-    v.check((i) => !(i.type === 'solo' && i.teamSize !== undefined), Common.errMsg1),
-    v.check((i) => i.type === 'solo' || i.teamSize !== undefined || i.teamSize === null, Common.errMsg2)
+
+    v.check((i) => {
+      if (i.type === 'solo') {
+        return i.teamSize === undefined;
+      }
+      return true;
+    }, Common.errMsg1),
+    v.check((i) => {
+      if (i.type !== 'solo') {
+        return i.teamSize !== undefined && i.teamSize !== null;
+      }
+      return true;
+    }, Common.errMsg2),
+    v.transform((i) => {
+      return {
+        ...i,
+        upperRankRange: i.rankRange?.upper,
+        lowerRankRange: i.rankRange?.lower,
+        minTeamSize: i.teamSize?.min,
+        maxTeamSize: i.teamSize?.max
+      } as InferInsertModel<typeof Tournament>;
+    })
   );
 
   public static UpdateTournamentRefereeSettings = v.partial(
@@ -140,11 +164,37 @@ export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
 
 class TournamentDynamicValidation {
-  public updateTournament(stored: Pick<typeof Tournament.$inferSelect, 'type' | 'publishedAt' | 'concludedAt' | 'playerRegsOpenedAt' | 'playerRegsClosedAt' | 'staffRegsOpenedAt' | 'staffRegsClosedAt'>) {
+  public updateTournament(
+    stored: Pick<
+      typeof Tournament.$inferSelect,
+      | 'type'
+      | 'publishedAt'
+      | 'concludedAt'
+      | 'playerRegsOpenedAt'
+      | 'playerRegsClosedAt'
+      | 'staffRegsOpenedAt'
+      | 'staffRegsClosedAt'
+    >
+  ) {
     return v.pipe(
       s.$assume<TournamentValidationOutput['UpdateTournament']>(),
-      v.check((i) => !(stored.type === 'solo' && (i.useTeamBanners !== undefined || i.teamSize !== undefined)), Common.errMsg1),
-      v.check((i) => stored.type !== 'solo' && i.teamSize === null, Common.errMsg2)
+      v.check((i) => {
+        if (stored.type === 'solo') {
+          return i.useTeamBanners === undefined && i.teamSize === undefined;
+        }
+        return true;
+      }, Common.errMsg1),
+      v.check((i) => {
+        if (stored.type !== 'solo') {
+          console.log(stored.type);
+          console.log(i.teamSize);
+          return !!i.teamSize;
+        }
+        return true;
+      }, Common.errMsg2),
+      v.transform((data) => {
+        return data;
+      })
     );
   }
 }

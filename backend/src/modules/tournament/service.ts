@@ -4,7 +4,7 @@ import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
-import { TournamentValidation } from './validation';
+import { tournamentDynamicValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
@@ -29,9 +29,9 @@ class TournamentService extends Service {
       type,
       teamSize: teamSettings
         ? {
-          min: teamSettings.minSize,
-          max: teamSettings.maxSize
-        }
+            min: teamSettings.minSize,
+            max: teamSettings.maxSize
+          }
         : undefined,
       useTeamBanners: teamSettings?.useBanners
     } as any);
@@ -39,28 +39,28 @@ class TournamentService extends Service {
 
   public async createTournament(
     db: DatabaseClient,
-    input: TournamentValidationInput['CreateTournament']
+    input: TournamentValidationOutput['CreateTournament']
   ) {
     const fn = this.createServiceFunction('Failed to create tournament');
-    const data = await fn.validate(TournamentValidation.CreateTournament, 'tournament', input);
+
     const tournament = await fn.handleDbQuery(
-      tournamentRepository.createTournament(db, data),
+      tournamentRepository.createTournament(db, input),
       this.handleTournamentCreationError(
         {
-          name: data.name,
-          urlSlug: data.urlSlug
+          name: input.name,
+          urlSlug: input.urlSlug
         },
         fn.errorMessage
       )
     );
     await fn.handleSearchQuery(
       tournamentRepository.syncTournament({
-        acronym: data.acronym,
+        acronym: input.acronym,
         deletedAt: null,
         id: tournament.id,
-        name: data.name,
+        name: input.name,
         publishedAt: null,
-        urlSlug: data.urlSlug
+        urlSlug: input.urlSlug
       })
     );
     return tournament;
@@ -68,7 +68,7 @@ class TournamentService extends Service {
 
   public async updateTournament(
     db: DatabaseClient,
-    input: TournamentValidationInput['UpdateTournament'],
+    input: TournamentValidationOutput['UpdateTournament'],
     payload: {
       tournamentId: number;
       userId: number;
@@ -77,10 +77,11 @@ class TournamentService extends Service {
     const { tournamentId, userId } = payload;
 
     const fn = this.createServiceFunction('Failed to update tournament');
-    const data = await fn.validate(TournamentValidation.UpdateTournament, 'tournament', input);
 
     const existingTournament = await tournamentRepository.getTournament(db, tournamentId, {
-      id: true,
+      type: true,
+      publishedAt: true,
+      concludedAt: true,
       playerRegsOpenedAt: true,
       playerRegsClosedAt: true,
       staffRegsOpenedAt: true,
@@ -100,11 +101,19 @@ class TournamentService extends Service {
       });
     }
 
-    if (data.schedule) {
-      this.checkTournamentDates(existingTournament, data.schedule);
+    const _data = await fn.validate(
+      tournamentDynamicValidation.updateTournament(existingTournament),
+      'tournament',
+      input
+    );
+
+    console.log(_data);
+
+    if (input.schedule) {
+      this.checkTournamentDates(existingTournament, input.schedule);
     }
 
-    await fn.handleDbQuery(tournamentRepository.updateTournament(db, data, tournamentId));
+    await fn.handleDbQuery(tournamentRepository.updateTournament(db, _data, tournamentId));
   }
 
   public async delegateHost(db: DatabaseClient, tournamentId: number, hostId: number) {
@@ -145,7 +154,12 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.changeTournamentHost(db, hostId, tournamentId));
   }
 
-  public async deleteTournament(db: DatabaseClient, tournamentId: number, userId: number, deleteInstantly = false) {
+  public async deleteTournament(
+    db: DatabaseClient,
+    tournamentId: number,
+    userId: number,
+    deleteInstantly = false
+  ) {
     const fn = this.createServiceFunction('Failed to delete tournament');
     const tournament = await tournamentRepository.getTournament(db, tournamentId, {
       id: true,
@@ -164,7 +178,9 @@ class TournamentService extends Service {
       });
     }
 
-    const deleteAt = deleteInstantly ? undefined : new Date(new Date().setHours(new Date().getHours() + 24));
+    const deleteAt = deleteInstantly
+      ? undefined
+      : new Date(new Date().setHours(new Date().getHours() + 24));
 
     await fn.handleDbQuery(tournamentRepository.softDeleteTournament(db, tournamentId, deleteAt));
   }

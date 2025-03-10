@@ -36,12 +36,13 @@ const tournamentRouter = new Hono()
         tournamentId: s.stringToInteger()
       })
     ),
+    vValidator('json', TournamentValidation.UpdateTournament),
     async (c) => {
-      const { tournamentId } = c.req.param();
-      const body = await c.req.json();
+      const { tournamentId } = c.req.valid('param');
+      const body = c.req.valid('json');
 
       await tournamentService.updateTournament(db, body, {
-        tournamentId: parseInt(tournamentId),
+        tournamentId,
         userId: c.get('user').id
       });
 

@@ -4,7 +4,7 @@ import { Tournament } from '$src/schema';
 import { meilisearch } from '$src/singletons/meilisearch.ts';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient, MeilisearchTournamentIndex, Selection } from '$src/types';
-import type { TournamentValidation } from './validation';
+import type { TournamentValidation, TournamentValidationOutput } from './validation';
 
 class TournamentRepository {
   public async getTournament<T extends Selection<typeof Tournament>>(
@@ -37,10 +37,16 @@ class TournamentRepository {
 
   public async updateTournament(
     db: DatabaseClient,
-    tournament: v.InferOutput<(typeof TournamentValidation)['UpdateTournament']>,
+    tournament: TournamentValidationOutput['UpdateTournament'],
     tournamentId: number
   ) {
-    return db.update(Tournament).set(tournament).where(eq(Tournament.id, tournamentId));
+    return db
+      .update(Tournament)
+      .set({
+        ...tournament,
+        updatedAt: sql`now()`
+      })
+      .where(eq(Tournament.id, tournamentId));
   }
 
   public async changeTournamentHost(
