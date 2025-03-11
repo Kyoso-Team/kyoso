@@ -60,11 +60,7 @@ export abstract class TournamentValidation {
     }),
     v.check((i) => {
       if (i.isOpenRank) {
-        return (
-          i.rankRange === null ||
-          i.rankRange === undefined ||
-          Object.values(i.rankRange).every((val) => val === null)
-        );
+        return !i.rankRange || Object.values(i.rankRange).every((val) => val === null);
       }
       return true;
     }, 'Cannot set rank range for an open rank tournament'),
