@@ -130,7 +130,10 @@ export abstract class TournamentValidation {
             return true;
           }, 'Invalid date range: Expected the start date to be set if the end date is set'),
           v.check((i) => {
-            return !i.start === !i.end || (!!i.start && !!i.end && i.start <= i.end);
+            if (i.start && i.end) {
+              return i.start <= i.end;
+            }
+            return true;
           }, 'Invalid date range: Expected the start date to be before the end date'),
           v.check((i) => {
             const now = new Date();
@@ -142,14 +145,18 @@ export abstract class TournamentValidation {
         )
       )
     ),
-    v.check(
-      (i) => !i.tournament?.start && (!!i.playerRegs || !!i.staffRegs),
-      'Invalid date range: Expected the tournament publish date to be set if player or staff registration dates are also set'
-    ),
-    v.check(
-      (i) => !!i.tournament?.end && (!i.playerRegs || !i.staffRegs),
-      'Invalid date range: Expected the tournament player and staff registration dates to be set if the conclusion date is also set'
-    ),
+    v.check((i) => {
+      if (i.playerRegs || i.staffRegs) {
+        return !!i.tournament?.start;
+      }
+      return true;
+    }, 'Invalid date range: Expected the tournament publish date to be set if player or staff registration dates are also set'),
+    v.check((i) => {
+      if (i.tournament && i.tournament.end) {
+        return !!i.playerRegs && !!i.staffRegs;
+      }
+      return true;
+    }, 'Invalid date range: Expected the tournament player and staff registration dates to be set if the conclusion date is also set'),
     v.transform((i) => ({
       publishedAt: i.tournament?.start ?? null,
       playerRegsOpenedAt: i.playerRegs?.start ?? null,
@@ -177,8 +184,27 @@ export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
 
 class TournamentDynamicValidation {
-  public updateTournament() {
-    return v.pipe(s.$assume<TournamentValidationOutput['UpdateTournament']>());
+  public updateTournament(
+    stored: Pick<
+      typeof Tournament.$inferSelect,
+      | 'publishedAt'
+      | 'concludedAt'
+      | 'playerRegsOpenedAt'
+      | 'playerRegsClosedAt'
+      | 'staffRegsOpenedAt'
+      | 'staffRegsClosedAt'
+    >
+  ) {
+    return v.pipe(
+      s.$assume<TournamentValidationOutput['UpdateTournament']>(),
+      v.check(() => {
+        const now = new Date();
+
+        const dates = Object.values(stored).filter((date) => date !== null);
+
+        return !dates.some((date) => date < now);
+      }, 'Cannot update expired dates')
+    );
   }
 }
 

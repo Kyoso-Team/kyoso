@@ -4,10 +4,23 @@ import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
+import { tournamentDynamicValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
 class TournamentService extends Service {
+  private HOST_RESTRICTED_FIELDS: Set<keyof TournamentValidationOutput['UpdateTournament']> =
+    new Set([
+      'name',
+      'urlSlug',
+      'acronym',
+      'description',
+      'teamSize',
+      'useTeamBanners',
+      'rankRange',
+      'bws'
+    ]);
+
   public async createDummyTournament(
     db: DatabaseClient,
     n: number,
@@ -75,17 +88,14 @@ class TournamentService extends Service {
   ) {
     const { tournamentId, userId } = payload;
 
-    const fn = this.createServiceFunction('Failed to update tournament');
-
     const existingTournament = await tournamentRepository.getTournament(db, tournamentId, {
-      type: true,
-      publishedAt: true,
-      concludedAt: true,
-      playerRegsOpenedAt: true,
+      hostUserId: true,
       playerRegsClosedAt: true,
-      staffRegsOpenedAt: true,
+      playerRegsOpenedAt: true,
       staffRegsClosedAt: true,
-      hostUserId: true
+      staffRegsOpenedAt: true,
+      concludedAt: true,
+      publishedAt: true
     });
 
     if (!existingTournament) {
@@ -94,15 +104,13 @@ class TournamentService extends Service {
       });
     }
 
-    if (userId !== existingTournament.hostUserId) {
-      throw new HTTPException(403, {
-        message: 'Only host can update the tournament'
-      });
-    }
+    const fn = this.createServiceFunction('Failed to update tournament');
 
-    if (input.schedule) {
-      this.checkTournamentDates(existingTournament, input.schedule);
-    }
+    const { hostUserId, ...dates } = existingTournament;
+
+    this.validateTournamentUpdateFields(input, userId, hostUserId);
+
+    await fn.validate(tournamentDynamicValidation.updateTournament(dates), 'tournament', input);
 
     await fn.handleDbQuery(tournamentRepository.updateTournament(db, input, tournamentId));
   }
@@ -176,17 +184,6 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.softDeleteTournament(db, tournamentId, deleteAt));
   }
 
-  private checkTournamentDates(
-    tournamentDates: Pick<
-      typeof Tournament.$inferSelect,
-      'playerRegsOpenedAt' | 'staffRegsClosedAt' | 'playerRegsClosedAt' | 'staffRegsOpenedAt'
-    >,
-    newDates: TournamentValidationOutput['UpdateTournamentSchedule']
-  ) {
-    //TODO: implement date validation logic
-    return true;
-  }
-
   private handleTournamentCreationError(
     tournament: { name: string; urlSlug: string },
     descriptionIfUnknownError: string
@@ -207,6 +204,24 @@ class TournamentService extends Service {
       unknownError(descriptionIfUnknownError)(err);
       return undefined as never;
     };
+  }
+
+  private validateTournamentUpdateFields(
+    input: TournamentValidationOutput['UpdateTournament'],
+    userId: number,
+    hostUserId: number | null
+  ) {
+    const updatedFields = new Set(
+      Object.keys(input) as (keyof TournamentValidationOutput['UpdateTournament'])[]
+    );
+
+    const hasRestrictedFields = updatedFields.intersection(this.HOST_RESTRICTED_FIELDS).size !== 0;
+
+    if (hasRestrictedFields && userId !== hostUserId) {
+      throw new HTTPException(403, {
+        message: 'Input contains fields restricted to hosts'
+      });
+    }
   }
 }
 

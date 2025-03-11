@@ -44,6 +44,11 @@ class TournamentRepository {
       .update(Tournament)
       .set({
         ...tournament,
+        ...tournament.schedule,
+        lowerRankRange: tournament.rankRange?.lower,
+        upperRankRange: tournament.rankRange?.upper,
+        minTeamSize: tournament.teamSize?.min,
+        maxTeamSize: tournament.teamSize?.max,
         updatedAt: sql`now()`
       })
       .where(eq(Tournament.id, tournamentId));
@@ -51,7 +56,7 @@ class TournamentRepository {
 
   public async changeTournamentHost(
     db: DatabaseClient,
-    hostUserId: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>['hostUserId'],
+    hostUserId: TournamentValidationOutput['CreateTournament']['hostUserId'],
     tournamentId: number
   ) {
     return db.update(Tournament).set({ hostUserId }).where(eq(Tournament.id, tournamentId));
