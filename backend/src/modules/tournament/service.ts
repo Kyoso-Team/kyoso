@@ -189,15 +189,15 @@ class TournamentService extends Service {
     descriptionIfUnknownError: string
   ) {
     return (err: unknown): never => {
-      if (isUniqueConstraintViolationError(err, [Tournament.name])) {
-        throw new HTTPException(409, {
-          message: `Tournament with name ${tournament.name} already exists`
-        });
-      }
-
       if (isUniqueConstraintViolationError(err, [Tournament.urlSlug])) {
         throw new HTTPException(409, {
           message: `Tournament with URL slug ${tournament.urlSlug} already exists`
+        });
+      }
+
+      if (isUniqueConstraintViolationError(err, [Tournament.name])) {
+        throw new HTTPException(409, {
+          message: `Tournament with name ${tournament.name} already exists`
         });
       }
 
