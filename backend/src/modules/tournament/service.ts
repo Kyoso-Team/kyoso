@@ -115,8 +115,18 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.updateTournament(db, input, tournamentId));
   }
 
-  public async delegateHost(db: DatabaseClient, tournamentId: number, hostId: number) {
+  public async delegateHost(
+    db: DatabaseClient,
+    data: {
+      oldHostUserId: number;
+      newHostUserId: number;
+      tournamentId: number;
+    }
+  ) {
     const fn = this.createServiceFunction('Failed to delegate host');
+
+    const { oldHostUserId, newHostUserId, tournamentId } = data;
+
     const tournament = await tournamentRepository.getTournament(db, tournamentId, {
       id: true,
       hostUserId: true
@@ -128,13 +138,19 @@ class TournamentService extends Service {
       });
     }
 
-    if (tournament.hostUserId === hostId) {
+    if (tournament.hostUserId !== oldHostUserId) {
       throw new HTTPException(400, {
-        message: 'Cannot assign the same host'
+        message: 'Only the host can delegate to another host'
       });
     }
 
-    const newHost = await userRepository.getUser(db, hostId, {
+    if (oldHostUserId === newHostUserId) {
+      throw new HTTPException(400, {
+        message: 'Cannot delegate host to the same user'
+      });
+    }
+
+    const newHost = await userRepository.getUser(db, newHostUserId, {
       banned: true
     });
 
@@ -146,11 +162,13 @@ class TournamentService extends Service {
 
     if (newHost.banned) {
       throw new HTTPException(400, {
-        message: 'Cannot delegate to a banned user'
+        message: 'Cannot delegate host to a banned user'
       });
     }
 
-    await fn.handleDbQuery(tournamentRepository.changeTournamentHost(db, hostId, tournamentId));
+    await fn.handleDbQuery(
+      tournamentRepository.changeTournamentHost(db, newHostUserId, tournamentId)
+    );
   }
 
   public async deleteTournament(

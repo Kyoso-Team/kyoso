@@ -52,19 +52,29 @@ const tournamentRouter = new Hono()
     }
   )
   .patch(
-    'delegate_host',
+    '/:tournamentId/delegate_host',
     sessionMiddleware(),
+    vValidator(
+      'param',
+      v.object({
+        tournamentId: s.stringToInteger()
+      })
+    ),
     vValidator(
       'json',
       v.object({
-        tournamentId: s.integerId(),
-        hostId: s.integerId()
+        newHostUserId: s.integerId()
       })
     ),
     async (c) => {
+      const { tournamentId } = c.req.valid('param');
       const body = c.req.valid('json');
 
-      await tournamentService.delegateHost(db, body.tournamentId, body.hostId);
+      await tournamentService.delegateHost(db, {
+        tournamentId,
+        newHostUserId: body.newHostUserId,
+        oldHostUserId: c.get('user').id
+      });
 
       return c.json({
         message: 'Host changed successfully'
