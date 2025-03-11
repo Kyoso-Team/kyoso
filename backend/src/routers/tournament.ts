@@ -29,7 +29,9 @@ const tournamentRouter = new Hono()
   )
   .patch(
     '/:tournamentId',
-    sessionMiddleware(),
+    sessionMiddleware({
+      approvedHost: true
+    }),
     vValidator(
       'param',
       v.object({
@@ -53,7 +55,9 @@ const tournamentRouter = new Hono()
   )
   .patch(
     '/:tournamentId/delegate_host',
-    sessionMiddleware(),
+    sessionMiddleware({
+      approvedHost: true
+    }),
     vValidator(
       'param',
       v.object({

@@ -151,7 +151,8 @@ class TournamentService extends Service {
     }
 
     const newHost = await userRepository.getUser(db, newHostUserId, {
-      banned: true
+      banned: true,
+      approvedHost: true
     });
 
     if (!newHost) {
@@ -163,6 +164,12 @@ class TournamentService extends Service {
     if (newHost.banned) {
       throw new HTTPException(400, {
         message: 'Cannot delegate host to a banned user'
+      });
+    }
+
+    if (!newHost.approvedHost) {
+      throw new HTTPException(400, {
+        message: 'Cannot delegate host to a non-approved host'
       });
     }
 
