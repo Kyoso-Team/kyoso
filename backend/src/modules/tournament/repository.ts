@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { meilisearch } from '$src/singletons/meilisearch.ts';
@@ -51,7 +51,15 @@ class TournamentRepository {
         maxTeamSize: tournament.teamSize?.max,
         updatedAt: sql`now()`
       })
-      .where(eq(Tournament.id, tournamentId));
+      .where(
+        and(
+          eq(Tournament.id, tournamentId),
+          or(
+            isNull(Tournament.deletedAt),
+            and(isNotNull(Tournament.deletedAt), lt(Tournament.deletedAt, sql`now()`))
+          )
+        )
+      );
   }
 
   public async changeTournamentHost(
