@@ -4,7 +4,6 @@ import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
-import { tournamentDynamicValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
@@ -101,19 +100,11 @@ class TournamentService extends Service {
       });
     }
 
-    const _data = await fn.validate(
-      tournamentDynamicValidation.updateTournament(existingTournament),
-      'tournament',
-      input
-    );
-
-    console.log(_data);
-
     if (input.schedule) {
       this.checkTournamentDates(existingTournament, input.schedule);
     }
 
-    await fn.handleDbQuery(tournamentRepository.updateTournament(db, _data, tournamentId));
+    await fn.handleDbQuery(tournamentRepository.updateTournament(db, input, tournamentId));
   }
 
   public async delegateHost(db: DatabaseClient, tournamentId: number, hostId: number) {

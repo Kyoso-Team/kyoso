@@ -21,7 +21,6 @@ export abstract class TournamentValidation {
     urlSlug: v.pipe(v.string(), v.minLength(2), v.maxLength(16), s.validUrlSlug()),
     acronym: v.pipe(v.string(), v.minLength(2), v.maxLength(8)),
     description: v.optional(v.string()),
-    type: v.picklist(TournamentType.enumValues),
     rankRange: v.optional(
       v.nullable(
         v.pipe(
@@ -55,10 +54,20 @@ export abstract class TournamentValidation {
   public static CreateTournament = v.pipe(
     v.object({
       ...this.BaseMutateTournament.entries,
+      isOpenRank: v.boolean(),
       type: v.picklist(TournamentType.enumValues),
       hostUserId: s.integerId()
     }),
-
+    v.check((i) => {
+      if (i.isOpenRank) {
+        return (
+          i.rankRange === null ||
+          i.rankRange === undefined ||
+          Object.values(i.rankRange).every((val) => val === null)
+        );
+      }
+      return true;
+    }, 'Cannot set rank range for an open rank tournament'),
     v.check((i) => {
       if (i.type === 'solo') {
         return i.teamSize === undefined;
@@ -118,14 +127,22 @@ export abstract class TournamentValidation {
       v.optional(
         v.pipe(
           v.record(v.union([v.literal('start'), v.literal('end')]), v.optional(s.dateOrString())),
-          v.check(
-            (i) => !i.start && !!i.end,
-            'Invalid date range: Expected the start date to be set if the end date is set'
-          ),
-          v.check(
-            (i) => !i.start === !i.end || (!!i.start && !!i.end && i.start <= i.end),
-            'Invalid date range: Expected the start date to be before the end date'
-          )
+          v.check((i) => {
+            if (i.end) {
+              return !!i.start;
+            }
+            return true;
+          }, 'Invalid date range: Expected the start date to be set if the end date is set'),
+          v.check((i) => {
+            return !i.start === !i.end || (!!i.start && !!i.end && i.start <= i.end);
+          }, 'Invalid date range: Expected the start date to be before the end date'),
+          v.check((i) => {
+            const now = new Date();
+
+            return !Object.values(i)
+              .filter((value) => value !== null)
+              .some((date) => date < now);
+          }, 'Invalid date range: Expected all dates to be in the future')
         )
       )
     ),
@@ -164,38 +181,8 @@ export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
 
 class TournamentDynamicValidation {
-  public updateTournament(
-    stored: Pick<
-      typeof Tournament.$inferSelect,
-      | 'type'
-      | 'publishedAt'
-      | 'concludedAt'
-      | 'playerRegsOpenedAt'
-      | 'playerRegsClosedAt'
-      | 'staffRegsOpenedAt'
-      | 'staffRegsClosedAt'
-    >
-  ) {
-    return v.pipe(
-      s.$assume<TournamentValidationOutput['UpdateTournament']>(),
-      v.check((i) => {
-        if (stored.type === 'solo') {
-          return i.useTeamBanners === undefined && i.teamSize === undefined;
-        }
-        return true;
-      }, Common.errMsg1),
-      v.check((i) => {
-        if (stored.type !== 'solo') {
-          console.log(stored.type);
-          console.log(i.teamSize);
-          return !!i.teamSize;
-        }
-        return true;
-      }, Common.errMsg2),
-      v.transform((data) => {
-        return data;
-      })
-    );
+  public updateTournament() {
+    return v.pipe(s.$assume<TournamentValidationOutput['UpdateTournament']>());
   }
 }
 
