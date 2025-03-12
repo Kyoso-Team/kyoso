@@ -1,7 +1,13 @@
-import * as v from 'valibot';
+import { Service } from '$src/utils/service';
 import { {$1}Repository } from './repository';
-import { {$2}Validation } from './validation';
+import type { DatabaseClient } from '$src/types';
+import type { {$2}ValidationInput, {$3}ValidationOutput } from './validation';
 
+class {$4}Service extends Service {
+    public async myFunction(db: DatabaseClient) {
+        const fn = this.createServiceFunction('My function');
+        return {$5}Repository.myFunction(db);
+    }
+}
 
-
-export const {$3}Service = {  };
+export const {$6}Service = new {$7}Service();
