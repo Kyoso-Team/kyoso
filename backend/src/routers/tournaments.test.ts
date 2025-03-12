@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { gte } from 'drizzle-orm';
 import { databaseRepository } from '$src/modules/database/repository';
+import { tournamentService } from '$src/modules/tournament/service';
 import { userService } from '$src/modules/user/service';
 import { Tournament } from '$src/schema';
 import { db } from '$src/singletons';
 import { api, loginAs } from '$src/tests';
-import { tournamentService } from '$src/modules/tournament/service';
 
 describe('post /tournament', () => {
   beforeAll(async () => {
@@ -30,6 +30,7 @@ describe('post /tournament', () => {
       json: {
         name: 'test',
         urlSlug: 'test',
+        isOpenRank: false,
         type: 'solo',
         acronym: 'test'
       }
@@ -44,6 +45,7 @@ describe('post /tournament', () => {
       json: {
         name: 'Tournament 1',
         urlSlug: 'test',
+        isOpenRank: false,
         type: 'solo',
         acronym: 'test'
       }
@@ -58,6 +60,7 @@ describe('post /tournament', () => {
       json: {
         name: 'test',
         urlSlug: 't1',
+        isOpenRank: false,
         type: 'solo',
         acronym: 'test'
       }
@@ -71,7 +74,11 @@ describe('post /tournament', () => {
       json: {
         name: 'test',
         urlSlug: 'test',
-        type: 'solo',
+        type: 'teams',
+        teamSize: {
+          min: 2,
+          max: 4
+        },
         acronym: 'test'
       }
     });
@@ -96,45 +103,32 @@ describe('patch /tournament', () => {
 
   it.todo('duplicate url slug');
 
-  it.todo(
-    "can't udpate 'publishedAt' or 'type' after tournament's published"
-  );
+  it.todo("can't update 'publishedAt' or 'type' after tournament's published");
 
-  it.todo(
-    "can't udpate 'playerRegsOpenedAt' after tournament's player regs. have opened"
-  );
+  it.todo("can't update 'playerRegsOpenedAt' after tournament's player regs. have opened");
 
   it.todo(
     "can't udpate 'bws', 'lowerRankRange', 'upperRankRange', 'minTeamSize', 'maxTeamSize', 'useTeamBanners' or 'playerRegsClosedAt' after tournament's player regs. have closed"
   );
 
-  it.todo(
-    "can't udpate 'staffRegsOpenedAt' after tournament's staff regs. have opened"
-  );
+  it.todo("can't update 'staffRegsOpenedAt' after tournament's staff regs. have opened");
+
+  it.todo("can't update 'staffRegsClosedAt' after tournament's staff regs. have closed");
 
   it.todo(
-    "can't udpate 'staffRegsClosedAt' after tournament's staff regs. have closed"
+    "can't update 'minTeamSize', 'maxTeamSize' or 'useTeamBanners' if it's a solo tournament"
   );
 
-  it.todo(
-    "can't udpate 'minTeamSize', 'maxTeamSize' or 'useTeamBanners' if it's a solo tournament"
-  );
+  it.todo("can't set a tournament date in the past");
 
-  it.todo(
-    "can't set a tournament date in the past"
-  );
+  it.todo("can't set a tournament date to a date before the one already set");
 
-  it.todo(
-    "can't set a tournament date to a date before the one already set"
-  );
+  it.todo("team-based tournament can't unset team settings");
 
-  it.todo('team-based tournament can\'t unset team settings');
-
-  it.todo('solo tournament can\'t set team settings');
+  it.todo("solo tournament can't set team settings");
 
   it.todo('update tournament');
 });
-
 
 describe('put /tournament/change/type', () => {
   it.todo("not the tournament's host");
