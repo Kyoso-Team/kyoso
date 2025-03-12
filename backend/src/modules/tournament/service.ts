@@ -4,23 +4,11 @@ import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
-import { tournamentDynamicValidation } from './validation';
+import { tournamentDynamicValidation, TournamentValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
 class TournamentService extends Service {
-  private HOST_RESTRICTED_FIELDS: Set<keyof TournamentValidationOutput['UpdateTournament']> =
-    new Set([
-      'name',
-      'urlSlug',
-      'acronym',
-      'description',
-      'teamSize',
-      'useTeamBanners',
-      'rankRange',
-      'bws'
-    ]);
-
   public async createDummyTournament(
     db: DatabaseClient,
     n: number,
@@ -240,7 +228,8 @@ class TournamentService extends Service {
       Object.keys(input) as (keyof TournamentValidationOutput['UpdateTournament'])[]
     );
 
-    const hasRestrictedFields = updatedFields.intersection(this.HOST_RESTRICTED_FIELDS).size !== 0;
+    const hasRestrictedFields =
+      updatedFields.intersection(TournamentValidation.HOST_RESTRICTED_FIELDS).size !== 0;
 
     if (hasRestrictedFields && userId !== hostUserId) {
       throw new HTTPException(403, {

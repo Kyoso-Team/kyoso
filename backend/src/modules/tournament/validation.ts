@@ -11,6 +11,18 @@ abstract class Common {
 }
 
 export abstract class TournamentValidation {
+  public static HOST_RESTRICTED_FIELDS: Set<keyof TournamentValidationOutput['UpdateTournament']> =
+    new Set([
+      'name',
+      'urlSlug',
+      'acronym',
+      'description',
+      'teamSize',
+      'useTeamBanners',
+      'rankRange',
+      'bws'
+    ]);
+
   public static Bws = v.record(
     v.union([v.literal('x'), v.literal('y'), v.literal('z')]),
     v.pipe(v.number(), v.notValue(0), v.minValue(-10), v.maxValue(10))
@@ -184,6 +196,10 @@ export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
 
 class TournamentDynamicValidation {
+  private DISALLOW_UPDATE_AFTER_START_DATE = new Set<
+    keyof TournamentValidationOutput['UpdateTournament']
+  >(['teamSize', 'useTeamBanners', 'rankRange', 'bws']);
+
   public updateTournament(
     stored: Pick<
       typeof Tournament.$inferSelect,
@@ -197,13 +213,31 @@ class TournamentDynamicValidation {
   ) {
     return v.pipe(
       s.$assume<TournamentValidationOutput['UpdateTournament']>(),
-      v.check(() => {
-        const now = new Date();
+      v.check((i) => {
+        if (i.schedule) {
+          const now = new Date();
 
-        const dates = Object.values(stored).filter((date) => date !== null);
+          const dates = Object.values(stored).filter((date) => date !== null);
 
-        return !dates.some((date) => date < now);
-      }, 'Cannot update expired dates')
+          return !dates.some((date) => date < now);
+        }
+        return true;
+      }, 'Cannot update expired dates'),
+      v.check((i) => {
+        if (!stored.playerRegsOpenedAt) {
+          return true;
+        }
+
+        const updatedFields = new Set(
+          Object.keys(i) as (keyof TournamentValidationOutput['UpdateTournament'])[]
+        );
+
+        if (updatedFields.intersection(this.DISALLOW_UPDATE_AFTER_START_DATE).size > 0) {
+          return new Date() < stored.playerRegsOpenedAt;
+        }
+
+        return true;
+      }, 'Cannot update team settings, rank range and BWS after player registrations opened')
     );
   }
 }
