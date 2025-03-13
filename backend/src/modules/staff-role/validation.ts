@@ -32,9 +32,16 @@ export abstract class StaffRoleValidation {
     tournamentId: s.integerId()
   });
 
-  public static UpdateStaffRole = v.object({
-    ...this.BaseMutateStaffRole.entries,
-    permissions: v.array(v.picklist(StaffPermission.enumValues))
+  public static UpdateStaffRole = v.partial(
+    v.object({
+      ...this.BaseMutateStaffRole.entries,
+      permissions: v.array(v.picklist(StaffPermission.enumValues))
+    })
+  );
+
+  public static SwapStaffRoles = v.object({
+    tournamentId: s.integerId(),
+    targetStaffRoleId: s.integerId()
   });
 }
 

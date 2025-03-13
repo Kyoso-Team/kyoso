@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient, Selection } from '$src/types';
@@ -15,6 +15,18 @@ class StaffRoleRepository {
       .from(StaffRole)
       .where(eq(StaffRole.id, staffRoleId))
       .then((rows) => rows[0]);
+  }
+
+  public async getStaffRoles<T extends Selection<typeof StaffRole>>(
+    db: DatabaseClient,
+    staffRoleIds: number[],
+    select: T
+  ) {
+    return db
+      .select(pick(StaffRole, select))
+      .from(StaffRole)
+      .where(and(inArray(StaffRole.id, staffRoleIds)))
+      .then((rows) => rows);
   }
 
   public async createStaffRole(
@@ -44,8 +56,24 @@ class StaffRoleRepository {
     return db.update(StaffRole).set(staffRole).where(eq(StaffRole.id, staffRoleId));
   }
 
+  public async deleteStaffRole<T extends Selection<typeof StaffRole>>(
+    db: DatabaseClient,
+    staffRoleId: number,
+    returning: T
+  ) {
+    return db
+      .delete(StaffRole)
+      .where(eq(StaffRole.id, staffRoleId))
+      .returning(pick(StaffRole, returning))
+      .then((rows) => rows[0]);
+  }
+
   public async getStaffRoleCount(db: DatabaseClient, tournamentId: number) {
     return db.$count(StaffRole, eq(StaffRole.tournamentId, tournamentId));
+  }
+
+  public async updateStaffRoleOrder(db: DatabaseClient, staffRoleId: number, order: number) {
+    return await db.update(StaffRole).set({ order }).where(eq(StaffRole.id, staffRoleId));
   }
 }
 
