@@ -25,7 +25,7 @@
     <button
       role="checkbox"
       aria-checked={value}
-      class={`input-checkbox${field.canDiplayError && field.error ? ' input-error' : ''}`}
+      class="input-checkbox{field.canDiplayError && field.error ? ' input-error' : ''}"
       onclick={toggle}
       disabled={field.isDisabled}
     >
@@ -56,7 +56,7 @@
     </legend>
     {#if field.preview}
       <span
-        class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}
+        class="input-preview{field.canDiplayError && field.error ? ' input-preview-error' : ''}"
       >
         <Render el={field.preview} />
       </span>
