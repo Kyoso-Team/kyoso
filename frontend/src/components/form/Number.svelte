@@ -32,9 +32,7 @@
     bind:value
   />
   {#if field.preview}
-    <span
-      class="input-preview{field.canDiplayError && field.error ? ' input-preview-error' : ''}"
-    >
+    <span class="input-preview{field.canDiplayError && field.error ? ' input-preview-error' : ''}">
       <Render el={field.preview} />
     </span>
   {/if}

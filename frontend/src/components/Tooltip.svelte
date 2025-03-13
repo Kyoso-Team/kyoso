@@ -24,12 +24,24 @@
 -->
 
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-	import * as tooltip from '@zag-js/tooltip';
-	import { useMachine, normalizeProps, mergeProps } from '@zag-js/svelte';
+  import { mergeProps, normalizeProps, useMachine } from '@zag-js/svelte';
+  import * as tooltip from '@zag-js/tooltip';
+  import { fade } from 'svelte/transition';
   import type { Snippet } from 'svelte';
 
-  interface TooltipProps extends Omit<tooltip.Props, 'id' | 'open' | 'onOpenChange' | 'openDelay' | 'closeDelay' | 'closeOnPointerDown' | 'closeOnScroll' | 'closeOnClick' | 'closeOnEscape'> {
+  interface TooltipProps
+    extends Omit<
+      tooltip.Props,
+      | 'id'
+      | 'open'
+      | 'onOpenChange'
+      | 'openDelay'
+      | 'closeDelay'
+      | 'closeOnPointerDown'
+      | 'closeOnScroll'
+      | 'closeOnClick'
+      | 'closeOnEscape'
+    > {
     position?: 'top' | 'right' | 'bottom' | 'left';
     /** Provide arbitrary classes for the root element. */
     class?: string;
@@ -47,29 +59,28 @@
     onclick?: () => void;
   }
 
-	const {
-		// Base
+  const {
+    // Base
     position = 'top',
-		class: classes = '',
-		triggerAriaLabel = '',
-		// Snippets
-		children,
-		tip,
-		// Events
-		onmouseover,
-		onclick,
-		// Zag ---
-		...zagProps
-	}: TooltipProps = $props();
+    class: classes = '',
+    triggerAriaLabel = '',
+    // Snippets
+    children,
+    tip,
+    // Events
+    onmouseover,
+    onclick,
+    // Zag ---
+    ...zagProps
+  }: TooltipProps = $props();
 
-
-	let open = $state(false);
-	const id = [...Array(8)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-	const service = useMachine(tooltip.machine, () => ({
-		...zagProps,
+  let open = $state(false);
+  const id = [...Array(8)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+  const service = useMachine(tooltip.machine, () => ({
+    ...zagProps,
     open,
     onOpenChange: (e) => (open = e.open),
-		id: id,
+    id: id,
     openDelay: 0,
     closeDelay: 0,
     closeOnPointerDown: false,
@@ -80,36 +91,42 @@
       ...zagProps.positioning,
       placement: position
     }
-	}));
-	const api = $derived(tooltip.connect(service, normalizeProps));
-	const triggerProps = $derived(mergeProps(api.getTriggerProps(), { onmouseover, onclick }));
+  }));
+  const api = $derived(tooltip.connect(service, normalizeProps));
+  const triggerProps = $derived(mergeProps(api.getTriggerProps(), { onmouseover, onclick }));
 </script>
 
 <span class="block {classes}" data-testid="tooltip">
-	<!-- Snippet: Trigger -->
-	{#if children}
-		<button {...triggerProps} type="button" aria-label={triggerAriaLabel}>
-			{@render children()}
-		</button>
-	{/if}
-	<!-- Tooltip Content -->
-	{#if api.open}
-		<div {...api.getPositionerProps()} transition:fade={{ duration: 100 }} class="!top-[2px]">
-			<!-- Arrow -->
+  <!-- Snippet: Trigger -->
+  {#if children}
+    <button {...triggerProps} type="button" aria-label={triggerAriaLabel}>
+      {@render children()}
+    </button>
+  {/if}
+  <!-- Tooltip Content -->
+  {#if api.open}
+    <div {...api.getPositionerProps()} transition:fade={{ duration: 100 }} class="!top-[2px]">
+      <!-- Arrow -->
       <div {...api.getArrowProps()}>
-        <div {...api.getArrowTipProps()} class="dark:!bg-zinc-900 bg-zinc-100 border dark:border-zinc-700 border-zinc-300 border-b-0 border-r-0 !w-2 !h-2 !top-[1px]"></div>
+        <div
+          {...api.getArrowTipProps()}
+          class="!top-[1px] !h-2 !w-2 border border-b-0 border-r-0 border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:!bg-zinc-900"
+        ></div>
       </div>
-			<!-- Snippet Content -->
-			<div {...api.getContentProps()} class="dark:bg-zinc-900 bg-zinc-100  border dark:border-zinc-700 border-zinc-300 dark:text-white text-black block px-3 py-1 text-sm  duration-150 rounded-md">
-				{@render tip?.()}
-			</div>
-		</div>
-	{/if}
+      <!-- Snippet Content -->
+      <div
+        {...api.getContentProps()}
+        class="block rounded-md border border-zinc-300 bg-zinc-100 px-3 py-1 text-sm text-black duration-150 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+      >
+        {@render tip?.()}
+      </div>
+    </div>
+  {/if}
 </span>
 
 <style>
-	:global([data-part='arrow']) {
-		--arrow-size: 10px;
-		--arrow-background: white;
-	}
+  :global([data-part='arrow']) {
+    --arrow-size: 10px;
+    --arrow-background: white;
+  }
 </style>
