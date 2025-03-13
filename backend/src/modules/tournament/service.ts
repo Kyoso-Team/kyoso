@@ -197,6 +197,26 @@ class TournamentService extends Service {
     await fn.handleDbQuery(tournamentRepository.softDeleteTournament(db, tournamentId, deleteAt));
   }
 
+  public async checkTournamentAvailability(db: DatabaseClient, tournamentId: number) {
+    const tournament = await tournamentRepository.getTournament(db, tournamentId, {
+      deletedAt: true,
+      concludedAt: true
+    });
+
+    if (!tournament) {
+      throw new HTTPException(404, {
+        message: 'Tournament does not exist'
+      });
+    }
+
+    const now = new Date();
+
+    const tournamentDeleted = tournament.deletedAt && tournament.deletedAt <= now;
+    const tournamentConcluded = tournament.concludedAt && tournament.concludedAt <= now;
+
+    return !(tournamentConcluded || tournamentDeleted);
+  }
+
   private handleTournamentCreationError(
     tournament: { name: string; urlSlug: string },
     descriptionIfUnknownError: string
