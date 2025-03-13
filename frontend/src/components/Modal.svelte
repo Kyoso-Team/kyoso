@@ -1,12 +1,19 @@
 <script lang="ts">
-    import { fadeUi } from '$lib/fade-ui.svelte';
-    import { focusTrap } from '$lib/focus-trap';
-    import type { MaybePromise } from '$lib/types';
-  import { onMount, type Snippet } from 'svelte';
-    import { portal } from 'svelte-portal';
-    import { fade } from 'svelte/transition';
+  import { fadeUi } from '$lib/fade-ui.svelte';
+  import { onMount } from 'svelte';
+  import { portal } from 'svelte-portal';
+  import { fade } from 'svelte/transition';
+  import { focusTrap } from '$lib/focus-trap';
+  import type { Snippet } from 'svelte';
+  import type { MaybePromise } from '$lib/types';
 
-  const { title, children, btnLabel = 'Ok', onBtnClick, unmount }: {
+  const {
+    title,
+    children,
+    btnLabel = 'Ok',
+    onBtnClick,
+    unmount
+  }: {
     title: string;
     children: Snippet;
     unmount: () => MaybePromise<void>;

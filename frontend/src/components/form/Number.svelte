@@ -26,15 +26,13 @@
   {/if}
   <input
     type="number"
-    class={`input${field.canDiplayError && field.error ? ' input-error' : ''}`}
+    class="input{field.canDiplayError && field.error ? ' input-error' : ''}"
     disabled={field.isDisabled}
     onblur={onBlur}
     bind:value
   />
   {#if field.preview}
-    <span
-      class={`input-preview${field.canDiplayError && field.error ? ' input-preview-error' : ''}`}
-    >
+    <span class="input-preview{field.canDiplayError && field.error ? ' input-preview-error' : ''}">
       <Render el={field.preview} />
     </span>
   {/if}

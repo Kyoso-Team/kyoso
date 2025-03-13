@@ -13,9 +13,9 @@ import {
   uuid,
   varchar
 } from 'drizzle-orm/pg-core';
+import { Tournament } from './tournaments';
 import { timestampConfig } from './utils';
 import type { AuthenticationValidationOutput } from '$src/modules/authentication/validation';
-import { Tournament } from './tournaments';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -146,11 +146,19 @@ export const Notification = pgTable('notification', {
   //roundId: integer().references(() => Round.id, { onDelete: 'set null' })
 });
 
-export const UserNotification = pgTable('user_notification', {
-  userId: integer().notNull().references(() => User.id, { onDelete: 'cascade' }),
-  notificationId: uuid().notNull().references(() => Notification.id, { onDelete: 'cascade' })
-}, (table) => [
-  primaryKey({
-    columns: [table.userId, table.notificationId]
-  })
-]);
+export const UserNotification = pgTable(
+  'user_notification',
+  {
+    userId: integer()
+      .notNull()
+      .references(() => User.id, { onDelete: 'cascade' }),
+    notificationId: uuid()
+      .notNull()
+      .references(() => Notification.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.notificationId]
+    })
+  ]
+);
