@@ -26,14 +26,26 @@ export const validUrlSlug = () =>
 export const deletionDate = (valueIfUndefined?: SQL | Date) =>
   v.nullable(v.optional(v.union([v.date(), v.custom((v) => is(v, SQL))]), valueIfUndefined));
 
-export const dateOrString = () => v.union([v.date(), v.pipe(v.string(), v.transform((v) => new Date(v)), v.date())]);
+export const dateOrString = () =>
+  v.union([
+    v.date(),
+    v.pipe(
+      v.string(),
+      v.transform((v) => new Date(v)),
+      v.date()
+    )
+  ]);
 
 export const omitPiped = <
   TPiped extends v.SchemaWithPipe<[v.ObjectSchema<any, any>, ...any[]]>,
   TObject extends TPiped['pipe'][0],
   TEntries extends keyof TObject['entries'],
   TKeys extends [TEntries, ...TEntries[]],
-  TRestPipe extends TPiped['pipe'] extends [infer _, ...infer TRest] ? TRest extends v.PipeItem<any, any, any>[] ? TRest : never : never
+  TRestPipe extends TPiped['pipe'] extends [infer _, ...infer TRest]
+    ? TRest extends v.PipeItem<any, any, any>[]
+      ? TRest
+      : never
+    : never
 >(
   schema: TPiped,
   keys: TKeys

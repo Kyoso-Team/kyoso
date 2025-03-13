@@ -1,7 +1,8 @@
 <script lang="ts">
+  import Tooltip from '$components/Tooltip.svelte';
   import CreateTournamentForm from '$ui/forms/CreateTournamentForm.svelte';
-  import TestModal from '$ui/modals/TestModal.svelte';
   import Test1Modal from '$ui/modals/Test1Modal.svelte';
+  import TestModal from '$ui/modals/TestModal.svelte';
 
   let open = $state(false);
   let open1 = $state(false);
@@ -32,3 +33,9 @@
 {#if open2}
   <Test1Modal unmount={close2} onYes={() => console.log('yes')} onNo={() => console.log('no')} />
 {/if}
+<Tooltip position="top" class="mt-16">
+  <div class="ml-4 h-16 w-64 bg-black text-white">Hover me</div>
+  {#snippet tip()}
+    Sample tooltip
+  {/snippet}
+</Tooltip>
