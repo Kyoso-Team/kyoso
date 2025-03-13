@@ -1,14 +1,28 @@
 import * as v from 'valibot';
 import { DraftOrderType, Tournament, TournamentType, WinCondition } from '$src/schema';
 import * as s from '$src/utils/validation';
+import type { InferInsertModel } from 'drizzle-orm';
 import type { MapInput, MapOutput } from '$src/types';
 
 abstract class Common {
-  static errMsg1 = 'Invalid team settings: Can\'t set team settings for a solo tournament' as const;
-  static errMsg2 = 'Invalid team settings: Must set team settings for a team-based tournament' as const;
-} 
+  static errMsg1 = "Invalid team settings: Can't set team settings for a solo tournament" as const;
+  static errMsg2 =
+    'Invalid team settings: Must set team settings for a team-based tournament' as const;
+}
 
 export abstract class TournamentValidation {
+  public static HOST_RESTRICTED_FIELDS: Set<keyof TournamentValidationOutput['UpdateTournament']> =
+    new Set([
+      'name',
+      'urlSlug',
+      'acronym',
+      'description',
+      'teamSize',
+      'useTeamBanners',
+      'rankRange',
+      'bws'
+    ]);
+
   public static Bws = v.record(
     v.union([v.literal('x'), v.literal('y'), v.literal('z')]),
     v.pipe(v.number(), v.notValue(0), v.minValue(-10), v.maxValue(10))
@@ -18,6 +32,7 @@ export abstract class TournamentValidation {
     name: v.pipe(v.string(), v.minLength(2), v.maxLength(50)),
     urlSlug: v.pipe(v.string(), v.minLength(2), v.maxLength(16), s.validUrlSlug()),
     acronym: v.pipe(v.string(), v.minLength(2), v.maxLength(8)),
+    description: v.optional(v.string()),
     rankRange: v.optional(
       v.nullable(
         v.pipe(
@@ -51,11 +66,37 @@ export abstract class TournamentValidation {
   public static CreateTournament = v.pipe(
     v.object({
       ...this.BaseMutateTournament.entries,
+      isOpenRank: v.boolean(),
       type: v.picklist(TournamentType.enumValues),
       hostUserId: s.integerId()
     }),
-    v.check((i) => !(i.type === 'solo' && i.teamSize !== undefined), Common.errMsg1),
-    v.check((i) => i.type === 'solo' || i.teamSize !== undefined || i.teamSize === null, Common.errMsg2)
+    v.check((i) => {
+      if (i.isOpenRank) {
+        return !i.rankRange || Object.values(i.rankRange).every((val) => val === null);
+      }
+      return true;
+    }, 'Cannot set rank range for an open rank tournament'),
+    v.check((i) => {
+      if (i.type === 'solo') {
+        return i.teamSize === undefined;
+      }
+      return true;
+    }, Common.errMsg1),
+    v.check((i) => {
+      if (i.type !== 'solo') {
+        return i.teamSize !== undefined && i.teamSize !== null;
+      }
+      return true;
+    }, Common.errMsg2),
+    v.transform((i) => {
+      return {
+        ...i,
+        upperRankRange: i.rankRange?.upper,
+        lowerRankRange: i.rankRange?.lower,
+        minTeamSize: i.teamSize?.min,
+        maxTeamSize: i.teamSize?.max
+      } as InferInsertModel<typeof Tournament>;
+    })
   );
 
   public static UpdateTournamentRefereeSettings = v.partial(
@@ -94,25 +135,40 @@ export abstract class TournamentValidation {
       v.optional(
         v.pipe(
           v.record(v.union([v.literal('start'), v.literal('end')]), v.optional(s.dateOrString())),
-          v.check(
-            (i) => !i.start && !!i.end,
-            'Invalid date range: Expected the start date to be set if the end date is set'
-          ),
-          v.check(
-            (i) => !i.start === !i.end || (!!i.start && !!i.end && i.start <= i.end),
-            'Invalid date range: Expected the start date to be before the end date'
-          )
+          v.check((i) => {
+            if (i.end) {
+              return !!i.start;
+            }
+            return true;
+          }, 'Invalid date range: Expected the start date to be set if the end date is set'),
+          v.check((i) => {
+            if (i.start && i.end) {
+              return i.start <= i.end;
+            }
+            return true;
+          }, 'Invalid date range: Expected the start date to be before the end date'),
+          v.check((i) => {
+            const now = new Date();
+
+            return !Object.values(i)
+              .filter((value) => value !== null)
+              .some((date) => date < now);
+          }, 'Invalid date range: Expected all dates to be in the future')
         )
       )
     ),
-    v.check(
-      (i) => !i.tournament?.start && (!!i.playerRegs || !!i.staffRegs),
-      'Invalid date range: Expected the tournament publish date to be set if player or staff registration dates are also set'
-    ),
-    v.check(
-      (i) => !!i.tournament?.end && (!i.playerRegs || !i.staffRegs),
-      'Invalid date range: Expected the tournament player and staff registration dates to be set if the conclusion date is also set'
-    ),
+    v.check((i) => {
+      if (i.playerRegs || i.staffRegs) {
+        return !!i.tournament?.start;
+      }
+      return true;
+    }, 'Invalid date range: Expected the tournament publish date to be set if player or staff registration dates are also set'),
+    v.check((i) => {
+      if (i.tournament && i.tournament.end) {
+        return !!i.playerRegs && !!i.staffRegs;
+      }
+      return true;
+    }, 'Invalid date range: Expected the tournament player and staff registration dates to be set if the conclusion date is also set'),
     v.transform((i) => ({
       publishedAt: i.tournament?.start ?? null,
       playerRegsOpenedAt: i.playerRegs?.start ?? null,
@@ -140,11 +196,48 @@ export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
 
 class TournamentDynamicValidation {
-  public updateTournament(stored: Pick<typeof Tournament.$inferSelect, 'type' | 'publishedAt' | 'concludedAt' | 'playerRegsOpenedAt' | 'playerRegsClosedAt' | 'staffRegsOpenedAt' | 'staffRegsClosedAt'>) {
+  private DISALLOW_UPDATE_AFTER_START_DATE = new Set<
+    keyof TournamentValidationOutput['UpdateTournament']
+  >(['teamSize', 'useTeamBanners', 'rankRange', 'bws']);
+
+  public updateTournament(
+    stored: Pick<
+      typeof Tournament.$inferSelect,
+      | 'publishedAt'
+      | 'concludedAt'
+      | 'playerRegsOpenedAt'
+      | 'playerRegsClosedAt'
+      | 'staffRegsOpenedAt'
+      | 'staffRegsClosedAt'
+    >
+  ) {
     return v.pipe(
       s.$assume<TournamentValidationOutput['UpdateTournament']>(),
-      v.check((i) => !(stored.type === 'solo' && (i.useTeamBanners !== undefined || i.teamSize !== undefined)), Common.errMsg1),
-      v.check((i) => stored.type !== 'solo' && i.teamSize === null, Common.errMsg2)
+      v.check((i) => {
+        if (i.schedule) {
+          const now = new Date();
+
+          const dates = Object.values(stored).filter((date) => date !== null);
+
+          return !dates.some((date) => date < now);
+        }
+        return true;
+      }, 'Cannot update expired dates'),
+      v.check((i) => {
+        if (!stored.playerRegsOpenedAt) {
+          return true;
+        }
+
+        const updatedFields = new Set(
+          Object.keys(i) as (keyof TournamentValidationOutput['UpdateTournament'])[]
+        );
+
+        if (updatedFields.intersection(this.DISALLOW_UPDATE_AFTER_START_DATE).size > 0) {
+          return new Date() < stored.playerRegsOpenedAt;
+        }
+
+        return true;
+      }, 'Cannot update team settings, rank range and BWS after player registrations opened')
     );
   }
 }
