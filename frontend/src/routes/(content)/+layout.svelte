@@ -3,6 +3,7 @@
   import '../../app.css';
   import NavBar from './NavBar.svelte';
   import FadedBg from '$components/FadedBg.svelte';
+  import Toast from '$components/Toast.svelte';
   import { c } from '$lib/common.svelte';
   import { toggleTheme } from '$lib/theme';
   import type { LayoutData } from './$types';
@@ -20,6 +21,7 @@
 <svelte:head>
   {@html `<\u{73}cript>(${toggleTheme.toString()})();</script>`}
 </svelte:head>
+<Toast />
 <FadedBg />
 <NavBar />
 {@render children()}

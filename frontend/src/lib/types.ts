@@ -15,3 +15,9 @@ export interface ConfirmationModalProps {
   onYes: () => MaybePromise<void>;
   onNo?: () => MaybePromise<void>;
 }
+
+export interface ToastItem {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'generic';
+  link?: string;
+}
