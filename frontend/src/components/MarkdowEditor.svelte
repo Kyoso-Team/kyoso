@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Tooltip from '$components/Tooltip.svelte';
   import Bold from '@lucide/svelte/icons/bold';
   import Code from '@lucide/svelte/icons/code';
   import Eye from '@lucide/svelte/icons/eye';
@@ -26,20 +27,21 @@
   let textareaElement: HTMLTextAreaElement | undefined = $state();
   let editing = $state(true);
   const formats: {
+    tip: string;
     value: string;
     endValue?: string;
     icon: Component;
   }[] = [
-    { value: '**', icon: Bold },
-    { value: '_', icon: Italic },
-    { value: '~~', icon: Strikethrough },
-    { value: '`', icon: Code },
-    { value: '```\n', endValue: '\n```', icon: FileJson },
-    { value: '>', endValue: '', icon: TextQuote },
-    { value: '[', endValue: 'label](url)', icon: Link },
-    { value: '- Item 1\n- Item 2', endValue: '', icon: List },
-    { value: '1. Item 1\n2. Item 2', endValue: '', icon: ListOrdered },
-    { value: '- [x] Complete\n- [ ] Todo', endValue: '', icon: ListTodo }
+    { tip: 'Bold', value: '**', icon: Bold },
+    { tip: 'Italic', value: '_', icon: Italic },
+    { tip: 'Strikethrough', value: '~~', icon: Strikethrough },
+    { tip: 'Code', value: '`', icon: Code },
+    { tip: 'Code block', value: '```\n', endValue: '\n```', icon: FileJson },
+    { tip: 'Quote', value: '>', endValue: '', icon: TextQuote },
+    { tip: 'Link', value: '[', endValue: 'label](url)', icon: Link },
+    { tip: 'Unordered list', value: '- Item 1\n- Item 2', endValue: '', icon: List },
+    { tip: 'Ordered list', value: '1. Item 1\n2. Item 2', endValue: '', icon: ListOrdered },
+    { tip: 'Task list', value: '- [x] Complete\n- [ ] Todo', endValue: '', icon: ListTodo }
   ];
 
   function onFormatBtnClick(index: number) {
@@ -68,23 +70,33 @@
 
 <div class="border-surface-token-700-300 flex w-full flex-col rounded-md border">
   <div class="bg-surface-token-800-200 flex rounded-t-md p-1">
-    <button class="btn-icon-sm-contrast" onclick={toggleEditing}>
-      {#if editing}
-        <Eye size={16} />
-      {:else}
-        <Pencil size={16} />
-      {/if}
-    </button>
+    <Tooltip>
+      <button class="btn-icon-sm-contrast" onclick={toggleEditing}>
+        {#if editing}
+          <Eye size={16} />
+        {:else}
+          <Pencil size={16} />
+        {/if}
+      </button>
+      {#snippet tip()}
+        {editing ? 'Preview' : 'Edit'}
+      {/snippet}
+    </Tooltip>
     <div class="flex w-full justify-end">
       {#if editing}
         <div class="flex" transition:fade={{ duration: 75 }}>
           {#each formats as format, i}
-            <button
-              class="btn-icon-sm-surface-soft bg-surface-token-800-200 border-0"
-              onclick={() => onFormatBtnClick(i)}
-            >
-              <format.icon size={16} />
-            </button>
+            <Tooltip>
+              <button
+                class="btn-icon-sm-surface-soft bg-surface-token-800-200 border-0"
+                onclick={() => onFormatBtnClick(i)}
+              >
+                <format.icon size={16} />
+              </button>
+              {#snippet tip()}
+                {format.tip}
+              {/snippet}
+            </Tooltip>
           {/each}
         </div>
       {/if}
