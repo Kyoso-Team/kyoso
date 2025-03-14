@@ -4,10 +4,6 @@
   import { fly } from 'svelte/transition';
   import type { ToastItem } from '$lib/types';
 
-  function onItemMouseEnter(itemId: string) {
-    toast.pause(itemId);
-  }
-
   const colors: Record<ToastItem['type'], string> = {
     success: 'bg-green-500/10 border-green-500',
     error: 'bg-red-500/10 border-red-500',
@@ -24,7 +20,7 @@
       in:fly={{ duration: 150, x: -50 }}
       out:fly={{ duration: 150, x: -50, y: 0 }}
       animate:flip={{ duration: 150 }}
-      on:mouseenter={() => onItemMouseEnter(item.id)}
+      on:mouseenter={() => toast.pause(item.id)}
       on:mouseleave={toast.resume.bind(toast)}
     >
       {#snippet toastItem()}

@@ -2,8 +2,8 @@ import { SvelteMap as Map, SvelteSet as Set } from 'svelte/reactivity';
 import type { ToastItem } from './types';
 
 export class Toast {
-  private maxItemsOnScreen = 3;
-  private timerLength = 3000;
+  private maxItemsOnScreen = 3 as const;
+  private timerLength = 3000 as const;
   private items = new Map<string, ToastItem>();
   private paused = new Set<string>();
   private queued = new Set<string>();
