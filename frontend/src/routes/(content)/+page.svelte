@@ -3,10 +3,12 @@
   import CreateTournamentForm from '$ui/forms/CreateTournamentForm.svelte';
   import Test1Modal from '$ui/modals/Test1Modal.svelte';
   import TestModal from '$ui/modals/TestModal.svelte';
+  import MarkdowEditor from '$components/MarkdowEditor.svelte';
 
   let open = $state(false);
   let open1 = $state(false);
   let open2 = $state(false);
+  let value = $state('');
 
   function close() {
     open = false;
@@ -39,3 +41,6 @@
     Sample tooltip
   {/snippet}
 </Tooltip>
+<div class="my-16 ml-8 w-[32rem]">
+  <MarkdowEditor bind:value={value} />
+</div>

@@ -1,4 +1,5 @@
 import plugin from 'tailwindcss/plugin';
+import typography from '@tailwindcss/typography';
 
 function values(values) {
   return {
@@ -127,6 +128,18 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
         {}
     },
 
+    '.btn-icon-sm': {
+      '@apply block p-2 text-sm duration-150 rounded-md disabled:opacity-50': {}
+    },
+    '.btn-icon-sm-surface-soft': {
+      '@apply btn-icon-sm bg-surface-token-700-300 hover:bg-surface-token-600-400 border-surface-token-600-400 border':
+        {}
+    },
+    '.btn-icon-sm-contrast': {
+      '@apply btn-icon-sm bg-black dark:bg-white hover:bg-surface-token-100-900 dark:text-black text-white':
+        {}
+    },
+
     '.btn-md': {
       '@apply block px-4 py-[6px] text-sm leading-normal duration-150 font-medium rounded-md': {}
     },
@@ -177,6 +190,10 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
 
     'h2': {
       '@apply text-2xl font-bold text-surface-token-100-900 dark:text-white text-black': {}
+    },
+
+    '.from-markdown-content': {
+      '@apply prose prose-neutral dark:prose-invert': {}
     }
   });
 });
@@ -217,5 +234,5 @@ export default {
       }
     }
   },
-  plugins: [customStyles]
+  plugins: [typography, customStyles]
 };
