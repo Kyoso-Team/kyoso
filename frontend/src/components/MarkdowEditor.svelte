@@ -1,22 +1,25 @@
 <script lang="ts">
   import Bold from '@lucide/svelte/icons/bold';
-  import Italic from '@lucide/svelte/icons/italic';
-  import Strikethrough from '@lucide/svelte/icons/strikethrough';
   import Code from '@lucide/svelte/icons/code';
-  import FileJson from '@lucide/svelte/icons/file-json';
-  import TextQuote from '@lucide/svelte/icons/text-quote';
-  import Link from '@lucide/svelte/icons/link';
   import Eye from '@lucide/svelte/icons/eye';
-  import Pencil from '@lucide/svelte/icons/pencil';
-  import ListOrdered from '@lucide/svelte/icons/list-ordered';
+  import FileJson from '@lucide/svelte/icons/file-json';
+  import Italic from '@lucide/svelte/icons/italic';
+  import Link from '@lucide/svelte/icons/link';
   import List from '@lucide/svelte/icons/list';
+  import ListOrdered from '@lucide/svelte/icons/list-ordered';
   import ListTodo from '@lucide/svelte/icons/list-todo';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Strikethrough from '@lucide/svelte/icons/strikethrough';
+  import TextQuote from '@lucide/svelte/icons/text-quote';
   import { fade } from 'svelte/transition';
   import { showdown } from '$lib/showdown';
   import type { Component } from 'svelte';
 
-  // eslint-disable-next-line prefer-const
-  let { value = $bindable(''), oninput }: {
+  let {
+    value = $bindable(''),
+    // eslint-disable-next-line prefer-const
+    oninput
+  }: {
     value: string;
     oninput?: (() => void) | undefined;
   } = $props();
@@ -51,7 +54,10 @@
 
     textareaElement.focus();
     setTimeout(() => {
-      textareaElement!.setSelectionRange(selectionStart + formats[index].value.length, selectionStart + formats[index].value.length);
+      textareaElement!.setSelectionRange(
+        selectionStart + formats[index].value.length,
+        selectionStart + formats[index].value.length
+      );
     }, 0);
   }
 
@@ -60,8 +66,8 @@
   }
 </script>
 
-<div class="w-full flex flex-col border border-surface-token-700-300 rounded-md">
-  <div class="flex bg-surface-token-800-200 p-1 rounded-t-md">
+<div class="border-surface-token-700-300 flex w-full flex-col rounded-md border">
+  <div class="bg-surface-token-800-200 flex rounded-t-md p-1">
     <button class="btn-icon-sm-contrast" onclick={toggleEditing}>
       {#if editing}
         <Eye size={16} />
@@ -69,7 +75,7 @@
         <Pencil size={16} />
       {/if}
     </button>
-    <div class="w-full flex justify-end">
+    <div class="flex w-full justify-end">
       {#if editing}
         <div class="flex" transition:fade={{ duration: 75 }}>
           {#each formats as format, i}
@@ -85,11 +91,16 @@
     </div>
   </div>
   {#if editing}
-    <textarea class="input resize-none text-base h-64 !mt-0 rounded-t-none" bind:value={value} oninput={oninput} bind:this={textareaElement}></textarea>
+    <textarea
+      class="input !mt-0 h-64 resize-none rounded-t-none text-base"
+      bind:value
+      {oninput}
+      bind:this={textareaElement}
+    ></textarea>
   {:else}
-    <div class="py-1 px-2">
+    <div class="px-2 py-1">
       {#if value.length === 0}
-        <p class="italic text-surface-token-200-800">No content</p>
+        <p class="text-surface-token-200-800 italic">No content</p>
       {:else}
         <div class="from-markdown-content">
           {@html showdown.makeHtml(value)}
