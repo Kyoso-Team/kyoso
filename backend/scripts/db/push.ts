@@ -1,9 +1,9 @@
 import { $ } from 'bun';
-import { databaseRepository } from '$src/modules/database/repository';
+import { resetDatabase } from '$src/dev';
 import { db } from '$src/singletons/db';
 
-await databaseRepository.resetDatabase(db);
-await databaseRepository.prePushDatabase(db);
+await resetDatabase();
 
 await $`bunx drizzle-kit push`.quiet();
 await db.$client.end();
+process.exit(0);

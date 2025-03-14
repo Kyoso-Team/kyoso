@@ -51,7 +51,7 @@ const tournamentRouter = new Hono()
       });
     }
   )
-  .patch(
+  .put(
     '/:tournamentId/delegate_host',
     sessionMiddleware(),
     vValidator(
