@@ -1,3 +1,3 @@
 import { describe } from 'bun:test';
 
-describe.todo('put /tournament/delegate_host');
+describe.todo('patch /tournament/delegate_host');
