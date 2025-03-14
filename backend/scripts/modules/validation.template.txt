@@ -1,6 +1,12 @@
 import * as v from 'valibot';
 import * as s from '$src/utils/validation';
+import type { MapInput, MapOutput } from '$src/types';
 
+export abstract class {$1}Validation {
+  public static myValidation = v.object({
+    myField: v.string()
+  });
+}
 
-
-export const {$1}Validation = {  };
+export type {$2}ValidationInput = MapInput<typeof {$3}Validation>;
+export type {$4}ValidationOutput = MapOutput<typeof {$5}Validation>;

@@ -18,7 +18,7 @@ export const StaffRole = pgTable(
   {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     createdAt: timestamp('created_at', timestampConfig).notNull().defaultNow(),
-    deletedAt: timestamp('deleted_at', timestampConfig),
+    updatedAt: timestamp('updated_at', timestampConfig).notNull().defaultNow(),
     name: varchar('name', { length: 50 }).notNull(),
     color: text({
       enum: [
