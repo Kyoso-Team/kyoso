@@ -36,7 +36,7 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
           })
         )
         .from(Tournament)
-        .where(eq(Tournament.id, +body.tournamentId))
+        .where(eq(Tournament.id, +payload.tournamentId))
         .then((rows) => rows[0]);
 
       if (!tournament) {
@@ -53,7 +53,7 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
         .where(
           and(
             eq(StaffMember.userId, c.get('user').id),
-            eq(StaffMember.tournamentId, +body.tournamentId)
+            eq(StaffMember.tournamentId, +payload.tournamentId)
           )
         );
 
