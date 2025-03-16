@@ -29,9 +29,10 @@ const app = new Hono()
       },
       store: new RedisStore({
         prefix: 'ratelimit:',
-        //@ts-expect-error - known issue with @ioredis/types
-        sendCommand: (...args: string[]) => redis.call(...args)
-      }) as unknown as Store
+        // Known issue with @ioredis/types
+        sendCommand: (...args: [string, ...string[]]) => redis.call(...args) as any
+      }) as unknown as Store,
+      skip: env.NODE_ENV === 'test' ? () => true : undefined
     })
   )
   .route('/', authRouter)

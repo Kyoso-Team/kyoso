@@ -1,5 +1,7 @@
 <script lang="ts">
+  import MarkdowEditor from '$components/MarkdowEditor.svelte';
   import Tooltip from '$components/Tooltip.svelte';
+  import { toast } from '$lib/toast.svelte';
   import CreateTournamentForm from '$ui/forms/CreateTournamentForm.svelte';
   import Test1Modal from '$ui/modals/Test1Modal.svelte';
   import TestModal from '$ui/modals/TestModal.svelte';
@@ -7,6 +9,7 @@
   let open = $state(false);
   let open1 = $state(false);
   let open2 = $state(false);
+  let value = $state('');
 
   function close() {
     open = false;
@@ -39,3 +42,52 @@
     Sample tooltip
   {/snippet}
 </Tooltip>
+<div class="my-16 ml-8 w-[32rem]">
+  <MarkdowEditor bind:value />
+</div>
+
+<span>Toast</span>
+<div class="mb-16 flex gap-2">
+  <button
+    class="btn-md-contrast"
+    onclick={() =>
+      toast.add({
+        message: 'Sample messsage',
+        type: 'generic'
+      })}>Generic</button
+  >
+  <button
+    class="btn-md-contrast"
+    onclick={() =>
+      toast.add({
+        message: 'Sample messsage',
+        type: 'error'
+      })}>Error</button
+  >
+  <button
+    class="btn-md-contrast"
+    onclick={() =>
+      toast.add({
+        message:
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+        type: 'warning'
+      })}>Important</button
+  >
+  <button
+    class="btn-md-contrast"
+    onclick={() =>
+      toast.add({
+        message: 'Sample messsage',
+        type: 'success'
+      })}>Success</button
+  >
+  <button
+    class="btn-md-contrast"
+    onclick={() =>
+      toast.add({
+        message: 'Sample messsage',
+        type: 'generic',
+        link: 'https://osu.ppy.sh'
+      })}>With link</button
+  >
+</div>

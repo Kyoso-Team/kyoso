@@ -37,11 +37,11 @@ export const dateOrString = () =>
   ]);
 
 export const omitPiped = <
-  TPiped extends v.SchemaWithPipe<[v.ObjectSchema<any, any>, ...any[]]>,
+  TPiped extends v.SchemaWithPipe<readonly [v.ObjectSchema<any, any>, ...any[]]>,
   TObject extends TPiped['pipe'][0],
   TEntries extends keyof TObject['entries'],
   TKeys extends [TEntries, ...TEntries[]],
-  TRestPipe extends TPiped['pipe'] extends [infer _, ...infer TRest]
+  TRestPipe extends TPiped['pipe'] extends readonly [infer _, ...infer TRest]
     ? TRest extends v.PipeItem<any, any, any>[]
       ? TRest
       : never
@@ -49,7 +49,7 @@ export const omitPiped = <
 >(
   schema: TPiped,
   keys: TKeys
-): v.SchemaWithPipe<[v.SchemaWithOmit<TObject, TKeys>, ...TRestPipe]> => {
+): v.SchemaWithPipe<readonly [v.SchemaWithOmit<TObject, TKeys>, ...TRestPipe]> => {
   return v.pipe(v.omit(schema.pipe[0], keys), ...schema.pipe.slice(1)) as any;
 };
 
