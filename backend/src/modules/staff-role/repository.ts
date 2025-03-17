@@ -8,12 +8,13 @@ class StaffRoleRepository {
   public async getStaffRole<T extends Selection<typeof StaffRole>>(
     db: DatabaseClient,
     staffRoleId: number,
+    tournamentId: number,
     select: T
   ) {
     return db
       .select(pick(StaffRole, select))
       .from(StaffRole)
-      .where(eq(StaffRole.id, staffRoleId))
+      .where(and(eq(StaffRole.id, staffRoleId), eq(StaffRole.tournamentId, tournamentId)))
       .then((rows) => rows[0]);
   }
 

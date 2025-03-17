@@ -58,13 +58,20 @@ export const staffRoleRouter = new Hono()
     vValidator(
       'param',
       v.object({
-        staffRoleId: s.stringToInteger()
+        staffRoleId: s.integerId()
+      })
+    ),
+    vValidator(
+      'query',
+      v.object({
+        tournamentId: s.stringToInteger()
       })
     ),
     async (c) => {
       const { staffRoleId } = c.req.valid('param');
+      const { tournamentId } = c.req.valid('query');
 
-      await staffRoleService.deleteStaffRole(db, staffRoleId);
+      await staffRoleService.deleteStaffRole(db, staffRoleId, tournamentId);
 
       return c.json({ message: 'Staff role deleted' });
     }

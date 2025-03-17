@@ -49,9 +49,14 @@ class StaffRoleService extends Service {
   ) {
     const fn = this.createServiceFunction('Failed to update staff role');
 
-    const existingStaffRole = await staffRoleRepository.getStaffRole(db, staffRoleId, {
-      id: true
-    });
+    const existingStaffRole = await staffRoleRepository.getStaffRole(
+      db,
+      staffRoleId,
+      input.tournamentId,
+      {
+        id: true
+      }
+    );
 
     if (!existingStaffRole) {
       throw new HTTPException(404, {
@@ -86,12 +91,12 @@ class StaffRoleService extends Service {
     }
 
     const [sourceStaffRole, targetStaffRole] = await Promise.all([
-      staffRoleRepository.getStaffRole(db, sourceStaffRoleId, {
+      staffRoleRepository.getStaffRole(db, sourceStaffRoleId, tournamentId, {
         id: true,
         order: true,
         tournamentId: true
       }),
-      staffRoleRepository.getStaffRole(db, targetStaffRoleId, {
+      staffRoleRepository.getStaffRole(db, targetStaffRoleId, tournamentId, {
         id: true,
         order: true,
         tournamentId: true
@@ -126,13 +131,18 @@ class StaffRoleService extends Service {
     );
   }
 
-  public async deleteStaffRole(db: DatabaseClient, staffRoleId: number) {
+  public async deleteStaffRole(db: DatabaseClient, staffRoleId: number, tournamentId: number) {
     const fn = this.createServiceFunction('Failed to delete staff role');
 
-    const existingStaffRole = await staffRoleRepository.getStaffRole(db, staffRoleId, {
-      order: true,
-      tournamentId: true
-    });
+    const existingStaffRole = await staffRoleRepository.getStaffRole(
+      db,
+      staffRoleId,
+      tournamentId,
+      {
+        order: true,
+        tournamentId: true
+      }
+    );
 
     if (!existingStaffRole) {
       throw new HTTPException(404, {

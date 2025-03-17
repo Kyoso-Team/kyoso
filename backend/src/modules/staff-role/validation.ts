@@ -24,20 +24,23 @@ export abstract class StaffRoleValidation {
         'pink'
       ]),
       'slate'
-    )
-  });
-
-  public static CreateStaffRole = v.object({
-    ...this.BaseMutateStaffRole.entries,
+    ),
     tournamentId: s.integerId()
   });
 
-  public static UpdateStaffRole = v.partial(
-    v.object({
-      ...this.BaseMutateStaffRole.entries,
-      permissions: v.array(v.picklist(StaffPermission.enumValues))
-    })
-  );
+  public static CreateStaffRole = v.object({
+    ...this.BaseMutateStaffRole.entries
+  });
+
+  public static UpdateStaffRole = v.object({
+    ...v.pick(this.BaseMutateStaffRole, ['tournamentId']).entries,
+    ...v.partial(
+      v.object({
+        ...v.omit(this.BaseMutateStaffRole, ['tournamentId']).entries,
+        permissions: v.array(v.picklist(StaffPermission.enumValues))
+      })
+    ).entries
+  });
 
   public static SwapStaffRoles = v.object({
     tournamentId: s.integerId(),
