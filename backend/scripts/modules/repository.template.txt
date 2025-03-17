@@ -1,8 +1,9 @@
-import * as v from 'valibot';
 import type { DatabaseClient } from '$src/types';
 
-async function myFunction(db: DatabaseClient) {
-  return db;
+class {$1}Repository {
+  public myFunction(db: DatabaseClient) {
+    return db;
+  }
 }
 
-export const {$1}Repository = {  };
+export const {$2}Repository = new {$3}Repository();
