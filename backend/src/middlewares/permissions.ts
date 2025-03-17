@@ -32,7 +32,9 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
       const tournament = await db
         .select(
           pick(Tournament, {
-            hostUserId: true
+            hostUserId: true,
+            concludedAt: true,
+            publishedAt: true
           })
         )
         .from(Tournament)
