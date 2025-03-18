@@ -4,24 +4,11 @@ import * as s from '$src/utils/validation';
 import type { InferInsertModel } from 'drizzle-orm';
 import type { MapInput, MapOutput } from '$src/types';
 
-abstract class Common {
-  static errMsg1 = "Invalid team settings: Can't set team settings for a solo tournament" as const;
-  static errMsg2 =
-    'Invalid team settings: Must set team settings for a team-based tournament' as const;
-}
-
 export abstract class TournamentValidation {
-  public static HOST_RESTRICTED_FIELDS: Set<keyof TournamentValidationOutput['UpdateTournament']> =
-    new Set([
-      'name',
-      'urlSlug',
-      'acronym',
-      'description',
-      'teamSize',
-      'useTeamBanners',
-      'rankRange',
-      'bws'
-    ]);
+  private static errMsg1 =
+    "Invalid team settings: Can't set team settings for a solo tournament" as const;
+  private static errMsg2 =
+    'Invalid team settings: Must set team settings for a team-based tournament' as const;
 
   public static Bws = v.record(
     v.union([v.literal('x'), v.literal('y'), v.literal('z')]),
@@ -81,13 +68,13 @@ export abstract class TournamentValidation {
         return i.teamSize === undefined;
       }
       return true;
-    }, Common.errMsg1),
+    }, this.errMsg1),
     v.check((i) => {
       if (i.type !== 'solo') {
         return i.teamSize !== undefined && i.teamSize !== null;
       }
       return true;
-    }, Common.errMsg2),
+    }, this.errMsg2),
     v.transform((i) => {
       return {
         ...i,
@@ -194,52 +181,3 @@ export abstract class TournamentValidation {
 
 export type TournamentValidationOutput = MapOutput<typeof TournamentValidation>;
 export type TournamentValidationInput = MapInput<typeof TournamentValidation>;
-
-class TournamentDynamicValidation {
-  private DISALLOW_UPDATE_AFTER_START_DATE = new Set<
-    keyof TournamentValidationOutput['UpdateTournament']
-  >(['teamSize', 'useTeamBanners', 'rankRange', 'bws']);
-
-  public updateTournament(
-    stored: Pick<
-      typeof Tournament.$inferSelect,
-      | 'publishedAt'
-      | 'concludedAt'
-      | 'playerRegsOpenedAt'
-      | 'playerRegsClosedAt'
-      | 'staffRegsOpenedAt'
-      | 'staffRegsClosedAt'
-    >
-  ) {
-    return v.pipe(
-      s.$assume<TournamentValidationOutput['UpdateTournament']>(),
-      v.check((i) => {
-        if (i.schedule) {
-          const now = new Date();
-
-          const dates = Object.values(stored).filter((date) => date !== null);
-
-          return !dates.some((date) => date < now);
-        }
-        return true;
-      }, 'Cannot update expired dates'),
-      v.check((i) => {
-        if (!stored.playerRegsOpenedAt) {
-          return true;
-        }
-
-        const updatedFields = new Set(
-          Object.keys(i) as (keyof TournamentValidationOutput['UpdateTournament'])[]
-        );
-
-        if (updatedFields.intersection(this.DISALLOW_UPDATE_AFTER_START_DATE).size > 0) {
-          return new Date() < stored.playerRegsOpenedAt;
-        }
-
-        return true;
-      }, 'Cannot update team settings, rank range and BWS after player registrations opened')
-    );
-  }
-}
-
-export const tournamentDynamicValidation = new TournamentDynamicValidation();

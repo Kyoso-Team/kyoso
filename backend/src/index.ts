@@ -6,8 +6,8 @@ import RedisStore from 'rate-limit-redis';
 import { devRouter } from '$src/routers/dev.ts';
 import { tournamentRouter } from '$src/routers/tournament';
 import { authRouter } from './routers/auth';
-import { redis } from './singletons';
 import { staffRoleRouter } from './routers/staff-role';
+import { redis } from './singletons';
 import { env } from './utils/env';
 import type { Store } from 'hono-rate-limiter';
 
