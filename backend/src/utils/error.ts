@@ -21,7 +21,7 @@ export function unknownError(description: string) {
   };
 }
 
-class ValidationError extends Error {
+export class ValidationError extends Error {
   constructor(message: string, key: string, issue: string, options?: ErrorOptions) {
     super(`${message}. Validation error for '${key}': ${issue}`, options);
   }

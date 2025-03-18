@@ -6,11 +6,11 @@ export function expectResponse<T extends ClientResponse<any, number, ResponseFor
   return {
     toEqual: async (
       status: number,
-      data: ('error' | (string & {})) | Awaited<ReturnType<T['json']>> | null
+      data: ('error' | 'success' | (string & {})) | Awaited<ReturnType<T['json']>> | null
     ) => {
       expect(resp.status).toEqual(status);
       expect(await (typeof data === 'string' ? resp.text() : resp.json())).toStrictEqual(
-        data === 'error' ? expect.any(String) : data
+        data === 'error' || data === 'success' ? expect.any(String) : data
       );
     }
   };

@@ -4,11 +4,28 @@ import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/repository';
 import { tournamentRepository } from './repository';
-import { tournamentDynamicValidation, TournamentValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 
 class TournamentService extends Service {
+  private HOST_RESTRICTED_FIELDS = new Set<keyof TournamentValidationOutput['UpdateTournament']>([
+    'name',
+    'urlSlug',
+    'acronym',
+    'description',
+    'teamSize',
+    'useTeamBanners',
+    'rankRange',
+    'bws'
+  ]);
+  private DISALLOW_UPDATE_AFTER_START_DATE = new Set<
+    keyof TournamentValidationOutput['UpdateTournament']
+  >(['teamSize', 'useTeamBanners', 'rankRange', 'bws']);
+  private TEAM_TOURNAMENT_FIELDS = new Set<keyof TournamentValidationOutput['UpdateTournament']>([
+    'teamSize',
+    'useTeamBanners'
+  ]);
+
   public async createDummyTournament(
     db: DatabaseClient,
     n: number,
@@ -45,7 +62,7 @@ class TournamentService extends Service {
 
     const tournament = await fn.handleDbQuery(
       tournamentRepository.createTournament(db, input),
-      this.handleTournamentCreationError(
+      this.handleTournamentMutationError(
         {
           name: input.name,
           urlSlug: input.urlSlug
@@ -83,7 +100,8 @@ class TournamentService extends Service {
       staffRegsClosedAt: true,
       staffRegsOpenedAt: true,
       concludedAt: true,
-      publishedAt: true
+      publishedAt: true,
+      type: true
     });
 
     if (!existingTournament) {
@@ -92,15 +110,27 @@ class TournamentService extends Service {
       });
     }
 
+    if (userId !== existingTournament.hostUserId) {
+      throw new HTTPException(401, {
+        message: "You're not this tournament's host"
+      });
+    }
+
     const fn = this.createServiceFunction('Failed to update tournament');
 
-    const { hostUserId, ...dates } = existingTournament;
+    const { hostUserId, type, ...dates } = existingTournament;
+    this.validateTournamentUpdateFields(input, dates, type, userId, hostUserId);
 
-    this.validateTournamentUpdateFields(input, userId, hostUserId);
-
-    await fn.validate(tournamentDynamicValidation.updateTournament(dates), 'tournament', input);
-
-    await fn.handleDbQuery(tournamentRepository.updateTournament(db, input, tournamentId));
+    await fn.handleDbQuery(
+      tournamentRepository.updateTournament(db, input, tournamentId),
+      this.handleTournamentMutationError(
+        {
+          name: input.name,
+          urlSlug: input.urlSlug
+        },
+        fn.errorMessage
+      )
+    );
   }
 
   public async delegateHost(
@@ -217,8 +247,8 @@ class TournamentService extends Service {
     return !(tournamentConcluded || tournamentDeleted);
   }
 
-  private handleTournamentCreationError(
-    tournament: { name: string; urlSlug: string },
+  private handleTournamentMutationError(
+    tournament: { name: string | undefined; urlSlug: string | undefined },
     descriptionIfUnknownError: string
   ) {
     return (err: unknown): never => {
@@ -241,6 +271,16 @@ class TournamentService extends Service {
 
   private validateTournamentUpdateFields(
     input: TournamentValidationOutput['UpdateTournament'],
+    currentDates: Pick<
+      (typeof Tournament)['$inferSelect'],
+      | 'publishedAt'
+      | 'concludedAt'
+      | 'playerRegsOpenedAt'
+      | 'playerRegsClosedAt'
+      | 'staffRegsOpenedAt'
+      | 'staffRegsClosedAt'
+    >,
+    tournamentType: TournamentValidationOutput['CreateTournament']['type'],
     userId: number,
     hostUserId: number | null
   ) {
@@ -248,12 +288,72 @@ class TournamentService extends Service {
       Object.keys(input) as (keyof TournamentValidationOutput['UpdateTournament'])[]
     );
 
-    const hasRestrictedFields =
-      updatedFields.intersection(TournamentValidation.HOST_RESTRICTED_FIELDS).size !== 0;
+    let hasRestrictedFields = updatedFields.intersection(this.HOST_RESTRICTED_FIELDS).size !== 0;
 
     if (hasRestrictedFields && userId !== hostUserId) {
-      throw new HTTPException(403, {
+      throw new HTTPException(401, {
         message: 'Input contains fields restricted to hosts'
+      });
+    }
+
+    const published =
+      (!!input.schedule?.publishedAt && Date.now() > input.schedule.publishedAt.getTime()) ||
+      (!!currentDates.publishedAt && Date.now() > currentDates.publishedAt.getTime());
+    hasRestrictedFields =
+      updatedFields.intersection(this.DISALLOW_UPDATE_AFTER_START_DATE).size !== 0;
+
+    if (published && hasRestrictedFields) {
+      throw new HTTPException(403, {
+        message: `Can't update the following fields after tournament is published: ${Array.from(
+          this.DISALLOW_UPDATE_AFTER_START_DATE
+        )
+          .map((field) => `'${field}'`)
+          .join(', ')}`
+      });
+    }
+
+    if (
+      input.schedule &&
+      Object.values(input.schedule).some((date) => date !== null && Date.now() > date.getTime())
+    ) {
+      throw new HTTPException(400, {
+        message: "Can't set a date in the past"
+      });
+    }
+
+    const now = Date.now();
+    const updatingSetDateToPast = !!Object.entries(currentDates)
+      .filter(([_, date]) => date !== null)
+      .find(([key, currentDate]) => {
+        const newDate = input.schedule?.[
+          key as keyof TournamentValidationOutput['UpdateTournament']['schedule']
+        ] as Date | null | undefined;
+        return (
+          newDate !== undefined &&
+          newDate !== null &&
+          currentDate !== null &&
+          newDate.getTime() !== currentDate.getTime() &&
+          now > currentDate.getTime()
+        );
+      });
+
+    if (updatingSetDateToPast) {
+      throw new HTTPException(403, {
+        message: "Can't update an already set date that is in the past"
+      });
+    }
+
+    hasRestrictedFields = updatedFields.intersection(this.TEAM_TOURNAMENT_FIELDS).size !== 0;
+
+    if (tournamentType === 'solo' && hasRestrictedFields) {
+      throw new HTTPException(403, {
+        message: "Can't update the team settings for a solo tournament"
+      });
+    }
+
+    if (tournamentType !== 'solo' && input.teamSize === null) {
+      throw new HTTPException(403, {
+        message: "Can't delete team settings for a team-based tournament"
       });
     }
   }
