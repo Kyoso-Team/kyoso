@@ -22,7 +22,9 @@ export class StaffMemberValidation {
 }
 
 export class StaffMemberDynamicValidation {
-  public updateStaffMemberRoles(stored: (typeof StaffMemberRole.$inferSelect)[]) {
+  public updateStaffMemberRoles(
+    stored: Pick<typeof StaffMemberRole.$inferSelect, 'staffRoleId'>[]
+  ) {
     return v.pipe(
       s.$assume<StaffMemberValidationOutput['UpdateStaffMember']>(),
       v.transform((i) => {
