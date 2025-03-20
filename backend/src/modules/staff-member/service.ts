@@ -1,15 +1,17 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
-import { StaffMemberRole } from '$src/schema';
+import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
+import { db } from '$src/singletons/db';
 import { pick } from '$src/utils/query';
 import { Service } from '$src/utils/service';
 import { tournamentService } from '../tournament/service';
 import { staffMemberRepository } from './repository';
 import { staffMemberDynamicValidation } from './validation';
+import type { StaffMemberContext } from '$src/middlewares/permissions';
 import type { DatabaseClient } from '$src/types';
 import type { StaffMemberValidationOutput } from './validation';
 
-export class StaffMemberService extends Service {
+class StaffMemberService extends Service {
   public async createStaffMember(
     db: DatabaseClient,
     staffMember: StaffMemberValidationOutput['CreateStaffMember']
@@ -30,6 +32,7 @@ export class StaffMemberService extends Service {
     return await fn.handleDbQuery(staffMemberRepository.createStaffMember(db, staffMember));
   }
 
+  //TODO: finish this function
   public async updateStaffMemberRoles(
     db: DatabaseClient,
     data: StaffMemberValidationOutput['UpdateStaffMember']
@@ -72,4 +75,86 @@ export class StaffMemberService extends Service {
       staffMemberRepository.updateStaffMemberRoles(db, existingStaffMember.id, staffRoles)
     );
   }
+
+  public async removeStaffMember(
+    sourceStaffMember: StaffMemberContext,
+    targetStaffMemberId: number,
+    tournamentId: number,
+    hostUserId: number | null
+  ) {
+    if (sourceStaffMember.id === targetStaffMemberId) {
+      throw new HTTPException(400, {
+        message: 'Cannot remove yourself'
+      });
+    }
+
+    const fn = this.createServiceFunction('Failed to remove staff member');
+
+    const staffMemberToRemove = await db
+      .select()
+      .from(StaffMember)
+      .leftJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))
+      .leftJoin(StaffRole, eq(StaffRole.id, StaffMemberRole.staffRoleId))
+      .where(
+        and(
+          eq(StaffMember.id, targetStaffMemberId),
+          eq(StaffMember.tournamentId, tournamentId),
+          or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
+        )
+      )
+      .then((rows) => {
+        return {
+          ...rows[0].staff_member,
+          staffRoles: new Set(rows.flatMap((row) => row.staff_role?.permissions ?? []))
+        };
+      });
+
+    if (!staffMemberToRemove) {
+      throw new HTTPException(404, {
+        message: 'Staff member not found'
+      });
+    }
+
+    if (staffMemberToRemove.userId === hostUserId) {
+      throw new HTTPException(403, {
+        message: 'Tournament host cannot be removed from the tournament'
+      });
+    }
+
+    if (
+      staffMemberToRemove.staffRoles.has('manage_tournament') &&
+      sourceStaffMember.userId !== hostUserId
+    ) {
+      throw new HTTPException(403, {
+        message: 'Cannot remove staff member with tournament management permissions'
+      });
+    }
+    return await fn.handleDbQuery(
+      staffMemberRepository.deleteStaffMember(db, staffMemberToRemove.id)
+    );
+  }
+
+  public async leaveStaffTeam(userId: number, tournamentId: number, hostUserId: number | null) {
+    const fn = this.createServiceFunction('Failed to leave staff team');
+
+    if (hostUserId === userId) {
+      throw new HTTPException(403, {
+        message: 'Host cannot leave own tournament'
+      });
+    }
+
+    const staffMember = await staffMemberRepository.getStaffMember(db, userId, tournamentId, {
+      id: true
+    });
+
+    if (!staffMember) {
+      throw new HTTPException(404, {
+        message: 'Staff member not found'
+      });
+    }
+
+    return await fn.handleDbQuery(staffMemberRepository.deleteStaffMember(db, staffMember.id));
+  }
 }
+
+export const staffMemberService = new StaffMemberService();

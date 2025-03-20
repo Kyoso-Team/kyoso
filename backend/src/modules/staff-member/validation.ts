@@ -9,6 +9,7 @@ export class StaffMemberValidation {
     tournamentId: s.integerId(),
     staffRoleIds: v.pipe(
       v.array(s.integerId()),
+      v.minLength(1),
       v.checkItems(
         (item, index, array) => array.indexOf(item) === index,
         'Cannot assign the same staff role multiple times'

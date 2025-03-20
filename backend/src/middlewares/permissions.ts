@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
 import { StaffMember, StaffMemberRole, StaffRole, Tournament, User } from '$src/schema';
@@ -11,12 +11,18 @@ import type { UserTokens } from './session';
 
 export type StaffPermissions = (typeof StaffPermission.enumValues)[number];
 
-export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
+export type StaffMemberContext = InferSelectModel<typeof StaffMember> & {
+  permissions: Set<StaffPermissions>;
+};
+
+export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = []) => {
   return createMiddleware(
     async (
       c: Context<{
         Variables: {
           user: Pick<InferSelectModel<typeof User>, 'id' | 'admin' | 'approvedHost'> & UserTokens;
+          staffMember: StaffMemberContext;
+          tournament: Pick<InferSelectModel<typeof Tournament>, 'hostUserId' | 'id'>;
         };
       }>,
       next
@@ -32,6 +38,7 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
       const tournament = await db
         .select(
           pick(Tournament, {
+            id: true,
             hostUserId: true,
             concludedAt: true,
             publishedAt: true
@@ -47,6 +54,12 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
         });
       }
 
+      if (tournament.concludedAt || !tournament.publishedAt) {
+        throw new HTTPException(403, {
+          message: 'Tournament has already concluded or is deleted'
+        });
+      }
+
       const staffMember = await db
         .select()
         .from(StaffMember)
@@ -55,7 +68,8 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
         .where(
           and(
             eq(StaffMember.userId, c.get('user').id),
-            eq(StaffMember.tournamentId, +payload.tournamentId)
+            eq(StaffMember.tournamentId, +payload.tournamentId),
+            or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
           )
         );
 
@@ -64,6 +78,7 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
       );
 
       if (
+        permissions.length !== 0 &&
         staffMemberPermissions.isDisjointFrom(new Set(permissions)) &&
         tournament.hostUserId !== c.get('user').id
       ) {
@@ -71,6 +86,16 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[]) => {
           message: 'Forbidden'
         });
       }
+
+      c.set('staffMember', {
+        ...staffMember[0].staff_member,
+        permissions: staffMemberPermissions
+      });
+
+      c.set('tournament', {
+        id: tournament.id,
+        hostUserId: tournament.hostUserId
+      });
 
       await next();
     }

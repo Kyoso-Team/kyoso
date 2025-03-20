@@ -88,6 +88,19 @@ class StaffMemberRepository {
       await db.insert(StaffMemberRole).values(staffMemberRoles);
     });
   }
+
+  public async deleteStaffMember(db: DatabaseClient, staffMemberId: number) {
+    return db.transaction(async (tx) => {
+      await tx
+        .update(StaffMember)
+        .set({
+          deletedAt: sql`now()`
+        })
+        .where(eq(StaffMember.id, staffMemberId));
+
+      await tx.delete(StaffMemberRole).where(eq(StaffMemberRole.staffMemberId, staffMemberId));
+    });
+  }
 }
 
 export const staffMemberRepository = new StaffMemberRepository();
