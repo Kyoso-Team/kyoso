@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { StaffMember, StaffMemberRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -19,8 +19,7 @@ class StaffMemberRepository {
         and(
           eq(StaffMember.userId, userId),
           eq(StaffMember.tournamentId, tournamentId),
-          isNotNull(StaffMember.deletedAt),
-          lt(StaffMember.deletedAt, sql`now()`)
+          or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
         )
       )
       .then((rows) => rows[0]);

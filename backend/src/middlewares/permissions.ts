@@ -1,3 +1,4 @@
+import { S3 } from '@aws-sdk/client-s3';
 import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
@@ -41,7 +42,8 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = [])
             id: true,
             hostUserId: true,
             concludedAt: true,
-            publishedAt: true
+            publishedAt: true,
+            deletedAt: true
           })
         )
         .from(Tournament)
@@ -54,14 +56,22 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = [])
         });
       }
 
-      if (tournament.concludedAt || !tournament.publishedAt) {
+      const now = new Date();
+
+      const tournamentDeleted = tournament.deletedAt && tournament.deletedAt <= now;
+      const tournamentConcluded = tournament.concludedAt && tournament.concludedAt <= now;
+
+      if (tournamentDeleted || tournamentConcluded) {
         throw new HTTPException(403, {
           message: 'Tournament has already concluded or is deleted'
         });
       }
 
       const staffMember = await db
-        .select()
+        .select({
+          staffMember: StaffMember,
+          permissions: StaffRole.permissions
+        })
         .from(StaffMember)
         .leftJoin(StaffMemberRole, eq(StaffMember.id, StaffMemberRole.staffMemberId))
         .leftJoin(StaffRole, eq(StaffMemberRole.staffRoleId, StaffRole.id))
@@ -71,15 +81,19 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = [])
             eq(StaffMember.tournamentId, +payload.tournamentId),
             or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
           )
-        );
+        )
+        .then((rows) => {
+          return {
+            ...rows[0].staffMember,
+            permissions: new Set(rows.flatMap((row) => row.permissions ?? []))
+          };
+        });
 
-      const staffMemberPermissions = new Set(
-        staffMember.flatMap((staffMember) => staffMember.staff_role?.permissions ?? [])
-      );
+      console.log(staffMember);
 
       if (
         permissions.length !== 0 &&
-        staffMemberPermissions.isDisjointFrom(new Set(permissions)) &&
+        staffMember.permissions.isDisjointFrom(new Set(permissions)) &&
         tournament.hostUserId !== c.get('user').id
       ) {
         throw new HTTPException(403, {
@@ -87,10 +101,7 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = [])
         });
       }
 
-      c.set('staffMember', {
-        ...staffMember[0].staff_member,
-        permissions: staffMemberPermissions
-      });
+      c.set('staffMember', staffMember);
 
       c.set('tournament', {
         id: tournament.id,

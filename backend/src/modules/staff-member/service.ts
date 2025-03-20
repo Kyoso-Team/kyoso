@@ -4,6 +4,7 @@ import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
 import { db } from '$src/singletons/db';
 import { pick } from '$src/utils/query';
 import { Service } from '$src/utils/service';
+import { staffRoleRepository } from '../staff-role/repository';
 import { tournamentService } from '../tournament/service';
 import { staffMemberRepository } from './repository';
 import { staffMemberDynamicValidation } from './validation';
@@ -35,11 +36,19 @@ class StaffMemberService extends Service {
   //TODO: finish this function
   public async updateStaffMemberRoles(
     db: DatabaseClient,
+    sourceStaffMember: StaffMemberContext,
+    hostUserId: number | null,
     data: StaffMemberValidationOutput['UpdateStaffMember']
   ) {
     const fn = this.createServiceFunction('Failed to update staff member roles');
 
-    const { userId, tournamentId } = data;
+    const { userId, tournamentId, staffRoleIds } = data;
+
+    if (sourceStaffMember.userId === userId) {
+      throw new HTTPException(403, {
+        message: 'Cannot update own roles'
+      });
+    }
 
     const existingStaffMember = await staffMemberRepository.getStaffMember(
       db,
@@ -56,6 +65,28 @@ class StaffMemberService extends Service {
       });
     }
 
+    const staffRoles = await staffRoleRepository.getStaffRoles(db, tournamentId, staffRoleIds, {
+      permissions: true
+    });
+
+    if (!staffRoles) {
+      throw new HTTPException(404, {
+        message: 'Staff roles not found/not belong to this tournament'
+      });
+    }
+
+    if (
+      staffRoles.some(
+        (staffRole) =>
+          new Set(staffRole.permissions).has('manage_tournament') &&
+          sourceStaffMember.userId !== hostUserId
+      )
+    ) {
+      throw new HTTPException(403, {
+        message: 'Only the host can assign/remove roles with tournament management permission'
+      });
+    }
+
     const staffMemberRoles = await db
       .select(
         pick(StaffMemberRole, {
@@ -65,14 +96,14 @@ class StaffMemberService extends Service {
       .from(StaffMemberRole)
       .where(eq(StaffMemberRole.staffMemberId, existingStaffMember.id));
 
-    const staffRoles = await fn.validate(
+    const updateStaffRoles = await fn.validate(
       staffMemberDynamicValidation.updateStaffMemberRoles(staffMemberRoles),
       'staff member roles',
       data
     );
 
     return await fn.handleDbQuery(
-      staffMemberRepository.updateStaffMemberRoles(db, existingStaffMember.id, staffRoles)
+      staffMemberRepository.updateStaffMemberRoles(db, existingStaffMember.id, updateStaffRoles)
     );
   }
 

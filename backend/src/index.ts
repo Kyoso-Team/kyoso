@@ -6,6 +6,7 @@ import RedisStore from 'rate-limit-redis';
 import { devRouter } from '$src/routers/dev.ts';
 import { tournamentRouter } from '$src/routers/tournament';
 import { authRouter } from './routers/auth';
+import { staffMemberRouter } from './routers/staff-member';
 import { staffRoleRouter } from './routers/staff-role';
 import { redis } from './singletons';
 import { env } from './utils/env';
@@ -39,7 +40,8 @@ const app = new Hono()
   .route('/', authRouter)
   .route('/', tournamentRouter)
   .route('/', devRouter)
-  .route('/', staffRoleRouter);
+  .route('/', staffRoleRouter)
+  .route('/', staffMemberRouter);
 
 export default app;
 export type App = typeof app;

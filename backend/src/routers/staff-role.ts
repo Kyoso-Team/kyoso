@@ -1,6 +1,7 @@
 import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
 import * as v from 'valibot';
+import { staffPermissionsMiddleware } from '$src/middlewares/permissions';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { staffRoleService } from '$src/modules/staff-role/service';
 import { StaffRoleValidation } from '$src/modules/staff-role/validation';
@@ -10,6 +11,7 @@ import * as s from '$src/utils/validation';
 export const staffRoleRouter = new Hono()
   .basePath('staff/role')
   .use(sessionMiddleware())
+  .use(staffPermissionsMiddleware(['manage_tournament']))
   .post('/', vValidator('json', StaffRoleValidation.CreateStaffRole), async (c) => {
     const body = c.req.valid('json');
 
@@ -58,20 +60,13 @@ export const staffRoleRouter = new Hono()
     vValidator(
       'param',
       v.object({
-        staffRoleId: s.integerId()
-      })
-    ),
-    vValidator(
-      'query',
-      v.object({
-        tournamentId: s.stringToInteger()
+        staffRoleId: s.stringToInteger()
       })
     ),
     async (c) => {
       const { staffRoleId } = c.req.valid('param');
-      const { tournamentId } = c.req.valid('query');
 
-      await staffRoleService.deleteStaffRole(db, staffRoleId, tournamentId);
+      await staffRoleService.deleteStaffRole(db, staffRoleId);
 
       return c.json({ message: 'Staff role deleted' });
     }

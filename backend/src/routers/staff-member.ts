@@ -19,7 +19,10 @@ export const staffMemberRouter = new Hono()
     async (c) => {
       const body = c.req.valid('json');
 
-      await staffMemberService.updateStaffMemberRoles(db, body);
+      const staffMember = c.get('staffMember');
+      const hostUserId = c.get('tournament').hostUserId;
+
+      await staffMemberService.updateStaffMemberRoles(db, staffMember, hostUserId, body);
 
       return c.json({ message: 'Staff member roles updated' });
     }
