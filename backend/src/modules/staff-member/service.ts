@@ -33,7 +33,6 @@ class StaffMemberService extends Service {
     return await fn.handleDbQuery(staffMemberRepository.createStaffMember(db, staffMember));
   }
 
-  //TODO: finish this function
   public async updateStaffMemberRoles(
     db: DatabaseClient,
     sourceStaffMember: StaffMemberContext,
