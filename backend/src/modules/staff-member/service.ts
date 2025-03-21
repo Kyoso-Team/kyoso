@@ -1,6 +1,6 @@
-import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
-import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
+import { StaffMemberRole } from '$src/schema';
 import { db } from '$src/singletons/db';
 import { pick } from '$src/utils/query';
 import { Service } from '$src/utils/service';

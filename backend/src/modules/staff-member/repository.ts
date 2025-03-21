@@ -1,5 +1,5 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
-import { StaffMember, StaffMemberRole, StaffPermission, StaffRole } from '$src/schema';
+import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { StaffPermissions } from '$src/middlewares/permissions';
@@ -29,6 +29,9 @@ class StaffMemberRepository {
         )
       )
       .then((rows) => {
+        if (rows.length === 0) {
+          return null;
+        }
         return {
           ...rows[0],
           //@ts-expect-error -- it doesn't like the select generic
