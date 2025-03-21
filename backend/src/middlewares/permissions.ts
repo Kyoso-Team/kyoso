@@ -1,4 +1,3 @@
-import { S3 } from '@aws-sdk/client-s3';
 import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
@@ -29,7 +28,10 @@ export const staffPermissionsMiddleware = (permissions: StaffPermissions[] = [])
       next
     ) => {
       const payload =
-        c.req.method !== 'GET' ? await c.req.json<{ tournamentId: string }>() : c.req.query();
+        c.req.method === 'GET' || c.req.method === 'DELETE'
+          ? c.req.query()
+          : await c.req.json<{ tournamentId: string }>();
+
       if (!payload.tournamentId || isNaN(parseInt(payload.tournamentId))) {
         throw new HTTPException(400, {
           message: 'Missing tournament ID'
