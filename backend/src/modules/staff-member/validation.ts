@@ -18,7 +18,7 @@ export class StaffMemberValidation {
   });
 
   public static UpdateStaffMember = v.object({
-    ...this.CreateStaffMember.entries
+    ...v.omit(this.CreateStaffMember, ['userId']).entries
   });
 }
 

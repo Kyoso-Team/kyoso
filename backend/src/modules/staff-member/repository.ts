@@ -1,28 +1,40 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
-import { StaffMember, StaffMemberRole } from '$src/schema';
+import { StaffMember, StaffMemberRole, StaffPermission, StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { InferSelectModel } from 'drizzle-orm';
+import type { StaffPermissions } from '$src/middlewares/permissions';
 import type { DatabaseClient, Selection } from '$src/types';
 import type { StaffMemberValidationOutput } from './validation';
 
 class StaffMemberRepository {
   public async getStaffMember<T extends Selection<typeof StaffMember>>(
     db: DatabaseClient,
-    userId: number,
+    staffMemberId: number,
     tournamentId: number,
     select: T
   ) {
-    return db
-      .select(pick(StaffMember, select))
+    return await db
+      .select({
+        ...pick(StaffMember, select),
+        permissions: StaffRole.permissions
+      })
       .from(StaffMember)
+      .innerJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))
+      .innerJoin(StaffRole, eq(StaffRole.id, StaffMemberRole.staffRoleId))
       .where(
         and(
-          eq(StaffMember.userId, userId),
+          eq(StaffMember.id, staffMemberId),
           eq(StaffMember.tournamentId, tournamentId),
           or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
         )
       )
-      .then((rows) => rows[0]);
+      .then((rows) => {
+        return {
+          ...rows[0],
+          //@ts-expect-error -- it doesn't like the select generic
+          permissions: (rows.flatMap((row) => row.permissions) ?? []) as StaffPermissions[]
+        };
+      });
   }
 
   public async createStaffMember(
@@ -66,25 +78,29 @@ class StaffMemberRepository {
     }
   ) {
     return db.transaction(async (tx) => {
-      await tx
-        .delete(StaffMemberRole)
-        .where(
-          and(
-            eq(StaffMemberRole.staffMemberId, staffMemberId),
-            inArray(StaffMemberRole.staffRoleId, staffRoles.remove)
-          )
+      if (staffRoles.remove.length !== 0) {
+        await tx
+          .delete(StaffMemberRole)
+          .where(
+            and(
+              eq(StaffMemberRole.staffMemberId, staffMemberId),
+              inArray(StaffMemberRole.staffRoleId, staffRoles.remove)
+            )
+          );
+      }
+
+      if (staffRoles.add.length !== 0) {
+        const staffMemberRoles = staffRoles.add.map<InferSelectModel<typeof StaffMemberRole>>(
+          (staffRoleId) => {
+            return {
+              staffMemberId,
+              staffRoleId
+            };
+          }
         );
 
-      const staffMemberRoles = staffRoles.add.map<InferSelectModel<typeof StaffMemberRole>>(
-        (staffRoleId) => {
-          return {
-            staffMemberId,
-            staffRoleId
-          };
-        }
-      );
-
-      await db.insert(StaffMemberRole).values(staffMemberRoles);
+        await db.insert(StaffMemberRole).values(staffMemberRoles);
+      }
     });
   }
 

@@ -36,14 +36,15 @@ class StaffMemberService extends Service {
   public async updateStaffMemberRoles(
     db: DatabaseClient,
     sourceStaffMember: StaffMemberContext,
+    staffMemberId: number,
     hostUserId: number | null,
     data: StaffMemberValidationOutput['UpdateStaffMember']
   ) {
     const fn = this.createServiceFunction('Failed to update staff member roles');
 
-    const { userId, tournamentId, staffRoleIds } = data;
+    const { tournamentId, staffRoleIds } = data;
 
-    if (sourceStaffMember.userId === userId) {
+    if (sourceStaffMember.id === staffMemberId) {
       throw new HTTPException(403, {
         message: 'Cannot update own roles'
       });
@@ -51,7 +52,7 @@ class StaffMemberService extends Service {
 
     const existingStaffMember = await staffMemberRepository.getStaffMember(
       db,
-      userId,
+      staffMemberId,
       tournamentId,
       {
         id: true
@@ -64,13 +65,22 @@ class StaffMemberService extends Service {
       });
     }
 
+    if (
+      new Set(existingStaffMember.permissions).has('manage_tournament') &&
+      sourceStaffMember.userId !== hostUserId
+    ) {
+      throw new HTTPException(403, {
+        message: 'Cannot update roles of staff member with tournament management permissions'
+      });
+    }
+
     const staffRoles = await staffRoleRepository.getStaffRoles(db, tournamentId, staffRoleIds, {
       permissions: true
     });
 
-    if (!staffRoles) {
-      throw new HTTPException(404, {
-        message: 'Staff roles not found/not belong to this tournament'
+    if (staffRoles.length !== data.staffRoleIds.length) {
+      throw new HTTPException(400, {
+        message: 'All staff roles must belong to the same tournament'
       });
     }
 
@@ -82,7 +92,7 @@ class StaffMemberService extends Service {
       )
     ) {
       throw new HTTPException(403, {
-        message: 'Only the host can assign/remove roles with tournament management permission'
+        message: 'Only host can assign tournament management permissions'
       });
     }
 
@@ -120,24 +130,15 @@ class StaffMemberService extends Service {
 
     const fn = this.createServiceFunction('Failed to remove staff member');
 
-    const staffMemberToRemove = await db
-      .select()
-      .from(StaffMember)
-      .leftJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))
-      .leftJoin(StaffRole, eq(StaffRole.id, StaffMemberRole.staffRoleId))
-      .where(
-        and(
-          eq(StaffMember.id, targetStaffMemberId),
-          eq(StaffMember.tournamentId, tournamentId),
-          or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
-        )
-      )
-      .then((rows) => {
-        return {
-          ...rows[0].staff_member,
-          staffRoles: new Set(rows.flatMap((row) => row.staff_role?.permissions ?? []))
-        };
-      });
+    const staffMemberToRemove = await staffMemberRepository.getStaffMember(
+      db,
+      targetStaffMemberId,
+      tournamentId,
+      {
+        id: true,
+        userId: true
+      }
+    );
 
     if (!staffMemberToRemove) {
       throw new HTTPException(404, {
@@ -152,7 +153,7 @@ class StaffMemberService extends Service {
     }
 
     if (
-      staffMemberToRemove.staffRoles.has('manage_tournament') &&
+      new Set(staffMemberToRemove.permissions).has('manage_tournament') &&
       sourceStaffMember.userId !== hostUserId
     ) {
       throw new HTTPException(403, {

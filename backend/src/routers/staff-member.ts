@@ -17,12 +17,19 @@ export const staffMemberRouter = new Hono()
     vValidator('json', StaffMemberValidation.UpdateStaffMember),
     staffPermissionsMiddleware(['manage_tournament']),
     async (c) => {
+      const { staffMemberId } = c.req.valid('param');
       const body = c.req.valid('json');
 
       const staffMember = c.get('staffMember');
       const hostUserId = c.get('tournament').hostUserId;
 
-      await staffMemberService.updateStaffMemberRoles(db, staffMember, hostUserId, body);
+      await staffMemberService.updateStaffMemberRoles(
+        db,
+        staffMember,
+        staffMemberId,
+        hostUserId,
+        body
+      );
 
       return c.json({ message: 'Staff member roles updated' });
     }
