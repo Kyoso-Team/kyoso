@@ -183,7 +183,7 @@ const authRouter = new Hono()
       return c.redirect(`${env.FRONTEND_URL}${redirect_path ?? '/'}`, 302);
     }
   )
-  .get('/refresh-tokens', sessionMiddleware(), async (c) => {
+  .patch('/refresh-tokens', sessionMiddleware(), async (c) => {
     const { osu, discord } = c.get('user');
 
     await authenticationService.refreshTokens({
