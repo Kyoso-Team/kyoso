@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { snakeCase } from 'scule';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import type { OsuBadgeValidationOutput } from './validation';
@@ -24,19 +25,21 @@ class OsuBadgeRepository {
     badges: OsuBadgeValidationOutput['CreateOsuUserAwardedBadge'][],
     osuUserId: number
   ) {
+    const sqlExpressions = badges
+      .map(
+        (badge) =>
+          `when ${snakeCase(OsuBadge.imgFileName.name)} = '${badge.imgFileName}' then '${badge.awardedAt.toISOString()}'::date`
+      )
+      .join(' ');
+
     return db
       .insert(OsuUserAwardedBadge)
       .select(
         db
           .select({
-            awardedAt: sql`case ${badges
-              .map(
-                (badge) =>
-                  sql`when ${OsuBadge.imgFileName} = ${badge.imgFileName} then ${badge.awardedAt}`
-              )
-              .join(' ')} end`.as('awarded_at'),
+            osuUserId: sql`${osuUserId}`.as('osu_user_id'),
             osuBadgeId: OsuBadge.id,
-            osuUserId: sql`${osuUserId}`.as('osu_user_id')
+            awardedAt: sql.raw(`case ${sqlExpressions} end`).as('awarded_at')
           })
           .from(OsuBadge)
       )
