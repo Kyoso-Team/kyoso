@@ -35,7 +35,7 @@ class AuthenticationService extends Service {
   public async refreshTokens({ osu, discord }: UserTokens) {
     const now = new Date();
 
-    if (osu.token.tokenIssuedAt >= now.getTime()) {
+    if (now.getDate() - new Date(osu.token.tokenIssuedAt).getDate() >= 1) {
       const newOsuTokens = await osuOAuth.refreshAccessToken(osu.token.refreshToken);
       await userService.updateOsuUser(
         db,
@@ -46,7 +46,7 @@ class AuthenticationService extends Service {
       );
     }
 
-    if (discord.token.tokenIssuedAt >= now.getTime()) {
+    if (now.getDate() - new Date(discord.token.tokenIssuedAt).getDate() >= 1) {
       const newDiscordTokens = await mainDiscordOAuth.refreshAccessToken(
         discord.token.refreshToken
       );
