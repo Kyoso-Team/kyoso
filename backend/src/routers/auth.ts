@@ -10,6 +10,7 @@ import { authenticationService } from '$src/modules/authentication/service';
 import { cookieService } from '$src/modules/cookie/service';
 import { discordService } from '$src/modules/discord/service.ts';
 import { entityRepository } from '$src/modules/entity/repository';
+import { osuBadgeService } from '$src/modules/osu-badge/service';
 import { osuRepository } from '$src/modules/osu/repository';
 import { osuService } from '$src/modules/osu/service';
 import { userRepository } from '$src/modules/user/repository';
@@ -84,6 +85,12 @@ const authRouter = new Hono()
         }
 
         await authenticationService.createSession(c, db, osuUser.userId);
+
+        const badges = await osuService
+          .getOsuSelf(accessToken)
+          .then((user) => user.badges.map(authenticationService.transformBadge));
+
+        await osuBadgeService.handleOsuUserAwardedBadges(db, badges, osuUserId);
 
         const redirectPath = cookieService.getRedirectPath(c);
         cookieService.deleteRedirectPath(c);

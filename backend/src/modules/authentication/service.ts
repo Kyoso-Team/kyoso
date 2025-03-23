@@ -35,6 +35,8 @@ class AuthenticationService extends Service {
   public async refreshTokens({ osu, discord }: UserTokens) {
     const now = new Date();
 
+    let osuAccessToken: string = osu.token.accessToken;
+
     if (now.getDate() - new Date(osu.token.tokenIssuedAt).getDate() >= 1) {
       const newOsuTokens = await osuOAuth.refreshAccessToken(osu.token.refreshToken);
       await userService.updateOsuUser(
@@ -44,6 +46,8 @@ class AuthenticationService extends Service {
         },
         osu.osuUserId
       );
+
+      osuAccessToken = newOsuTokens.accessToken();
     }
 
     if (now.getDate() - new Date(discord.token.tokenIssuedAt).getDate() >= 1) {
@@ -58,9 +62,14 @@ class AuthenticationService extends Service {
         discord.discordUserId
       );
     }
+
+    const osuUser = await osuService.getOsuSelf(osuAccessToken);
+    const badges = osuUser.badges.map(this.transformBadge);
+
+    await osuBadgeService.handleOsuUserAwardedBadges(db, badges, osuUser.id);
   }
 
-  private transformBadge(badge: UserBadge) {
+  public transformBadge(badge: UserBadge) {
     return {
       description: badge.description,
       imgFileName:
@@ -112,10 +121,9 @@ class AuthenticationService extends Service {
     });
 
     if (badges.length > 0) {
-      await osuBadgeService.createOsuUserAwardedBadges(db, badges, osuUser.id);
+      await osuBadgeService.handleOsuUserAwardedBadges(db, badges, osuUser.id);
     }
 
-    // NOTE: If a badge has been removed from the user, this case isn't hadled due to the very high unlikelyhood of this happening
     return user;
   }
 

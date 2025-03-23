@@ -1,9 +1,20 @@
-import { SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, SQL, sql } from 'drizzle-orm';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import type { OsuBadgeValidationOutput } from './validation';
 
 class OsuBadgeRepository {
+  public async getOsuUserAwardedBadges(db: DatabaseClient, osuUserId: number) {
+    return db
+      .select({
+        badge: OsuBadge
+      })
+      .from(OsuUserAwardedBadge)
+      .innerJoin(OsuBadge, eq(OsuBadge.id, OsuUserAwardedBadge.osuBadgeId))
+      .where(eq(OsuUserAwardedBadge.osuUserId, osuUserId))
+      .then((rows) => rows.map((row) => row.badge));
+  }
+
   public async upsertOsuBadges(
     db: DatabaseClient,
     badges: OsuBadgeValidationOutput['UpsertOsuBadge'][]
@@ -39,10 +50,31 @@ class OsuBadgeRepository {
             awardedAt: sql`case ${sql.join(sqlExpressions, sql` `)} end`.as('awarded_at')
           })
           .from(OsuBadge)
+          .where(
+            inArray(
+              OsuBadge.imgFileName,
+              badges.map((badge) => badge.imgFileName)
+            )
+          )
       )
       .onConflictDoNothing({
         target: [OsuUserAwardedBadge.osuUserId, OsuUserAwardedBadge.osuBadgeId]
       });
+  }
+
+  public async removeOsuUserAwardedBadges(
+    db: DatabaseClient,
+    badgeIds: number[],
+    osuUserId: number
+  ) {
+    return db
+      .delete(OsuUserAwardedBadge)
+      .where(
+        and(
+          eq(OsuUserAwardedBadge.osuUserId, osuUserId),
+          inArray(OsuUserAwardedBadge.osuBadgeId, badgeIds)
+        )
+      );
   }
 }
 
