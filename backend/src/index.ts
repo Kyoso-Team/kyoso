@@ -33,7 +33,7 @@ const app = new Hono()
         // Known issue with @ioredis/types
         sendCommand: (...args: [string, ...string[]]) => redis.call(...args) as any
       }) as unknown as Store,
-      skip: env.NODE_ENV === 'test' ? () => true : undefined
+      skip: () => env.NODE_ENV === 'test'
     })
   )
   .route('/', authRouter)
