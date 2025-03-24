@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import RedisStore from 'rate-limit-redis';
 import { devRouter } from '$src/routers/dev.ts';
 import { tournamentRouter } from '$src/routers/tournament';
+import { apiKeyRouter } from './routers/api-key';
 import { authRouter } from './routers/auth';
 import { staffRoleRouter } from './routers/staff-role';
 import { redis } from './singletons';
@@ -39,7 +40,8 @@ const app = new Hono()
   .route('/', authRouter)
   .route('/', tournamentRouter)
   .route('/', devRouter)
-  .route('/', staffRoleRouter);
+  .route('/', staffRoleRouter)
+  .route('/', apiKeyRouter);
 
 export default app;
 export type App = typeof app;
