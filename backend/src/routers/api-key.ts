@@ -6,7 +6,7 @@ import { apiKeyService } from '$src/modules/api-key/service';
 import * as s from '$src/utils/validation';
 
 export const apiKeyRouter = new Hono()
-  .basePath('keys')
+  .basePath('api-keys')
   .use(sessionMiddleware())
   .get('/', async (c) => {
     const keys = await apiKeyService.getUserApiKeys(c.get('user').id);
