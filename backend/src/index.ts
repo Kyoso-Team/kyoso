@@ -7,6 +7,7 @@ import { devRouter } from '$src/routers/dev.ts';
 import { tournamentRouter } from '$src/routers/tournament';
 import { apiKeyRouter } from './routers/api-key';
 import { authRouter } from './routers/auth';
+import { staffMemberRouter } from './routers/staff-member';
 import { staffRoleRouter } from './routers/staff-role';
 import { redis } from './singletons';
 import { env } from './utils/env';
@@ -34,13 +35,14 @@ const app = new Hono()
         // Known issue with @ioredis/types
         sendCommand: (...args: [string, ...string[]]) => redis.call(...args) as any
       }) as unknown as Store,
-      skip: env.NODE_ENV === 'test' ? () => true : undefined
+      skip: () => env.NODE_ENV === 'test'
     })
   )
   .route('/', authRouter)
   .route('/', tournamentRouter)
   .route('/', devRouter)
   .route('/', staffRoleRouter)
+  .route('/', staffMemberRouter)
   .route('/', apiKeyRouter);
 
 export default app;
