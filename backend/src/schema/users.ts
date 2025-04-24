@@ -26,7 +26,8 @@ export const User = pgTable('user', {
 });
 
 export const UserApiKey = pgTable('user_api_key', {
-  key: text().primaryKey(),
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  key: text().notNull().unique(),
   createdAt: timestamp(timestampConfig).notNull().defaultNow(),
   userId: integer()
     .notNull()
