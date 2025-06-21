@@ -83,7 +83,6 @@ class TournamentRepository {
 
   public async syncTournament(tournament: MeilisearchTournamentIndex) {
     const index = meilisearch.index<MeilisearchTournamentIndex>('tournaments');
-
     await index.updateDocuments([tournament]);
   }
 }

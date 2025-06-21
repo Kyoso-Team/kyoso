@@ -1,6 +1,5 @@
 import * as v from 'valibot';
 import * as s from '$src/utils/validation';
-import { AuthenticationValidation } from '../authentication/validation';
 import type { MapInput, MapOutput } from '$src/types';
 
 export abstract class UserValidation {
@@ -25,7 +24,7 @@ export abstract class UserValidation {
     osuUserId: s.integerId(),
     username: v.pipe(v.string(), v.nonEmpty(), v.maxLength(15)),
     restricted: v.boolean(),
-    token: AuthenticationValidation.OAuthToken,
+    token: s.OAuthToken,
     countryCode: v.pipe(v.string(), v.length(2), v.toUpperCase())
   });
 
@@ -35,7 +34,7 @@ export abstract class UserValidation {
     userId: s.integerId(),
     discordUserId: s.bigintId(),
     username: v.pipe(v.string(), v.minLength(1), v.maxLength(32)),
-    token: AuthenticationValidation.OAuthToken
+    token: s.OAuthToken
   });
 
   public static UpdateDiscordUser = v.partial(

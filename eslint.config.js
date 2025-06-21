@@ -58,6 +58,7 @@ export default ts.config(
           caughtErrorsIgnorePattern: '^_'
         }
       ],
+      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
       'svelte/no-at-html-tags': 'off'
       // 'drizzle/enforce-delete-with-where': [
       //   'error',

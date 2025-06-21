@@ -1,17 +1,14 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { HTTPException } from 'hono/http-exception';
+import { time } from '$src/utils';
 import type { Context } from 'hono';
+import { Service } from '$src/utils/service';
 
-class CookieService {
-  // Values in ms
-  private MINUTES_10 = 600;
-  private DAYS_90 = 7776000;
-
+export class CookieService extends Service {
   public setOAuthState(c: Context, forOAuth: 'osu' | 'discord', state: string) {
     setCookie(c, `${forOAuth}_oauth_state`, state, {
       path: '/',
       httpOnly: true,
-      maxAge: this.MINUTES_10,
+      maxAge: time.minutes(10),
       sameSite: 'lax'
     });
   }
@@ -19,11 +16,6 @@ class CookieService {
   public getOAuthState(c: Context, forOAuth: 'osu' | 'discord') {
     const cookieName = `${forOAuth}_oauth_state`;
     const cookie = getCookie(c, cookieName);
-    if (!cookie) {
-      throw new HTTPException(400, {
-        message: `Missing cookie: ${cookieName}`
-      });
-    }
     return cookie;
   }
 
@@ -31,7 +23,7 @@ class CookieService {
     setCookie(c, 'session', sessionToken, {
       path: '/',
       httpOnly: true,
-      maxAge: this.DAYS_90,
+      maxAge: time.days(90),
       sameSite: 'lax'
     });
   }
@@ -48,7 +40,7 @@ class CookieService {
     setCookie(c, 'redirect_path', redirectPath, {
       path: '/',
       httpOnly: true,
-      maxAge: this.MINUTES_10,
+      maxAge: time.minutes(10),
       sameSite: 'lax'
     });
   }
@@ -61,5 +53,3 @@ class CookieService {
     return getCookie(c, 'redirect_path');
   }
 }
-
-export const cookieService = new CookieService();

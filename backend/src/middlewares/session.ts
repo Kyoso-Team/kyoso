@@ -1,6 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
-import { authenticationService } from '$src/modules/authentication/service.ts';
+import { authenticationService } from '$src/modules/authentication/authentication.service';
 import { User } from '$src/schema';
 import { db } from '$src/singletons';
 import type { InferSelectModel } from 'drizzle-orm';

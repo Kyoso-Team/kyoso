@@ -1,7 +1,7 @@
 import { HTTPException } from 'hono/http-exception';
-import { authenticationService } from '$src/modules/authentication/service.ts';
-import { userRepository } from '$src/modules/user/repository.ts';
-import { userService } from '$src/modules/user/service.ts';
+import { authenticationService } from '$src/modules/authentication/authentication.service';
+import { userRepository } from '$src/modules/user/user.repository';
+import { userService } from '$src/modules/user/user.service';
 import { User } from '$src/schema';
 import { db } from '$src/singletons';
 import type { InferSelectModel } from 'drizzle-orm';

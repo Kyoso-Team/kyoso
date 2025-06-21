@@ -1,8 +1,9 @@
 import { bearerAuth } from 'hono/bearer-auth';
-import { apiKeyService } from '$src/modules/api-key/service';
+import { ApiKeyService } from '$src/modules/api-key/api-key.service';
 
 export const apiKeyMiddleware = bearerAuth({
-  verifyToken: async (token, _) => {
-    return apiKeyService.checkApiKey(token);
+  verifyToken: async (token, c) => {
+    const apiKeyService = new ApiKeyService('request', c.get('requestId'));
+    return apiKeyService.doesApiKeyExist(token);
   }
 });

@@ -1,34 +1,36 @@
 import { db } from '$src/singletons';
 import { Service } from '$src/utils/service';
-import { apiKeyRepository } from './repository';
+import { apiKeyRepository } from './api-key.repository';
 
-class ApiKeyService extends Service {
+export class ApiKeyService extends Service {
   private BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   private RANDOMNESS_LENGTH = 30;
   private CHECKSUM_LENGTH = 6;
 
-  public async checkApiKey(apiKey: string) {
-    return await apiKeyRepository.checkApiKeyExists(db, apiKey);
-  }
-
-  public async getUserApiKeys(userId: number) {
-    return await apiKeyRepository.getUserApiKeys(db, userId).then((res) =>
-      res.map((r) => {
-        return {
-          ...r,
-          key: `${r.key.substring(0, 12)}...`
-        };
+  public async createApiKey(userId: number) {
+    const key = this.generateKey();
+    return await this.execute(
+      apiKeyRepository.db.createApiKey(db, {
+        key,
+        userId
       })
     );
   }
 
-  public async createApiKey(userId: number) {
-    const key = this.generateKey();
-    return await apiKeyRepository.createApiKey(db, key, userId);
+  public async deleteApiKey(apiKeyId: number, userId: number) {
+    await this.execute(
+      apiKeyRepository.db.deleteApiKey(db, apiKeyId, userId)
+    );
   }
 
-  public async deleteApiKey(apiKeyId: number, userId: number) {
-    return await apiKeyRepository.deleteApiKey(db, apiKeyId, userId);
+  public async getUserApiKeys(userId: number) {
+    return await this.execute(
+      apiKeyRepository.db.getUserApiKeys(db, userId)
+    );
+  }
+
+  public async doesApiKeyExist(apiKey: string) {
+    return await this.execute(apiKeyRepository.db.doesApiKeyExist(db, apiKey));
   }
 
   private generateRandomString(length: number) {
@@ -59,5 +61,3 @@ class ApiKeyService extends Service {
     return `${randomness}${checksum}`;
   }
 }
-
-export const apiKeyService = new ApiKeyService();

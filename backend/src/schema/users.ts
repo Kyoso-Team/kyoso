@@ -15,7 +15,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { Tournament } from './tournaments';
 import { timestampConfig } from './utils';
-import type { AuthenticationValidationOutput } from '$src/modules/authentication/validation';
+import * as s from '$src/utils/validation';
 
 export const User = pgTable('user', {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -52,7 +52,7 @@ export const OsuUser = pgTable(
     globalTaikoRank: integer(),
     globalCatchRank: integer(),
     globalManiaRank: integer(),
-    token: jsonb().notNull().$type<AuthenticationValidationOutput['OAuthToken']>(),
+    token: jsonb().notNull().$type<s.OAuthToken>(),
     countryCode: char('country_code', {
       length: 2
     })
@@ -113,7 +113,7 @@ export const DiscordUser = pgTable('discord_user', {
   updatedAt: timestamp(timestampConfig).notNull().defaultNow(),
   discordUserId: bigint({ mode: 'bigint' }).notNull(),
   username: varchar({ length: 32 }).notNull(),
-  token: jsonb().notNull().$type<AuthenticationValidationOutput['OAuthToken']>()
+  token: jsonb().notNull().$type<s.OAuthToken>()
 });
 
 export const Session = pgTable('session', {

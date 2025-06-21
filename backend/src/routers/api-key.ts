@@ -2,19 +2,23 @@ import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { sessionMiddleware } from '$src/middlewares/session';
-import { apiKeyService } from '$src/modules/api-key/service';
+import { ApiKeyService } from '$src/modules/api-key/api-key.service';
 import * as s from '$src/utils/validation';
+import { servicesMiddleware } from '$src/middlewares/services';
 
 export const apiKeyRouter = new Hono()
   .basePath('api-keys')
+  .use(servicesMiddleware({
+    apiKeyService: ApiKeyService
+  }))
   .use(sessionMiddleware())
   .get('/', async (c) => {
-    const keys = await apiKeyService.getUserApiKeys(c.get('user').id);
-    return c.json({ keys });
+    const keys = await c.var.apiKeyService.getUserApiKeys(c.get('user').id);
+    return c.json(keys);
   })
   .post('/', async (c) => {
-    const key = await apiKeyService.createApiKey(c.get('user').id);
-    return c.json({ key });
+    const key = await c.var.apiKeyService.createApiKey(c.get('user').id);
+    return c.json(key);
   })
   .delete(
     '/:apiKeyId',
@@ -27,7 +31,7 @@ export const apiKeyRouter = new Hono()
     async (c) => {
       const { apiKeyId } = c.req.valid('param');
 
-      await apiKeyService.deleteApiKey(apiKeyId, c.get('user').id);
+      await c.var.apiKeyService.deleteApiKey(apiKeyId, c.get('user').id);
 
       return c.json({ message: 'Successfully deleted API key' });
     }

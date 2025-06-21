@@ -36,26 +36,12 @@ export const dateOrString = () =>
     )
   ]);
 
-export const omitPiped = <
-  TPiped extends v.SchemaWithPipe<readonly [v.ObjectSchema<any, any>, ...any[]]>,
-  TObject extends TPiped['pipe'][0],
-  TEntries extends keyof TObject['entries'],
-  TKeys extends [TEntries, ...TEntries[]],
-  TRestPipe extends TPiped['pipe'] extends readonly [infer _, ...infer TRest]
-    ? TRest extends v.PipeItem<any, any, any>[]
-      ? TRest
-      : never
-    : never
->(
-  schema: TPiped,
-  keys: TKeys
-): v.SchemaWithPipe<readonly [v.SchemaWithOmit<TObject, TKeys>, ...TRestPipe]> => {
-  return v.pipe(v.omit(schema.pipe[0], keys), ...schema.pipe.slice(1)) as any;
-};
-
-/**
- * To avoid redundant validation in dynamic validation classes
- */
-export const $assume = <T>() => {
-  return v.any() as v.GenericSchema<T>;
-};
+export const OAuthToken = v.object({
+  /** Encrypted using JWT */
+  accessToken: nonEmptyString(),
+  /** Encrypted using JWT */
+  refreshToken: nonEmptyString(),
+  /** Timestamp in milliseconds */
+  tokenIssuedAt: v.pipe(v.number(), v.integer())
+});
+export type OAuthToken = v.InferOutput<typeof OAuthToken>;

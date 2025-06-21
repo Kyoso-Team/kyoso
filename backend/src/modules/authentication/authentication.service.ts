@@ -7,14 +7,12 @@ import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { Service } from '$src/utils/service';
-import { cookieService } from '../cookie/service';
 import { discordService } from '../discord/service';
 import { ipInfoService } from '../ipinfo/service';
 import { osuBadgeService } from '../osu-badge/service';
-import { osuService } from '../osu/service';
 import { sessionRepository } from '../session/repository';
 import { SessionValidation } from '../session/validation';
-import { userService } from '../user/service';
+import { userService } from '../user/user.service';
 import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
 import type { UserTokens } from '$src/middlewares/session.ts';
@@ -22,6 +20,7 @@ import type { Session } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
 import type { SessionSelection } from '../session/types';
 import type { AuthenticationValidationInput, AuthenticationValidationOutput } from './validation';
+import { userRepository } from '../user/user.repository';
 
 class AuthenticationService extends Service {
   public transformArcticToken(token: OAuth2Tokens): AuthenticationValidationOutput['OAuthToken'] {
@@ -79,6 +78,7 @@ class AuthenticationService extends Service {
   }
 
   public async registerUser(
+    c: Context,
     osuToken: AuthenticationValidationInput['OAuthToken'],
     discordToken: AuthenticationValidationInput['OAuthToken']
   ) {
@@ -93,10 +93,10 @@ class AuthenticationService extends Service {
 
     const user = await db.transaction(async (tx) => {
       const isOwner = env.KYOSO_OWNER === osuUser.id;
-      const user = await userService.createUser(tx, {
+      const user = await this.execute(userRepository.db.createUser(tx, {
         admin: isOwner,
         approvedHost: isOwner
-      });
+      }));
       await userService.createOsuUser(tx, {
         userId: user.id,
         osuUserId: osuUser.id,

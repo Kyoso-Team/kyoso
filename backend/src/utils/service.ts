@@ -1,21 +1,55 @@
 import * as v from 'valibot';
 import { env } from './env';
-import { unknownError, validationError } from './error';
+import { UnknownError, unknownError, validationError } from './error';
+import type { QueryWrapper } from './repository';
+import { logger } from '$src/singletons';
+import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
 
 export abstract class Service {
-  protected checkTest() {
-    if (env.NODE_ENV !== 'test') {
-      throw new Error('Operation only allowed in test environment');
-    }
-  }
+  constructor(private operation: 'request' | 'job', private operationId: string) {}
 
-  protected createServiceFunction(errorMessage: string) {
-    return new ServiceFunction(errorMessage);
+  /**
+   * "Operation" could be a request or a background job
+   */
+  protected async execute<T extends QueryWrapper<any>>(wrapped: T): Promise<Awaited<ReturnType<T['execute']>>> {
+    let logMsg = `${this.operation === 'request' ? 'Request' : 'Background job'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
+    let failed = false;
+    const start = performance.now();
+
+    try {
+      return await wrapped.execute();
+    } catch (err) {
+      failed = true;
+      throw new UnknownError(`${wrapped.meta.name} (${wrapped.meta.queryType}) failed in ${this.operation} ${this.operationId}`, {
+        cause: err
+      });
+    } finally {
+      const duration = performance.now() - start;
+      logMsg += `${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
+
+      if (wrapped.meta.queryType === 'db') {
+        logMsg += `${wrapped.meta.query}${
+          wrapped.meta.params.length > 0 && env.NODE_ENV !== 'production'
+            ? ` [${wrapped.meta.params.join(', ')}]`
+            : ''
+        }`;
+      } else if (wrapped.meta.queryType === 'kv') {
+        logMsg += `${wrapped.meta.method} "${wrapped.meta.key}"${
+          wrapped.meta.value ? ` to "${wrapped.meta.value}"` : ''
+        }${wrapped.meta.expires ? ` to expire in ${wrapped.meta.expires}ms` : ''}`;
+      }
+
+      if (failed) {
+        logger.error(logMsg);
+      } else {
+        logger.info(logMsg);
+      }
+    }
   }
 
   protected async fetch<T extends v.GenericSchema>(
     url: string | URL,
-    method: 'GET' | 'POST',
+    method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
     errorMessage: string,
     schema: T,
     item: string,
@@ -37,28 +71,21 @@ export abstract class Service {
     const data = await resp.json().catch(unknownError(errorMessage));
     return await v.parseAsync(schema, data).catch(validationError(errorMessage, item));
   }
-}
 
-class ServiceFunction {
-  constructor(public errorMessage: string) {}
+  // TODO: Handle errors and rollbacks properly
+  protected async transaction<T>(db: DatabaseClient, txName: string, transactionFn: (tx: DatabaseTransactionClient) => Promise<T>) {
+    let logMsg = `${this.operation === 'request' ? 'Request' : 'Background job'} ${this.operationId} - ${txName} (tx) - `;
+    const start = performance.now();
 
-  public async validate<T extends v.GenericSchema>(
-    schema: T,
-    item: string,
-    data: any
-  ): Promise<v.InferOutput<T>> {
-    return await v.parseAsync(schema, data).catch(validationError(this.errorMessage, item));
-  }
-
-  public async handleDbQuery<T>(query: Promise<T>, errorHandler?: (err: any) => never): Promise<T> {
-    return await query.catch(errorHandler ?? unknownError(this.errorMessage));
-  }
-
-  public async handleRedisQuery<T>(query: Promise<T>): Promise<T> {
-    return await query.catch(unknownError(this.errorMessage));
-  }
-
-  public async handleSearchQuery<T>(query: Promise<T>): Promise<T> {
-    return await query.catch(unknownError(this.errorMessage));
+    try {
+      logger.info(`${logMsg}Start`);
+      return await db.transaction(async (tx) => {
+        await transactionFn(tx);
+      });
+    } finally {
+      const duration = performance.now() - start;
+      logMsg += `Completed in ${Math.round(duration)}ms`;
+      logger.info(logMsg);
+    }
   }
 }

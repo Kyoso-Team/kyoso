@@ -4,7 +4,8 @@ import type { PostgresJsDatabase, PostgresJsQueryResultHKT } from 'drizzle-orm/p
 import type Redis from 'ioredis';
 import type * as v from 'valibot';
 
-export type DatabaseClient = PostgresJsDatabase | PgTransaction<PostgresJsQueryResultHKT>;
+export type DatabaseClient = PostgresJsDatabase | PgTransaction<PostgresJsQueryResultHKT, any, any>;
+export type DatabaseTransactionClient = PgTransaction<PostgresJsQueryResultHKT, any, any>;
 
 export type RedisClient = Redis;
 

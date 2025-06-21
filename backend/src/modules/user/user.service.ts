@@ -1,66 +1,70 @@
 import { Service } from '$src/utils/service';
-import { userRepository } from './repository';
+import { userRepository } from './user.repository';
 import { UserValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { UserValidationInput } from './validation';
+import type { Context } from 'hono';
+import { db } from '$src/singletons';
 
 class UserService extends Service {
-  public async createDummyUser(
-    db: DatabaseClient,
-    n: number,
-    options?: {
-      admin?: boolean;
-      approvedHost?: boolean;
-      country?: {
-        code: string;
-        name: string;
-      };
-      restricted?: boolean;
-      globalStdRank?: number;
-    }
-  ) {
-    this.checkTest();
-    const user = await this.createUser(db, {
-      admin: options?.admin ?? false,
-      approvedHost: options?.approvedHost ?? false
-    });
-    await this.createCountry(
-      db,
-      options?.country ?? {
-        code: 'US',
-        name: 'United States'
-      }
-    );
-    await this.createOsuUser(db, {
-      countryCode: options?.country?.code ?? 'US',
-      osuUserId: n,
-      restricted: options?.restricted ?? false,
-      token: {
-        accessToken: 'abc',
-        refreshToken: 'abc',
-        tokenIssuedAt: Date.now()
-      },
-      userId: user.id,
-      username: `osuuser${n}`,
-      globalStdRank: options?.globalStdRank
-    });
-    await this.createDiscordUser(db, {
-      discordUserId: BigInt(n),
-      token: {
-        accessToken: 'abc',
-        refreshToken: 'abc',
-        tokenIssuedAt: Date.now()
-      },
-      userId: user.id,
-      username: `discorduser${n}`
-    });
-    return user;
+  // public async createDummyUser(
+  //   db: DatabaseClient,
+  //   n: number,
+  //   options?: {
+  //     admin?: boolean;
+  //     approvedHost?: boolean;
+  //     country?: {
+  //       code: string;
+  //       name: string;
+  //     };
+  //     restricted?: boolean;
+  //     globalStdRank?: number;
+  //   }
+  // ) {
+  //   this.checkTest();
+  //   const user = await this.createUser(db, {
+  //     admin: options?.admin ?? false,
+  //     approvedHost: options?.approvedHost ?? false
+  //   });
+  //   await this.createCountry(
+  //     db,
+  //     options?.country ?? {
+  //       code: 'US',
+  //       name: 'United States'
+  //     }
+  //   );
+  //   await this.createOsuUser(db, {
+  //     countryCode: options?.country?.code ?? 'US',
+  //     osuUserId: n,
+  //     restricted: options?.restricted ?? false,
+  //     token: {
+  //       accessToken: 'abc',
+  //       refreshToken: 'abc',
+  //       tokenIssuedAt: Date.now()
+  //     },
+  //     userId: user.id,
+  //     username: `osuuser${n}`,
+  //     globalStdRank: options?.globalStdRank
+  //   });
+  //   await this.createDiscordUser(db, {
+  //     discordUserId: BigInt(n),
+  //     token: {
+  //       accessToken: 'abc',
+  //       refreshToken: 'abc',
+  //       tokenIssuedAt: Date.now()
+  //     },
+  //     userId: user.id,
+  //     username: `discorduser${n}`
+  //   });
+  //   return user;
+  // }
+
+  public async createUser(user: Parameters<typeof userRepository.db.createUser>[1]) {
+    return await this.execute(userRepository.db.createUser(db, user));
   }
 
-  public async createUser(db: DatabaseClient, userInput: UserValidationInput['CreateUser']) {
-    const fn = this.createServiceFunction('Failed to create user');
-    const user = await fn.validate(UserValidation.CreateUser, 'user', userInput);
-    return await fn.handleDbQuery(userRepository.createUser(db, user));
+  public async getOsuUser(osuUserId: number) {
+    return await this.execute(userRepository.db.getOsuUser(db, osuUserId));
   }
 
   public async createCountry(
@@ -126,6 +130,13 @@ class UserService extends Service {
     const fn = this.createServiceFunction('Failed to update user');
     const user = await fn.validate(UserValidation.UpdateUser, 'user', userInput);
     return await fn.handleDbQuery(userRepository.updateUser(db, user, userId));
+  }
+
+  public async isUserBanned(c: Context, userId: number) {
+    return await this.execute(
+      c,
+      userRepository.db.isUserBanned(db, userId)
+    );
   }
 }
 

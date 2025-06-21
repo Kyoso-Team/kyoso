@@ -2,7 +2,7 @@ import { HTTPException } from 'hono/http-exception';
 import { Tournament } from '$src/schema';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
-import { userRepository } from '../user/repository';
+import { userRepository } from '../user/user.repository';
 import { tournamentRepository } from './repository';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
