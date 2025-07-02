@@ -1,7 +1,7 @@
 import { Client } from 'osu-web.js';
 import { unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
-import { osuRepository } from './repository';
+import { osuRepository } from './osu.repository';
 import { osuOAuth } from '$src/singletons/oauth';
 import type * as s from '$src/utils/validation';
 

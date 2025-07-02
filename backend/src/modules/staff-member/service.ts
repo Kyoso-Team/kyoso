@@ -4,7 +4,7 @@ import { StaffMemberRole } from '$src/schema';
 import { db } from '$src/singletons/db';
 import { pick } from '$src/utils/query';
 import { Service } from '$src/utils/service';
-import { staffRoleRepository } from '../staff-role/repository';
+import { staffRoleRepository } from '../staff-role/staff-role.repository';
 import { tournamentService } from '../tournament/service';
 import { staffMemberRepository } from './repository';
 import { staffMemberDynamicValidation } from './validation';

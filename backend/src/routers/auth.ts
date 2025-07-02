@@ -10,7 +10,7 @@ import { authenticationService } from '$src/modules/authentication/authenticatio
 import { CookieService } from '$src/modules/cookie/service';
 import { discordService } from '$src/modules/discord/discord.service';
 import { osuBadgeService } from '$src/modules/osu-badge/service';
-import { osuRepository } from '$src/modules/osu/repository';
+import { osuRepository } from '$src/modules/osu/osu.repository';
 import { userRepository } from '$src/modules/user/user.repository';
 import { userService } from '$src/modules/user/user.service';
 import { User } from '$src/schema';
