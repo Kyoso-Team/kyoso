@@ -7,7 +7,7 @@ import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { Service } from '$src/utils/service';
-import { discordService } from '../discord/service';
+import { discordService } from '../discord/discord.service';
 import { ipInfoService } from '../ipinfo/ipinfo.service';
 import { osuBadgeService } from '../osu-badge/service';
 import { sessionRepository } from '../session/repository';

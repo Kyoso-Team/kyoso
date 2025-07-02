@@ -8,7 +8,7 @@ import * as v from 'valibot';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { authenticationService } from '$src/modules/authentication/authentication.service';
 import { CookieService } from '$src/modules/cookie/service';
-import { discordService } from '$src/modules/discord/service.ts';
+import { discordService } from '$src/modules/discord/discord.service';
 import { osuBadgeService } from '$src/modules/osu-badge/service';
 import { osuRepository } from '$src/modules/osu/repository';
 import { userRepository } from '$src/modules/user/user.repository';
