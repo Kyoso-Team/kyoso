@@ -1,12 +1,10 @@
 import { Service } from '$src/utils/service';
 import { userRepository } from './user.repository';
-import { UserValidation } from './validation';
-import type { DatabaseClient } from '$src/types';
-import type { UserValidationInput } from './validation';
-import type { Context } from 'hono';
 import { db } from '$src/singletons';
+import type { DatabaseClient } from '$src/types';
+import type { Country, DiscordUser, OsuUser, User } from '$src/schema';
 
-class UserService extends Service {
+export class UserService extends Service {
   // public async createDummyUser(
   //   db: DatabaseClient,
   //   n: number,
@@ -69,75 +67,50 @@ class UserService extends Service {
 
   public async createCountry(
     db: DatabaseClient,
-    countryInput: UserValidationInput['CreateCountry']
+    country: typeof Country.$inferInsert
   ) {
-    const fn = this.createServiceFunction('Failed to create country');
-    const country = await fn.validate(UserValidation.CreateCountry, 'country', countryInput);
-    return await fn.handleDbQuery(userRepository.createCountry(db, country));
+    return await this.execute(userRepository.db.createCountry(db, country));
   }
 
   public async createOsuUser(
     db: DatabaseClient,
-    osuUserInput: UserValidationInput['CreateOsuUser']
+    osuUser: Pick<typeof OsuUser.$inferInsert, 'globalStdRank' | 'globalCatchRank' | 'globalTaikoRank' | 'globalManiaRank' | 'userId' | 'osuUserId' | 'username' | 'restricted' | 'token' | 'countryCode'>
   ) {
-    const fn = this.createServiceFunction('Failed to create osu! user');
-    const osuUser = await fn.validate(UserValidation.CreateOsuUser, 'osuUser', osuUserInput);
-    return await fn.handleDbQuery(userRepository.createOsuUser(db, osuUser));
+    return await this.execute(userRepository.db.createOsuUser(db, osuUser));
   }
 
   public async updateOsuUser(
     db: DatabaseClient,
-    osuUserInput: UserValidationInput['UpdateOsuUser'],
+    osuUser: Partial<Pick<typeof OsuUser.$inferInsert, 'globalStdRank' | 'globalCatchRank' | 'globalTaikoRank' | 'globalManiaRank' | 'username' | 'restricted' | 'token' | 'countryCode'>>,
     osuUserId: number
   ) {
-    const fn = this.createServiceFunction('Failed to update osu! user');
-    const osuUser = await fn.validate(UserValidation.UpdateOsuUser, 'osuUser', osuUserInput);
-    return await fn.handleDbQuery(userRepository.updateOsuUser(db, osuUser, osuUserId));
+    return await this.execute(userRepository.db.updateOsuUser(db, osuUser, osuUserId));
   }
 
   public async createDiscordUser(
     db: DatabaseClient,
-    discordUserInput: UserValidationInput['CreateDiscordUser']
+    discordUser: Pick<typeof DiscordUser.$inferInsert, 'discordUserId' | 'token' | 'userId' | 'username'>
   ) {
-    const fn = this.createServiceFunction('Failed to create Discord user');
-    const discordUser = await fn.validate(
-      UserValidation.CreateDiscordUser,
-      'discordUser',
-      discordUserInput
-    );
-    return await fn.handleDbQuery(userRepository.createDiscordUser(db, discordUser));
+    return await this.execute(userRepository.db.createDiscordUser(db, discordUser));
   }
 
   public async updateDiscordUser(
     db: DatabaseClient,
-    discordUserInput: UserValidationInput['UpdateDiscordUser'],
+    discordUser: Partial<Pick<typeof DiscordUser.$inferInsert, 'token' | 'username'>>,
     discordUserId: bigint
   ) {
-    const fn = this.createServiceFunction('Failed to update Discord user');
-    const discordUser = await fn.validate(
-      UserValidation.UpdateDiscordUser,
-      'discordUser',
-      discordUserInput
-    );
-    return await fn.handleDbQuery(userRepository.updateDiscordUser(db, discordUser, discordUserId));
+    return await this.execute(userRepository.db.updateDiscordUser(db, discordUser, discordUserId));
   }
 
   public async updateUser(
     db: DatabaseClient,
-    userInput: UserValidationInput['UpdateUser'],
+    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>,
     userId: number
   ) {
-    const fn = this.createServiceFunction('Failed to update user');
-    const user = await fn.validate(UserValidation.UpdateUser, 'user', userInput);
-    return await fn.handleDbQuery(userRepository.updateUser(db, user, userId));
+    return await this.execute(userRepository.db.updateUser(db, user, userId));
   }
 
-  public async isUserBanned(c: Context, userId: number) {
-    return await this.execute(
-      c,
-      userRepository.db.isUserBanned(db, userId)
-    );
+  public async isUserBanned(db: DatabaseClient, userId: number) {
+    return await this.execute(userRepository.db.isUserBanned(db, userId));
   }
 }
-
-export const userService = new UserService();

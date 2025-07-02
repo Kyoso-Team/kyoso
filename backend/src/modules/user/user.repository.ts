@@ -2,7 +2,6 @@ import { and, eq, sql } from 'drizzle-orm';
 import { Country, DiscordUser, OsuUser, User } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient, Selection } from '$src/types';
-import type { UserValidationOutput } from './validation';
 import { DbRepository } from '$src/utils/repository';
 
 class UserDbRepository extends DbRepository {
@@ -19,7 +18,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async createCountry(db: DatabaseClient, country: typeof Country.$inferInsert) {
+  public createCountry(db: DatabaseClient, country: typeof Country.$inferInsert) {
     const query = db.insert(Country).values(country).onConflictDoNothing({
       target: Country.code
     });
@@ -30,7 +29,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async createOsuUser(db: DatabaseClient, user: typeof OsuUser.$inferInsert) {
+  public createOsuUser(db: DatabaseClient, user: typeof OsuUser.$inferInsert) {
     const query = db.insert(OsuUser).values(user);
 
     return this.wrap({
@@ -40,7 +39,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async createDiscordUser(
+  public createDiscordUser(
     db: DatabaseClient,
     user: typeof DiscordUser.$inferInsert
   ) {
@@ -52,7 +51,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async updateUser(
+  public updateUser(
     db: DatabaseClient,
     user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>,
     userId: number
@@ -68,7 +67,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async updateOsuUser(
+  public updateOsuUser(
     db: DatabaseClient,
     user: Partial<Pick<typeof OsuUser.$inferInsert, 'countryCode' | 'username' | 'globalCatchRank' | 'globalManiaRank' | 'globalStdRank' | 'globalTaikoRank' | 'restricted' | 'token'>>,
     osuUserId: number
@@ -88,21 +87,26 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public async updateDiscordUser(
+  public updateDiscordUser(
     db: DatabaseClient,
-    user: UserValidationOutput['UpdateDiscordUser'],
+    user: Partial<Pick<typeof DiscordUser.$inferInsert, 'token' | 'username'>>,
     discordUserId: bigint
   ) {
-    return db
+    const query = db
       .update(DiscordUser)
       .set({
         updatedAt: sql`now()`,
         ...user
       })
       .where(eq(DiscordUser.discordUserId, discordUserId));
+
+    return this.wrap({
+      query,
+      name: 'Update Discord user'
+    });
   }
 
-  public async getUser<T extends Selection<typeof User>>(
+  public getUser<T extends Selection<typeof User>>(
     db: DatabaseClient,
     userId: number,
     select: T
