@@ -47,29 +47,44 @@ export abstract class Service {
     }
   }
 
-  protected async fetch<T extends v.GenericSchema>(
+  protected async fetch<TDataSchema extends v.GenericSchema, T = undefined>(settings: {
     url: string | URL,
     method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
-    errorMessage: string,
-    schema: T,
-    item: string,
-    options?: {
-      body?: Record<string, any>;
-      headers?: HeadersInit;
-    }
-  ): Promise<v.InferOutput<T>> {
+    error: {
+      fetchFailed: string;
+      unhandledStatus: string;
+      validationFailed: string;
+      parseFailed: string;
+    },
+    schema: TDataSchema,
+    handleNonOkStatus?: (resp: Response) => T
+    body?: Record<string, any>;
+    headers?: HeadersInit;
+  }
+  ): Promise<T extends undefined | void ? v.InferOutput<TDataSchema> : v.InferOutput<TDataSchema> | T> {
+    const { url, method, error, schema, body, headers } = settings;
     const resp = await fetch(url, {
       method,
-      body: options?.body ? JSON.stringify(options.body) : undefined,
-      headers: options?.headers
-    }).catch(unknownError(errorMessage));
+      headers,
+      body: body ? JSON.stringify(body) : undefined
+    }).catch(unknownError(error.fetchFailed));
 
     if (!resp.ok) {
-      throw new Error('TODO: Handle non-200 responses from fetch');
+      let handled: any = undefined;
+
+      if (settings.handleNonOkStatus) {
+        handled = settings.handleNonOkStatus?.(resp.clone());
+      }
+
+      if (handled !== undefined) {
+        return handled;
+      }
+
+      throw new UnknownError(error.unhandledStatus, { cause: resp });
     }
 
-    const data = await resp.json().catch(unknownError(errorMessage));
-    return await v.parseAsync(schema, data).catch(validationError(errorMessage, item));
+    const data = await resp.json().catch(unknownError(error.parseFailed));
+    return await v.parseAsync(schema, data).catch(validationError(error.validationFailed, 'response')) as any;
   }
 
   // TODO: Handle errors and rollbacks properly
