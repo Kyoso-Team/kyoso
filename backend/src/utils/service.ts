@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { UnknownError, unknownError, validationError } from './error';
-import type { QueryWrapper } from './repository';
+import type { QueryWrapper } from '../modules/_base/repository';
 import { logger } from '$src/singletons';
 import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
 

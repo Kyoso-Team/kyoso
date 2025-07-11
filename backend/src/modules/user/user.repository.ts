@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { Country, DiscordUser, OsuUser, User } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient, Selection } from '$src/types';
-import { DbRepository } from '$src/utils/repository';
+import { DbRepository } from '$src/modules/_base/repository';
 
 class UserDbRepository extends DbRepository {
   public createUser(db: DatabaseClient, user: typeof User.$inferInsert) {

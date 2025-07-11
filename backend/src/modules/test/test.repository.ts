@@ -1,7 +1,7 @@
 import { count, eq, sql } from 'drizzle-orm';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
-import { DbRepository, KvRepository, SearchRepository } from '$src/utils/repository';
+import { DbRepository, KvRepository, SearchRepository } from '$src/modules/_base/repository';
 import { pgTable, serial, text } from 'drizzle-orm/pg-core';
 
 const Test = pgTable('test', {

@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { UserApiKey } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
-import { DbRepository } from '$src/utils/repository';
+import { DbRepository } from '$src/modules/_base/repository';
 
 class ApiKeyDbRepository extends DbRepository {
   public createApiKey(db: DatabaseClient, apiKey: typeof UserApiKey.$inferInsert) {

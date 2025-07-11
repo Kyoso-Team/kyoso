@@ -30,21 +30,3 @@ export type MapOutput<T> = {
 export type MapInput<T> = {
   [K in keyof T]: T[K] extends v.GenericSchema ? v.InferInput<T[K]> : T[K];
 };
-
-// Meilisearch index types
-
-export type MeilisearchUserIndex = {
-  osuUserId: number;
-  discordUserId: string; //using string instead of bigint due to serialization issues
-  username: string;
-  banned: boolean;
-};
-
-export type MeilisearchTournamentIndex = {
-  id: number;
-  name: string;
-  acronym: string;
-  urlSlug: string;
-  publishedAt: Date | null;
-  deletedAt: Date | null;
-};

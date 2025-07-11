@@ -1,5 +1,5 @@
 import { time } from '$src/utils';
-import { KvRepository } from '$src/utils/repository';
+import { KvRepository } from '$src/modules/_base/repository';
 import * as s from '$src/utils/validation';
 
 class OsuKvRepository extends KvRepository {

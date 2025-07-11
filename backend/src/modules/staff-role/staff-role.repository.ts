@@ -3,7 +3,7 @@ import { StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
 import type { StaffRoleValidationOutput } from './validation';
-import { DbRepository } from '$src/utils/repository';
+import { DbRepository } from '$src/modules/_base/repository';
 
 class StaffRoleDbRepository extends DbRepository {
   public getStaffRole(
