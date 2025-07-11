@@ -5,13 +5,26 @@ import { logger } from '$src/singletons';
 import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
 
 export abstract class Service {
-  constructor(private operation: 'request' | 'job', private operationId: string) {}
+  public static testOnly = (_: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function (...args: any[]) {
+      if (process.env.NODE_ENV !== 'test') {
+        throw new Error(`This method can only be called in test environment: ${propertyKey}`);
+      }
+      return originalMethod.apply(this, args);
+    };
+
+    return descriptor;
+  };
+
+  constructor(private operation: 'request' | 'job' | 'test-setup', private operationId: string) {}
 
   /**
    * "Operation" could be a request or a background job
    */
   protected async execute<T extends QueryWrapper<any>>(wrapped: T): Promise<Awaited<ReturnType<T['execute']>>> {
-    let logMsg = `${this.operation === 'request' ? 'Request' : 'Background job'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
+    let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
     let failed = false;
     const start = performance.now();
 

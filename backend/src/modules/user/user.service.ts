@@ -5,57 +5,57 @@ import type { DatabaseClient } from '$src/types';
 import type { Country, DiscordUser, OsuUser, User } from '$src/schema';
 
 export class UserService extends Service {
-  // public async createDummyUser(
-  //   db: DatabaseClient,
-  //   n: number,
-  //   options?: {
-  //     admin?: boolean;
-  //     approvedHost?: boolean;
-  //     country?: {
-  //       code: string;
-  //       name: string;
-  //     };
-  //     restricted?: boolean;
-  //     globalStdRank?: number;
-  //   }
-  // ) {
-  //   this.checkTest();
-  //   const user = await this.createUser(db, {
-  //     admin: options?.admin ?? false,
-  //     approvedHost: options?.approvedHost ?? false
-  //   });
-  //   await this.createCountry(
-  //     db,
-  //     options?.country ?? {
-  //       code: 'US',
-  //       name: 'United States'
-  //     }
-  //   );
-  //   await this.createOsuUser(db, {
-  //     countryCode: options?.country?.code ?? 'US',
-  //     osuUserId: n,
-  //     restricted: options?.restricted ?? false,
-  //     token: {
-  //       accessToken: 'abc',
-  //       refreshToken: 'abc',
-  //       tokenIssuedAt: Date.now()
-  //     },
-  //     userId: user.id,
-  //     username: `osuuser${n}`,
-  //     globalStdRank: options?.globalStdRank
-  //   });
-  //   await this.createDiscordUser(db, {
-  //     discordUserId: BigInt(n),
-  //     token: {
-  //       accessToken: 'abc',
-  //       refreshToken: 'abc',
-  //       tokenIssuedAt: Date.now()
-  //     },
-  //     userId: user.id,
-  //     username: `discorduser${n}`
-  //   });
-  //   return user;
-  // }
+  @Service.testOnly
+  public async createDummyUser(
+    db: DatabaseClient,
+    n: number,
+    options?: {
+      admin?: boolean;
+      approvedHost?: boolean;
+      country?: {
+        code: string;
+        name: string;
+      };
+      restricted?: boolean;
+      globalStdRank?: number;
+    }
+  ) {
+    const user = await this.createUser({
+      admin: options?.admin ?? false,
+      approvedHost: options?.approvedHost ?? false
+    });
+    await this.createCountry(
+      db,
+      options?.country ?? {
+        code: 'US',
+        name: 'United States'
+      }
+    );
+    await this.createOsuUser(db, {
+      countryCode: options?.country?.code ?? 'US',
+      osuUserId: n,
+      restricted: options?.restricted ?? false,
+      token: {
+        accessToken: 'abc',
+        refreshToken: 'abc',
+        tokenIssuedAt: Date.now()
+      },
+      userId: user.id,
+      username: `osuuser${n}`,
+      globalStdRank: options?.globalStdRank
+    });
+    await this.createDiscordUser(db, {
+      discordUserId: BigInt(n),
+      token: {
+        accessToken: 'abc',
+        refreshToken: 'abc',
+        tokenIssuedAt: Date.now()
+      },
+      userId: user.id,
+      username: `discorduser${n}`
+    });
+    return user;
+  }
 
   public async createUser(user: Parameters<typeof userRepository.db.createUser>[1]) {
     return await this.execute(userRepository.db.createUser(db, user));
