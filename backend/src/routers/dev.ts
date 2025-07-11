@@ -32,10 +32,20 @@ export const devRouter = elysia('/dev')
     await testService.setTestValue('test value 2');
     await testService.deleteTestValue();
 
+    await testService.setTestDocs([
+      { id: 1, value: '5 Digit World Cup 2023' },
+      { id: 2, value: '5 Digit World Cup 2024' },
+      { id: 3, value: '5 Digit World Cup 2025' },
+      { id: 4, value: 'osu! World Cup 2025' }
+    ]);
+    await testService.deleteTestDoc(2);
+    const searchResults = await testService.searchTestDocs('5 Digit');
+
     return {
       message: 'Test completed successfully',
       userCount,
-      value
+      value,
+      searchResults
     };
   });
 

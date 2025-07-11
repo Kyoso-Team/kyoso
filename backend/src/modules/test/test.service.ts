@@ -45,4 +45,16 @@ export class TestService extends Service {
   public deleteTestValue() {
     return this.execute(testRepository.kv.deleteTestValue());
   }
+
+  public setTestDocs(value: { id: number; value: string }[]) {
+    return this.execute(testRepository.search.setTestDocs(value));
+  }
+
+  public deleteTestDoc(id: string | number) {
+    return this.execute(testRepository.search.deleteTestDoc(id));
+  }
+
+  public searchTestDocs(query: string) {
+    return this.execute(testRepository.search.searchTestDocs(query));
+  }
 }

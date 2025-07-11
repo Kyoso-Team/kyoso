@@ -32,7 +32,6 @@
     "osu-web.js": "^2.5.0",
     "postgres": "^3.4.5",
     "rate-limit-redis": "^4.2.0",
-    "superjson": "^2.2.1",
     "valibot": "^1.0.0-beta.14",
     "winston": "^3.17.0"
   },

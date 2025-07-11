@@ -1,5 +1,4 @@
 import * as v from 'valibot';
-import { env } from './env';
 import { UnknownError, unknownError, validationError } from './error';
 import type { QueryWrapper } from './repository';
 import { logger } from '$src/singletons';
@@ -28,15 +27,28 @@ export abstract class Service {
       logMsg += `${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
 
       if (wrapped.meta.queryType === 'db') {
-        logMsg += `${wrapped.meta.query}${
-          wrapped.meta.params.length > 0 && env.NODE_ENV !== 'production'
-            ? ` [${wrapped.meta.params.join(', ')}]`
-            : ''
-        }`;
+        const params = wrapped.meta.params.length > 0 ? ` - [${wrapped.meta.params.join(', ')}]` : '';
+        const o = wrapped.meta.output.get();
+        const mo = wrapped.meta.mappedOutput.get();
+        const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
+
+        logMsg += `${wrapped.meta.query}${params}${output}`;
       } else if (wrapped.meta.queryType === 'kv') {
-        logMsg += `${wrapped.meta.method} "${wrapped.meta.key}"${
-          wrapped.meta.value ? ` to "${wrapped.meta.value}"` : ''
-        }${wrapped.meta.expires ? ` to expire in ${wrapped.meta.expires}ms` : ''}`;
+        const input = wrapped.meta.input && wrapped.meta.input !== 'undefined' ? ` set to "${wrapped.meta.input}"` : '';
+        const expires = wrapped.meta.expires ? ` to expire in ${wrapped.meta.expires}ms` : '';
+        const o = wrapped.meta.output?.get();
+        const mo = wrapped.meta.mappedOutput?.get();
+        const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
+
+        logMsg += `${wrapped.meta.method} "${wrapped.meta.key}"${input}${expires}${output}`;
+      } else if (wrapped.meta.queryType === 'search') {
+        const input = wrapped.meta.input && wrapped.meta.input !== 'undefined' ? ` with input "${wrapped.meta.input}"` : '';
+        const o = wrapped.meta.output?.get();
+        const output = o && o !== 'undefined' ? ` - Received ${o}` : '';
+        const document = wrapped.meta.documentId ? ` - Affected document with ID "${wrapped.meta.documentId}"` : '';
+        const search = wrapped.meta.search ? ` with query "${wrapped.meta.search.query}"` : '';
+
+        logMsg += `${wrapped.meta.index}.${wrapped.meta.method}${search}${input}${document}${output}`;
       }
 
       if (failed) {

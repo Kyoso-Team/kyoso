@@ -1,7 +1,7 @@
 import { count, eq, sql } from 'drizzle-orm';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
-import { DbRepository, KvRepository } from '$src/utils/repository';
+import { DbRepository, KvRepository, SearchRepository } from '$src/utils/repository';
 import { pgTable, serial, text } from 'drizzle-orm/pg-core';
 
 const Test = pgTable('test', {
@@ -90,7 +90,7 @@ class TestKvRepository extends KvRepository {
     return this.wrap.get({
       key: 'test_value',
       name: 'Get test value',
-      map: (value: string) => value
+      map: this.map.noop
     });
   }
 
@@ -102,9 +102,33 @@ class TestKvRepository extends KvRepository {
   }
 }
 
+class TestSearchRepository extends SearchRepository {
+  public setTestDocs(value: { id: number; value: string }[]) {
+    return this.indexes.test.updateDocuments({
+      name: 'Set test documents',
+      input: value
+    });
+  }
+
+  public deleteTestDoc(id: string | number) {
+    return this.indexes.test.deleteDocument({
+      name: 'Delete test document',
+      documentId: id
+    });
+  }
+
+  public searchTestDocs(query: string) {
+    return this.indexes.test.searchDocuments({
+      name: 'Search test documents',
+      query
+    });
+  }
+}
+
 class TestRepository {
   public db = new TestDbRepository();
   public kv = new TestKvRepository();
+  public search = new TestSearchRepository();
 }
 
 export const testRepository = new TestRepository();
