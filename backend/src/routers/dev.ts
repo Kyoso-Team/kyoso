@@ -1,19 +1,19 @@
-import { vValidator } from '@hono/valibot-validator';
-import { Hono } from 'hono';
-import { HTTPException } from 'hono/http-exception';
-import * as v from 'valibot';
-import { devCheckMiddleware } from '$src/middlewares/dev.ts';
-import { sessionMiddleware } from '$src/middlewares/session.ts';
-import { DevService, devService } from '$src/modules/dev/service.ts';
-import { integerId } from '$src/utils/validation.ts';
-import { servicesMiddleware } from '$src/middlewares/services';
+// import { vValidator } from '@hono/valibot-validator';
+// import { Hono } from 'hono';
+// import { HTTPException } from 'hono/http-exception';
+// import * as v from 'valibot';
+// import { devCheckMiddleware } from '$src/middlewares/dev.ts';
+import { SessionGuard } from '$src/middlewares/session.ts';
+// import { devService } from '$src/modules/dev/service.ts';
+// import { integerId } from '$src/utils/validation.ts';
+// import { servicesMiddleware } from '$src/middlewares/services';
 import { TestService } from '$src/modules/test/test.service';
 import { elysia, t } from './base';
 import { UserService } from '$src/modules/user/user.service';
 import { status } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 
-export const devRouter = elysia('/dev')
+export const devRouter = elysia({ prefix: '/dev' })
   .derive(({ requestId }) => {
     const authenticationService = new AuthenticationService('request', requestId);
     const testService = new TestService('request', requestId);

@@ -7,12 +7,16 @@ export const t = {
   })
 };
 
-export const elysia = (base: string) => new Elysia({
-  prefix: base
-})
-  .onRequest(({ set }) => {
-    set.headers['x-request-id'] = Bun.randomUUIDv7();
-  })
-  .derive(({ set }) => {
-    return { requestId: set.headers['x-request-id']! };
-  });
+type ElysiaConfig = {
+	name?: string;
+	prefix?: string;
+};
+
+export const elysia = (config: ElysiaConfig) =>
+	new Elysia(config)
+		.onRequest(({ set }) => {
+			set.headers['x-request-id'] = Bun.randomUUIDv7();
+		})
+		.derive({ as: 'global' }, ({ set }) => {
+			return { requestId: set.headers['x-request-id']! };
+		});
