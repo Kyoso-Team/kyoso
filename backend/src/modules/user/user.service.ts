@@ -61,10 +61,6 @@ export class UserService extends Service {
     return await this.execute(userRepository.db.createUser(db, user));
   }
 
-  public async getOsuUser(osuUserId: number) {
-    return await this.execute(userRepository.db.getOsuUser(db, osuUserId));
-  }
-
   public async createCountry(
     db: DatabaseClient,
     country: typeof Country.$inferInsert
@@ -79,19 +75,20 @@ export class UserService extends Service {
     return await this.execute(userRepository.db.createOsuUser(db, osuUser));
   }
 
+  public async updateUser(
+    db: DatabaseClient,
+    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>,
+    userId: number
+  ) {
+    return await this.execute(userRepository.db.updateUser(db, user, userId));
+  }
+
   public async updateOsuUser(
     db: DatabaseClient,
     osuUser: Partial<Pick<typeof OsuUser.$inferInsert, 'globalStdRank' | 'globalCatchRank' | 'globalTaikoRank' | 'globalManiaRank' | 'username' | 'restricted' | 'token' | 'countryCode'>>,
     osuUserId: number
   ) {
     return await this.execute(userRepository.db.updateOsuUser(db, osuUser, osuUserId));
-  }
-
-  public async createDiscordUser(
-    db: DatabaseClient,
-    discordUser: Pick<typeof DiscordUser.$inferInsert, 'discordUserId' | 'token' | 'userId' | 'username'>
-  ) {
-    return await this.execute(userRepository.db.createDiscordUser(db, discordUser));
   }
 
   public async updateDiscordUser(
@@ -102,12 +99,19 @@ export class UserService extends Service {
     return await this.execute(userRepository.db.updateDiscordUser(db, discordUser, discordUserId));
   }
 
-  public async updateUser(
+  public async createDiscordUser(
     db: DatabaseClient,
-    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>,
-    userId: number
+    discordUser: Pick<typeof DiscordUser.$inferInsert, 'discordUserId' | 'token' | 'userId' | 'username'>
   ) {
-    return await this.execute(userRepository.db.updateUser(db, user, userId));
+    return await this.execute(userRepository.db.createDiscordUser(db, discordUser));
+  }
+
+  public async getUser(userId: number) {
+    return await this.execute(userRepository.db.getUser(db, userId));
+  }
+
+  public async getOsuUser(osuUserId: number) {
+    return await this.execute(userRepository.db.getOsuUser(db, osuUserId));
   }
 
   public async isUserBanned(db: DatabaseClient, userId: number) {

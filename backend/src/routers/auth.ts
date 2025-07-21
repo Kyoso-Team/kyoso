@@ -7,7 +7,7 @@ import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { authenticationService } from '$src/modules/authentication/authentication.service';
-import { CookieService } from '$src/modules/cookie/service';
+import { CookieService } from '$src/modules/cookie/cookie.service';
 import { discordService } from '$src/modules/discord/discord.service';
 import { osuBadgeService } from '$src/modules/osu-badge/service';
 import { osuRepository } from '$src/modules/osu/osu.repository';

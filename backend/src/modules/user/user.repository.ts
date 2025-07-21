@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { Country, DiscordUser, OsuUser, User } from '$src/schema';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient, Selection } from '$src/types';
+import type { DatabaseClient } from '$src/types';
 import { DbRepository } from '$src/modules/_base/repository';
 
 class UserDbRepository extends DbRepository {
@@ -106,13 +106,15 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public getUser<T extends Selection<typeof User>>(
+  public getUser(
     db: DatabaseClient,
-    userId: number,
-    select: T
+    userId: number
   ) {
     const query = db
-      .select(pick(User, select))
+      .select(pick(User, {
+        id: true,
+        banned: true
+      }))
       .from(User)
       .where(eq(User.id, userId))
       .limit(1);

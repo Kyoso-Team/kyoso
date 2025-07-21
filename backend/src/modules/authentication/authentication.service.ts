@@ -22,7 +22,7 @@ import type { SessionSelection } from '../session/types';
 import type { AuthenticationValidationInput, AuthenticationValidationOutput } from './validation';
 import { userRepository } from '../user/user.repository';
 
-class AuthenticationService extends Service {
+export class AuthenticationService extends Service {
   public transformArcticToken(token: OAuth2Tokens): AuthenticationValidationOutput['OAuthToken'] {
     return {
       accessToken: token.accessToken(),
@@ -235,5 +235,3 @@ class AuthenticationService extends Service {
     return session;
   }
 }
-
-export const authenticationService = new AuthenticationService();

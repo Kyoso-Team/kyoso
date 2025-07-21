@@ -4,16 +4,26 @@ import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
 import { devCheckMiddleware } from '$src/middlewares/dev.ts';
 import { sessionMiddleware } from '$src/middlewares/session.ts';
-import { devService } from '$src/modules/dev/service.ts';
+import { DevService, devService } from '$src/modules/dev/service.ts';
 import { integerId } from '$src/utils/validation.ts';
 import { servicesMiddleware } from '$src/middlewares/services';
 import { TestService } from '$src/modules/test/test.service';
-import { elysia } from './base';
+import { elysia, t } from './base';
+import { UserService } from '$src/modules/user/user.service';
+import { status } from 'elysia';
+import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 
 export const devRouter = elysia('/dev')
   .derive(({ requestId }) => {
+    const authenticationService = new AuthenticationService('request', requestId);
     const testService = new TestService('request', requestId);
-    return { testService };
+    const userService = new UserService('request', requestId);
+    return { authenticationService, testService, userService };
+  })
+  .onBeforeHandle(() => {
+    if (process.env.NODE_ENV !== 'development') {
+      return status(403, 'This endpoint is only available in development environment');
+    }
   })
   .get('/test', async ({ testService }) => {
     await testService.deleteTestTable();
@@ -47,38 +57,31 @@ export const devRouter = elysia('/dev')
       value,
       searchResults
     };
+  })
+  .put('/impersonate', async ({ headers, body, authenticationService, userService }) => {
+    if (!headers['User-Agent']) {
+      return status(400, '"User-Agent" header is undefined');
+    }
+
+    const user = await userService.getUser(body.userId);
+
+    if (!user) {
+      return status(404, 'The user you want to impersonate doesn\'t exist');
+    }
+
+    if (user.banned) {
+      return status(403, 'The user you want to impersonate is banned');
+    }
+
+    await authenticationService.createSession(userId);
+    return 'Successfully impersonated user';
+  }, {
+    body: t.Object({
+      userId: t.IntegerId()
+    })
   });
 
 
-// export const devRouter = new Hono()
-//   .basePath('/dev')
-//   .use(servicesMiddleware({
-//     testService: TestService
-//   }))
-//   .use(devCheckMiddleware)
-//   .get('/test', async (c) => {
-//     await c.var.testService.deleteTestTable();
-//     await c.var.testService.createTestTable();
-
-//     await c.var.testService.insertUser('sample');
-//     await c.var.testService.updateUser(1, 'Mario564');
-//     const userCount = await c.var.testService.countUsers(1);
-//     await c.var.testService.deleteUser(1);
-//     await c.var.testService.testTransaction();
-
-//     await c.var.testService.deleteTestTable();
-
-//     await c.var.testService.setTestValue('test value', 1000);
-//     const value = await c.var.testService.getTestValue();
-//     await c.var.testService.setTestValue('test value 2');
-//     await c.var.testService.deleteTestValue();
-
-//     return c.json({
-//       message: 'Test completed successfully',
-//       userCount,
-//       value
-//     });
-//   })
 //   .put(
 //     'impersonate',
 //     vValidator(

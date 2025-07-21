@@ -5,6 +5,19 @@ import { logger } from '$src/singletons';
 import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
 
 export abstract class Service {
+  public static devOnly = (_: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function (...args: any[]) {
+      if (process.env.NODE_ENV !== 'development') {
+        throw new Error(`This method can only be called in development environment: ${propertyKey}`);
+      }
+      return originalMethod.apply(this, args);
+    };
+
+    return descriptor;
+  };
+
   public static testOnly = (_: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 

@@ -1,4 +1,11 @@
-import Elysia from 'elysia';
+import Elysia, { t as t1 } from 'elysia';
+
+export const t = {
+  ...t1,
+  IntegerId: () => t1.Integer({
+    minimum: 0
+  })
+};
 
 export const elysia = (base: string) => new Elysia({
   prefix: base
