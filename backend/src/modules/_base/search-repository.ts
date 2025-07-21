@@ -42,6 +42,7 @@ export class SearchRepository {
 
 export class SearchIndex<TData extends Record<string, any>> {
   private idx: Index<TData>;
+  public $document: TData = undefined as any;
 
   constructor(private idxName: string) {
     this.idx = meilisearch.index<TData>(this.idxName);

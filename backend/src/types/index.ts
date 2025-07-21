@@ -20,10 +20,6 @@ export type RemoveNever<T> = { [K in keyof T as T[K] extends never ? never : K]:
 export type Simplify<T> =
   RemoveNever<T> extends infer TNew ? { [K in keyof TNew]: TNew[K] } & {} : never;
 
-export type PickColumns<TTable extends Table, TColumns extends string | number | symbol> = Simplify<
-  Pick<TTable['$inferSelect'], Assume<TColumns, keyof TTable['$inferSelect']>>
->;
-
 export type MapOutput<T> = {
   [K in keyof T]: T[K] extends v.GenericSchema ? v.InferOutput<T[K]> : T[K];
 };

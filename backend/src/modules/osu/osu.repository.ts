@@ -20,7 +20,7 @@ class OsuKvRepository extends KvRepository {
     return this.wrap.get({
       key: this.keys.temporaryOsuTokens(state),
       name: 'Get temporarily stored osu! tokens',
-      map: (value: string) => JSON.parse(value) as s.OAuthToken
+      map: (value: string | null) => value ? JSON.parse(value) as s.OAuthToken : null
     });
   }
 

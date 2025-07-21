@@ -7,7 +7,7 @@ import type { InferSelectModel } from 'drizzle-orm';
 import type { DiscordUser, OsuUser } from '$src/schema';
 import { elysia } from '$src/routers/base';
 import { env } from '$src/utils/env';
-import { sessionRepository } from '$src/modules/session/repository';
+import { sessionRepository } from '$src/modules/session/session.repository';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 import { sha256 } from '@oslojs/crypto/sha2';
 

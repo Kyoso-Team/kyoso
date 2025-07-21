@@ -1,25 +1,30 @@
 import { and, eq, inArray, SQL, sql } from 'drizzle-orm';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
 import type { DatabaseClient } from '$src/types';
-import type { OsuBadgeValidationOutput } from './validation';
+import { DbRepository } from '../_base/db-repository';
 
-class OsuBadgeRepository {
-  public async getOsuUserAwardedBadges(db: DatabaseClient, osuUserId: number) {
-    return db
+class OsuBadgeDbRepository extends DbRepository {
+  public getOsuUserAwardedBadges(db: DatabaseClient, osuUserId: number) {
+    const query = db
       .select({
         badge: OsuBadge
       })
       .from(OsuUserAwardedBadge)
       .innerJoin(OsuBadge, eq(OsuBadge.id, OsuUserAwardedBadge.osuBadgeId))
-      .where(eq(OsuUserAwardedBadge.osuUserId, osuUserId))
-      .then((rows) => rows.map((row) => row.badge));
+      .where(eq(OsuUserAwardedBadge.osuUserId, osuUserId));
+
+    return this.wrap({
+      query,
+      name: 'Get osu! user awarded badges',
+      map: (rows) => rows.map((row) => row.badge)
+    });
   }
 
-  public async upsertOsuBadges(
+  public upsertOsuBadges(
     db: DatabaseClient,
-    badges: OsuBadgeValidationOutput['UpsertOsuBadge'][]
+    badges: Pick<typeof OsuBadge.$inferInsert, 'imgFileName' | 'description'>[]
   ) {
-    return db
+    const query = db
       .insert(OsuBadge)
       .values(badges)
       .onConflictDoUpdate({
@@ -28,19 +33,23 @@ class OsuBadgeRepository {
           description: sql`excluded.description`
         }
       });
+
+    return this.wrap({
+      query,
+      name: 'Upsert osu! badges'
+    });
   }
 
-  public async createOsuUserAwardedBadges(
+  public createOsuUserAwardedBadges(
     db: DatabaseClient,
-    badges: OsuBadgeValidationOutput['CreateOsuUserAwardedBadge'][],
+    badges: (Pick<typeof OsuBadge.$inferInsert, 'imgFileName'> & Pick<typeof OsuUserAwardedBadge.$inferInsert, 'awardedAt'>)[],
     osuUserId: number
   ) {
     const sqlExpressions: SQL[] = badges.map(
       (badge) =>
         sql`when ${OsuBadge.imgFileName} = ${badge.imgFileName} then ${badge.awardedAt.toISOString()}::date`
     );
-
-    return db
+    const query = db
       .insert(OsuUserAwardedBadge)
       .select(
         db
@@ -60,14 +69,19 @@ class OsuBadgeRepository {
       .onConflictDoNothing({
         target: [OsuUserAwardedBadge.osuUserId, OsuUserAwardedBadge.osuBadgeId]
       });
+
+    return this.wrap({
+      query,
+      name: 'Create osu! user awarded badges'
+    });
   }
 
-  public async removeOsuUserAwardedBadges(
+  public removeOsuUserAwardedBadges(
     db: DatabaseClient,
     badgeIds: number[],
     osuUserId: number
   ) {
-    return db
+    const query = db
       .delete(OsuUserAwardedBadge)
       .where(
         and(
@@ -75,7 +89,16 @@ class OsuBadgeRepository {
           inArray(OsuUserAwardedBadge.osuBadgeId, badgeIds)
         )
       );
+
+    return this.wrap({
+      query,
+      name: 'Remove osu! user awarded badges'
+    });
   }
+}
+
+class OsuBadgeRepository {
+  public db = new OsuBadgeDbRepository();
 }
 
 export const osuBadgeRepository = new OsuBadgeRepository();

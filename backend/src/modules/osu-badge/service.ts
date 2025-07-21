@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { Service } from '$src/utils/service';
-import { osuBadgeRepository } from './repository';
+import { osuBadgeRepository } from './osu-badge.repository';
 import { OsuBadgeValidation } from './validation';
 import type { DatabaseClient } from '$src/types';
 import type { OsuBadgeValidationInput } from './validation';

@@ -10,7 +10,7 @@ import { Service } from '$src/utils/service';
 import { discordService } from '../discord/discord.service';
 import { ipInfoService } from '../ipinfo/ipinfo.service';
 import { osuBadgeService } from '../osu-badge/service';
-import { sessionRepository } from '../session/repository';
+import { sessionRepository } from '../session/session.repository';
 import { SessionValidation } from '../session/validation';
 import { userService } from '../user/user.service';
 import type { Context } from 'hono';
