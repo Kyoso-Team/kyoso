@@ -1,19 +1,21 @@
-import { Hono } from 'hono';
-import { rateLimiter } from 'hono-rate-limiter';
-import { getConnInfo } from 'hono/bun';
-import { cors } from 'hono/cors';
-import RedisStore from 'rate-limit-redis';
-import { devRouter } from '$src/routers/dev.ts';
-import { tournamentRouter } from '$src/routers/tournament';
-import { apiKeyRouter } from './routers/api-key';
-import { authRouter } from './routers/auth';
-import { staffMemberRouter } from './routers/staff-member';
-import { staffRoleRouter } from './routers/staff-role';
-import { redis } from './singletons';
-import { env } from './utils/env';
-import { requestId } from 'hono/request-id';
-import type { Store } from 'hono-rate-limiter';
+// import { Hono } from 'hono';
+// import { rateLimiter } from 'hono-rate-limiter';
+// import { getConnInfo } from 'hono/bun';
+// import { cors } from 'hono/cors';
+// import RedisStore from 'rate-limit-redis';
+
+// import { tournamentRouter } from '$src/routers/tournament';
+// import { apiKeyRouter } from './routers/api-key';
+// import { authRouter } from './routers/auth';
+// import { staffMemberRouter } from './routers/staff-member';
+// import { staffRoleRouter } from './routers/staff-role';
+// import { redis } from './singletons';
+// import { env } from './utils/env';
+// import { requestId } from 'hono/request-id';
+// import type { Store } from 'hono-rate-limiter';
 import { Elysia } from 'elysia';
+import { devRouter } from '$src/routers/dev.ts';
+import { newAuthRouter } from './routers/auth';
 
 // const app = new Hono()
 //   .use(
@@ -50,8 +52,7 @@ import { Elysia } from 'elysia';
 //   .route('/', staffMemberRouter)
 //   .route('/', apiKeyRouter);
 
-const app = new Elysia()
-  .use(devRouter)
+const app = new Elysia().use(devRouter).use(newAuthRouter);
 
 export default app;
 export type App = typeof app;
