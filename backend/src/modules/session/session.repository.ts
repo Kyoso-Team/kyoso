@@ -1,13 +1,16 @@
 import { eq, sql } from 'drizzle-orm';
 import { DiscordUser, OsuUser, Session, User } from '$src/schema';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient } from '$src/types';
 import { DbRepository } from '../_base/db-repository';
+import type { DatabaseClient } from '$src/types';
 
 class SessionDbRepository extends DbRepository {
   public createSession(
     db: DatabaseClient,
-    session: Pick<typeof Session.$inferInsert, 'id' | 'userAgent' | 'ipAddress' | 'ipMetadata' | 'userId'>
+    session: Pick<
+      typeof Session.$inferInsert,
+      'id' | 'userAgent' | 'ipAddress' | 'ipMetadata' | 'userId'
+    >
   ) {
     const query = db.insert(Session).values({
       expiresAt: sql`now() + interval '3 months'`,
@@ -20,38 +23,36 @@ class SessionDbRepository extends DbRepository {
     });
   }
 
-  public getSession(
-    db: DatabaseClient,
-    sessionId: string
-  ) {
-    const query = db.select({
-      ...pick(Session, {
-        id: true,
-        expiresAt: true
-      }),
-      user: pick(User, {
-        id: true,
-        admin: true,
-        approvedHost: true,
-        banned: true
-      }),
-      osu: pick(OsuUser, {
-        osuUserId: true,
-        token: true,
-        username: true
-      }),
-      discord: pick(DiscordUser, {
-        discordUserId: true,
-        token: true,
-        username: true
+  public getSession(db: DatabaseClient, sessionId: string) {
+    const query = db
+      .select({
+        ...pick(Session, {
+          id: true,
+          expiresAt: true
+        }),
+        user: pick(User, {
+          id: true,
+          admin: true,
+          approvedHost: true,
+          banned: true
+        }),
+        osu: pick(OsuUser, {
+          osuUserId: true,
+          token: true,
+          username: true
+        }),
+        discord: pick(DiscordUser, {
+          discordUserId: true,
+          token: true,
+          username: true
+        })
       })
-    })
-    .from(Session)
-    .innerJoin(User, eq(User.id, Session.userId))
-    .innerJoin(OsuUser, eq(OsuUser.userId, User.id))
-    .innerJoin(DiscordUser, eq(DiscordUser.userId, User.id))
-    .where(eq(Session.id, sessionId))
-    .limit(1);
+      .from(Session)
+      .innerJoin(User, eq(User.id, Session.userId))
+      .innerJoin(OsuUser, eq(OsuUser.userId, User.id))
+      .innerJoin(DiscordUser, eq(DiscordUser.userId, User.id))
+      .where(eq(Session.id, sessionId))
+      .limit(1);
 
     return this.wrap({
       query,

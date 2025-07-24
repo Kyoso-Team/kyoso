@@ -1,8 +1,8 @@
 import * as v from 'valibot';
-import { UnknownError, unknownError, validationError } from './error';
-import type { QueryWrapper } from '../modules/_base/repository';
 import { logger } from '$src/singletons';
+import { UnknownError, unknownError, validationError } from './error';
 import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
+import type { QueryWrapper } from '../modules/_base/repository';
 
 export abstract class Service {
   public static devOnly = (_: any, propertyKey: string, descriptor: PropertyDescriptor) => {
@@ -10,7 +10,9 @@ export abstract class Service {
 
     descriptor.value = function (...args: any[]) {
       if (process.env.NODE_ENV !== 'development') {
-        throw new Error(`This method can only be called in development environment: ${propertyKey}`);
+        throw new Error(
+          `This method can only be called in development environment: ${propertyKey}`
+        );
       }
       return originalMethod.apply(this, args);
     };
@@ -31,12 +33,17 @@ export abstract class Service {
     return descriptor;
   };
 
-  constructor(private operation: 'request' | 'job' | 'test-setup', private operationId: string) {}
+  constructor(
+    private operation: 'request' | 'job' | 'test-setup',
+    private operationId: string
+  ) {}
 
   /**
    * "Operation" could be a request or a background job
    */
-  protected async execute<T extends QueryWrapper<any>>(wrapped: T): Promise<Awaited<ReturnType<T['execute']>>> {
+  protected async execute<T extends QueryWrapper<any>>(
+    wrapped: T
+  ): Promise<Awaited<ReturnType<T['execute']>>> {
     let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
     let failed = false;
     const start = performance.now();
@@ -45,22 +52,29 @@ export abstract class Service {
       return await wrapped.execute();
     } catch (err) {
       failed = true;
-      throw new UnknownError(`${wrapped.meta.name} (${wrapped.meta.queryType}) failed in ${this.operation} ${this.operationId}`, {
-        cause: err
-      });
+      throw new UnknownError(
+        `${wrapped.meta.name} (${wrapped.meta.queryType}) failed in ${this.operation} ${this.operationId}`,
+        {
+          cause: err
+        }
+      );
     } finally {
       const duration = performance.now() - start;
       logMsg += `${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
 
       if (wrapped.meta.queryType === 'db') {
-        const params = wrapped.meta.params.length > 0 ? ` - [${wrapped.meta.params.join(', ')}]` : '';
+        const params =
+          wrapped.meta.params.length > 0 ? ` - [${wrapped.meta.params.join(', ')}]` : '';
         const o = wrapped.meta.output.get();
         const mo = wrapped.meta.mappedOutput.get();
         const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
 
         logMsg += `${wrapped.meta.query}${params}${output}`;
       } else if (wrapped.meta.queryType === 'kv') {
-        const input = wrapped.meta.input && wrapped.meta.input !== 'undefined' ? ` set to "${wrapped.meta.input}"` : '';
+        const input =
+          wrapped.meta.input && wrapped.meta.input !== 'undefined'
+            ? ` set to "${wrapped.meta.input}"`
+            : '';
         const expires = wrapped.meta.expires ? ` to expire in ${wrapped.meta.expires}ms` : '';
         const o = wrapped.meta.output?.get();
         const mo = wrapped.meta.mappedOutput?.get();
@@ -68,10 +82,15 @@ export abstract class Service {
 
         logMsg += `${wrapped.meta.method} "${wrapped.meta.key}"${input}${expires}${output}`;
       } else if (wrapped.meta.queryType === 'search') {
-        const input = wrapped.meta.input && wrapped.meta.input !== 'undefined' ? ` with input "${wrapped.meta.input}"` : '';
+        const input =
+          wrapped.meta.input && wrapped.meta.input !== 'undefined'
+            ? ` with input "${wrapped.meta.input}"`
+            : '';
         const o = wrapped.meta.output?.get();
         const output = o && o !== 'undefined' ? ` - Received ${o}` : '';
-        const document = wrapped.meta.documentId ? ` - Affected document with ID "${wrapped.meta.documentId}"` : '';
+        const document = wrapped.meta.documentId
+          ? ` - Affected document with ID "${wrapped.meta.documentId}"`
+          : '';
         const search = wrapped.meta.search ? ` with query "${wrapped.meta.search.query}"` : '';
 
         logMsg += `${wrapped.meta.index}.${wrapped.meta.method}${search}${input}${document}${output}`;
@@ -86,20 +105,21 @@ export abstract class Service {
   }
 
   protected async fetch<TDataSchema extends v.GenericSchema, T = undefined>(settings: {
-    url: string | URL,
-    method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
+    url: string | URL;
+    method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
     error: {
       fetchFailed: string;
       unhandledStatus: string;
       validationFailed: string;
       parseFailed: string;
-    },
-    schema: TDataSchema,
-    handleNonOkStatus?: (resp: Response) => T
+    };
+    schema: TDataSchema;
+    handleNonOkStatus?: (resp: Response) => T;
     body?: Record<string, any>;
     headers?: HeadersInit;
-  }
-  ): Promise<T extends undefined | void ? v.InferOutput<TDataSchema> : v.InferOutput<TDataSchema> | T> {
+  }): Promise<
+    T extends undefined | void ? v.InferOutput<TDataSchema> : v.InferOutput<TDataSchema> | T
+  > {
     const { url, method, error, schema, body, headers } = settings;
     const resp = await fetch(url, {
       method,
@@ -122,11 +142,17 @@ export abstract class Service {
     }
 
     const data = await resp.json().catch(unknownError(error.parseFailed));
-    return await v.parseAsync(schema, data).catch(validationError(error.validationFailed, 'response')) as any;
+    return (await v
+      .parseAsync(schema, data)
+      .catch(validationError(error.validationFailed, 'response'))) as any;
   }
 
   // TODO: Handle errors and rollbacks properly
-  protected async transaction<T>(db: DatabaseClient, txName: string, transactionFn: (tx: DatabaseTransactionClient) => Promise<T>) {
+  protected async transaction<T>(
+    db: DatabaseClient,
+    txName: string,
+    transactionFn: (tx: DatabaseTransactionClient) => Promise<T>
+  ) {
     let logMsg = `${this.operation === 'request' ? 'Request' : 'Background job'} ${this.operationId} - ${txName} (tx) - `;
     const start = performance.now();
 

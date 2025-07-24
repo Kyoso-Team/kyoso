@@ -1,8 +1,8 @@
-import { TestService } from '$src/modules/test/test.service';
-import { elysia, t } from './base';
-import { UserService } from '$src/modules/user/user.service';
 import { status } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
+import { TestService } from '$src/modules/test/test.service';
+import { UserService } from '$src/modules/user/user.service';
+import { elysia, t } from './base';
 
 export const devRouter = elysia({
   prefix: '/dev',
@@ -48,35 +48,48 @@ export const devRouter = elysia({
       searchResults
     };
   })
-  .put('/impersonate', async ({ body, headers, authenticationService, userService }) => {
-    const user = await userService.getUser(body.userId);
+  .put(
+    '/impersonate',
+    async ({ body, headers, authenticationService, userService }) => {
+      const user = await userService.getUser(body.userId);
 
-    if (!user) {
-      return status(404, 'The user you want to impersonate doesn\'t exist');
-    }
+      if (!user) {
+        return status(404, "The user you want to impersonate doesn't exist");
+      }
 
-    if (user.banned) {
-      return status(403, 'The user you want to impersonate is banned');
-    }
+      if (user.banned) {
+        return status(403, 'The user you want to impersonate is banned');
+      }
 
-    await authenticationService.createSession(body.userId, '127.0.0.1', {
-      city: 'Sample',
-      country: 'Sample',
-      region: 'Sample'
-    }, headers['user-agent'] ?? null);
-  }, {
-    body: t.Object({
-      userId: t.IntegerId()
-    })
-  })
-  .patch('/change-permissions', async ({ body, session, authenticationService }) => {
-    await authenticationService.updateUser(session.user.id, body);
-  }, {
-    body: t.Partial(
-      t.Object({
-        admin: t.Boolean(),
-        approvedHost: t.Boolean()
+      await authenticationService.createSession(
+        body.userId,
+        '127.0.0.1',
+        {
+          city: 'Sample',
+          country: 'Sample',
+          region: 'Sample'
+        },
+        headers['user-agent'] ?? null
+      );
+    },
+    {
+      body: t.Object({
+        userId: t.IntegerId()
       })
-    ),
-    session: true
-  });
+    }
+  )
+  .patch(
+    '/change-permissions',
+    async ({ body, session, authenticationService }) => {
+      await authenticationService.updateUser(session.user.id, body);
+    },
+    {
+      body: t.Partial(
+        t.Object({
+          admin: t.Boolean(),
+          approvedHost: t.Boolean()
+        })
+      ),
+      session: true
+    }
+  );

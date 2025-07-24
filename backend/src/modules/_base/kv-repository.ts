@@ -1,8 +1,9 @@
-import type { ChainableCommander } from 'ioredis';
-import { TrackValue, type BaseQueryMeta, type QueryWrapper } from './common';
 import { redis } from '$src/singletons';
-import { env } from '$src/utils/env';
 import { serializeToConsole } from '$src/utils';
+import { env } from '$src/utils/env';
+import { TrackValue } from './common';
+import type { ChainableCommander } from 'ioredis';
+import type { BaseQueryMeta, QueryWrapper } from './common';
 
 export interface KvQueryMeta extends BaseQueryMeta {
   queryType: 'kv';
@@ -69,7 +70,11 @@ export class KvRepository {
       expires?: number;
     }): QueryWrapper<void> => {
       const value = meta.map(meta.value);
-      const cmd: [string, string, ...any[]] = [meta.key, value, ...(meta.expires ? ['PX', meta.expires] : [])];
+      const cmd: [string, string, ...any[]] = [
+        meta.key,
+        value,
+        ...(meta.expires ? ['PX', meta.expires] : [])
+      ];
 
       return {
         execute: async () => {
@@ -88,10 +93,7 @@ export class KvRepository {
         }
       };
     },
-    delete: (meta: {
-      key: string;
-      name: string;
-    }): QueryWrapper<void> => {
+    delete: (meta: { key: string; name: string }): QueryWrapper<void> => {
       const cmd: [string] = [meta.key];
 
       return {

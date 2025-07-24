@@ -1,16 +1,18 @@
 import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
 import * as v from 'valibot';
+import { servicesMiddleware } from '$src/middlewares/services';
 import { sessionMiddleware } from '$src/middlewares/session';
 import { ApiKeyService } from '$src/modules/api-key/api-key.service';
 import * as s from '$src/utils/validation';
-import { servicesMiddleware } from '$src/middlewares/services';
 
 export const apiKeyRouter = new Hono()
   .basePath('api-keys')
-  .use(servicesMiddleware({
-    apiKeyService: ApiKeyService
-  }))
+  .use(
+    servicesMiddleware({
+      apiKeyService: ApiKeyService
+    })
+  )
   .use(sessionMiddleware())
   .get('/', async (c) => {
     const keys = await c.var.apiKeyService.getUserApiKeys(c.get('user').id);

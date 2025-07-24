@@ -14,7 +14,10 @@ const tournamentRouter = new Hono()
     sessionMiddleware({
       approvedHost: true
     }),
-    vValidator('json', /* s.omitPiped(TournamentValidation.CreateTournament, ['hostUserId']) */ TournamentValidation.CreateTournament),
+    vValidator(
+      'json',
+      /* s.omitPiped(TournamentValidation.CreateTournament, ['hostUserId']) */ TournamentValidation.CreateTournament
+    ),
     async (c) => {
       const body = c.req.valid('json');
       const result = await tournamentService.createTournament(db, {

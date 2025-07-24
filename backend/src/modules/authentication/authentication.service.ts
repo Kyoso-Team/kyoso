@@ -37,34 +37,42 @@ export class AuthenticationService extends Service {
 
     const user = await this.transaction(db, 'Create user', async (tx) => {
       const isOwner = env.KYOSO_OWNER === osuUser.id;
-      const user = await this.execute(userRepository.db.createUser(tx, {
-        admin: isOwner,
-        approvedHost: isOwner
-      }));
+      const user = await this.execute(
+        userRepository.db.createUser(tx, {
+          admin: isOwner,
+          approvedHost: isOwner
+        })
+      );
 
-      await this.execute(userRepository.db.createOsuUser(tx, {
-        userId: user.id,
-        osuUserId: osuUser.id,
-        username: osuUser.username,
-        restricted: osuUser.is_restricted,
-        globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
-        globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
-        globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
-        globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
-        countryCode: osuUser.country.code,
-        token: osuToken
-      }));
+      await this.execute(
+        userRepository.db.createOsuUser(tx, {
+          userId: user.id,
+          osuUserId: osuUser.id,
+          username: osuUser.username,
+          restricted: osuUser.is_restricted,
+          globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
+          globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
+          globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
+          globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
+          countryCode: osuUser.country.code,
+          token: osuToken
+        })
+      );
 
-      await this.execute(userRepository.db.createDiscordUser(tx, {
-        userId: user.id,
-        discordUserId: BigInt(discordUser.id),
-        username: discordUser.username,
-        token: discordToken
-      }));
+      await this.execute(
+        userRepository.db.createDiscordUser(tx, {
+          userId: user.id,
+          discordUserId: BigInt(discordUser.id),
+          username: discordUser.username,
+          token: discordToken
+        })
+      );
 
       if (badges.length > 0) {
         await this.execute(osuBadgeRepository.db.deleteAllOsuUserAwardedBadges(tx, osuUser.id));
-        await this.execute(osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id));
+        await this.execute(
+          osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id)
+        );
       }
 
       return user;
@@ -73,17 +81,24 @@ export class AuthenticationService extends Service {
     return user;
   }
 
-  public async createSession(userId: number, ipAddress: string, ipMetadata: Awaited<ReturnType<IpInfoService['getIpMetadata']>>, userAgent: string | null) {
+  public async createSession(
+    userId: number,
+    ipAddress: string,
+    ipMetadata: Awaited<ReturnType<IpInfoService['getIpMetadata']>>,
+    userAgent: string | null
+  ) {
     const token = this.generateSessionToken();
     const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
-    await this.execute(sessionRepository.db.createSession(db, {
-      ipMetadata,
-      userId,
-      ipAddress,
-      id: sessionId,
-      userAgent: env.NODE_ENV !== 'production' ? 'test' : userAgent
-    }));
+    await this.execute(
+      sessionRepository.db.createSession(db, {
+        ipMetadata,
+        userId,
+        ipAddress,
+        id: sessionId,
+        userAgent: env.NODE_ENV !== 'production' ? 'test' : userAgent
+      })
+    );
     return token;
   }
 
@@ -102,7 +117,10 @@ export class AuthenticationService extends Service {
     await Bun.write(this.TEST_SESSION_TOKEN_PATH, sessionToken);
   }
 
-  public async updateUser(userId: number, user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>) {
+  public async updateUser(
+    userId: number,
+    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>
+  ) {
     return await this.execute(userRepository.db.updateUser(db, userId, user));
   }
 
@@ -115,25 +133,33 @@ export class AuthenticationService extends Service {
 
       await this.transaction(db, 'Update user badges', async (tx) => {
         await this.execute(osuBadgeRepository.db.deleteAllOsuUserAwardedBadges(tx, osuUser.id));
-        await this.execute(osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id));
+        await this.execute(
+          osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id)
+        );
       });
     }
 
-    await this.execute(userRepository.db.updateOsuUser(db, osuUser.id, {
-      username: osuUser.username,
-      restricted: osuUser.is_restricted,
-      globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
-      globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
-      globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
-      globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
-      countryCode: osuUser.country.code
-    }));
+    await this.execute(
+      userRepository.db.updateOsuUser(db, osuUser.id, {
+        username: osuUser.username,
+        restricted: osuUser.is_restricted,
+        globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
+        globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
+        globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
+        globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
+        countryCode: osuUser.country.code
+      })
+    );
   }
 
-  public async updateDiscordApiData(discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>) {
-    await this.execute(userRepository.db.updateDiscordUser(db, BigInt(discordUser.id), {
-      username: discordUser.username
-    }));
+  public async updateDiscordApiData(
+    discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>
+  ) {
+    await this.execute(
+      userRepository.db.updateDiscordUser(db, BigInt(discordUser.id), {
+        username: discordUser.username
+      })
+    );
   }
 
   public async getOsuTokens(code: string) {
@@ -171,7 +197,7 @@ export class AuthenticationService extends Service {
     return osuUserId;
   }
 
-  public transformArcticToken(token: OAuth2Tokens): OAuthToken  {
+  public transformArcticToken(token: OAuth2Tokens): OAuthToken {
     return {
       accessToken: token.accessToken(),
       refreshToken: token.refreshToken(),
@@ -189,7 +215,7 @@ export class AuthenticationService extends Service {
     const now = new Date();
     return now.getDate() - new Date(issuedAt).getDate() >= 1;
   }
-  
+
   public async refreshOsuToken(osuUserId: number, refreshToken: string) {
     const newOsuTokens = await osuOAuth.refreshAccessToken(refreshToken);
     await this.execute(
@@ -217,23 +243,16 @@ export class AuthenticationService extends Service {
     };
   }
 
-  public async setTempOsuTokens(
-    state: string,
-    tokens: OAuthToken
-  ) {
+  public async setTempOsuTokens(state: string, tokens: OAuthToken) {
     await this.execute(osuRepository.kv.setTempOsuTokens(state, tokens));
   }
 
   public async getTempOsuTokens(state: string) {
-    return await this.execute(
-      osuRepository.kv.getTempOsuTokens(state)
-    );
+    return await this.execute(osuRepository.kv.getTempOsuTokens(state));
   }
 
   public async deleteTempOsuTokens(state: string) {
-    return await this.execute(
-      osuRepository.kv.deleteTempOsuTokens(state)
-    );
+    return await this.execute(osuRepository.kv.deleteTempOsuTokens(state));
   }
 
   private generateSessionToken(): string {
@@ -250,7 +269,7 @@ export class AuthenticationService extends Service {
 
   public async deleteSession(sessionToken: string) {
     const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(sessionToken)));
-    
+
     await this.execute(sessionRepository.db.deleteSession(db, sessionId));
     if (env.NODE_ENV === 'test' && this.tokenFileExists()) {
       unlinkSync(this.TEST_SESSION_TOKEN_PATH);
@@ -267,11 +286,19 @@ export class AuthenticationService extends Service {
     return session;
   }
 
-  public hasSessionExpired(session: NonNullable<Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>>) {
+  public hasSessionExpired(
+    session: NonNullable<
+      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
+    >
+  ) {
     return Date.now() >= session.expiresAt.getTime();
   }
 
-  public sessionExpirationNeedsReset(session: NonNullable<Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>>) {
+  public sessionExpirationNeedsReset(
+    session: NonNullable<
+      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
+    >
+  ) {
     return Date.now() >= session.expiresAt.getTime() - time.days(10);
   }
 

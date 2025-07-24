@@ -1,8 +1,8 @@
 import { count, eq, sql } from 'drizzle-orm';
+import { pgTable, serial, text } from 'drizzle-orm/pg-core';
+import { DbRepository, KvRepository, SearchRepository } from '$src/modules/_base/repository';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
-import { DbRepository, KvRepository, SearchRepository } from '$src/modules/_base/repository';
-import { pgTable, serial, text } from 'drizzle-orm/pg-core';
 
 const Test = pgTable('test', {
   id: serial('id').primaryKey(),
@@ -11,7 +11,9 @@ const Test = pgTable('test', {
 
 class TestDbRepository extends DbRepository {
   public createTestTable(db: DatabaseClient) {
-    const query = db.execute(sql`create table if not exists "test" ("id" serial primary key, "name" text not null)`);
+    const query = db.execute(
+      sql`create table if not exists "test" ("id" serial primary key, "name" text not null)`
+    );
 
     return this.wrap({
       query,
@@ -33,10 +35,7 @@ class TestDbRepository extends DbRepository {
   }
 
   public updateUser(db: DatabaseClient, id: number, name: string) {
-    const query = db
-      .update(Test)
-      .set({ name })
-      .where(eq(Test.id, id));
+    const query = db.update(Test).set({ name }).where(eq(Test.id, id));
 
     return this.wrap({
       query,
@@ -45,9 +44,7 @@ class TestDbRepository extends DbRepository {
   }
 
   public deleteUser(db: DatabaseClient, id: number) {
-    const query = db
-      .delete(Test)
-      .where(eq(Test.id, id));
+    const query = db.delete(Test).where(eq(Test.id, id));
 
     return this.wrap({
       query,
@@ -65,7 +62,10 @@ class TestDbRepository extends DbRepository {
   }
 
   public countUsers(db: DatabaseClient, id: number) {
-    const query = db.select({ count: count().as('count') }).from(Test).where(eq(Test.id, id));
+    const query = db
+      .select({ count: count().as('count') })
+      .from(Test)
+      .where(eq(Test.id, id));
 
     return this.wrap({
       query,

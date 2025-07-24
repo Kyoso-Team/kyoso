@@ -18,15 +18,11 @@ export class ApiKeyService extends Service {
   }
 
   public async deleteApiKey(apiKeyId: number, userId: number) {
-    await this.execute(
-      apiKeyRepository.db.deleteApiKey(db, apiKeyId, userId)
-    );
+    await this.execute(apiKeyRepository.db.deleteApiKey(db, apiKeyId, userId));
   }
 
   public async getUserApiKeys(userId: number) {
-    return await this.execute(
-      apiKeyRepository.db.getUserApiKeys(db, userId)
-    );
+    return await this.execute(apiKeyRepository.db.getUserApiKeys(db, userId));
   }
 
   public async doesApiKeyExist(apiKey: string) {

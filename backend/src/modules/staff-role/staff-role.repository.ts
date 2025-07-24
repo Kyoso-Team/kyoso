@@ -1,22 +1,21 @@
 import { count, eq } from 'drizzle-orm';
+import { DbRepository } from '$src/modules/_base/repository';
 import { StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
 import type { StaffRoleValidationOutput } from './validation';
-import { DbRepository } from '$src/modules/_base/repository';
 
 class StaffRoleDbRepository extends DbRepository {
-  public getStaffRole(
-    db: DatabaseClient,
-    staffRoleId: number
-  ) {
+  public getStaffRole(db: DatabaseClient, staffRoleId: number) {
     const query = db
-      .select(pick(StaffRole, {
-        id: true,
-        name: true,
-        order: true,
-        tournamentId: true
-      }))
+      .select(
+        pick(StaffRole, {
+          id: true,
+          name: true,
+          order: true,
+          tournamentId: true
+        })
+      )
       .from(StaffRole)
       .where(eq(StaffRole.id, staffRoleId));
 
@@ -43,7 +42,7 @@ class StaffRoleDbRepository extends DbRepository {
           id: true
         })
       );
-      
+
     return this.wrap({
       query,
       name: 'Create staff role',
@@ -64,17 +63,16 @@ class StaffRoleDbRepository extends DbRepository {
     });
   }
 
-  public deleteStaffRole(
-    db: DatabaseClient,
-    staffRoleId: number
-  ) {
+  public deleteStaffRole(db: DatabaseClient, staffRoleId: number) {
     const query = db
       .delete(StaffRole)
       .where(eq(StaffRole.id, staffRoleId))
-      .returning(pick(StaffRole, {
-        id: true,
-        order: true
-      }));
+      .returning(
+        pick(StaffRole, {
+          id: true,
+          order: true
+        })
+      );
 
     return this.wrap({
       query,
@@ -84,7 +82,10 @@ class StaffRoleDbRepository extends DbRepository {
   }
 
   public countStaffRoles(db: DatabaseClient, tournamentId: number) {
-    const query = db.select({ count: count(StaffRole.id).as('count') }).from(StaffRole).where(eq(StaffRole.tournamentId, tournamentId));
+    const query = db
+      .select({ count: count(StaffRole.id).as('count') })
+      .from(StaffRole)
+      .where(eq(StaffRole.tournamentId, tournamentId));
 
     return this.wrap({
       query,

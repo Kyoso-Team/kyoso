@@ -1,8 +1,8 @@
+import { db } from '$src/singletons';
 import { Service } from '$src/utils/service';
 import { userRepository } from './user.repository';
-import { db } from '$src/singletons';
-import type { DatabaseClient } from '$src/types';
 import type { DiscordUser, OsuUser, User } from '$src/schema';
+import type { DatabaseClient } from '$src/types';
 
 export class UserService extends Service {
   // TODO: Move this to AuthenticationService
@@ -60,7 +60,19 @@ export class UserService extends Service {
 
   public async createOsuUser(
     db: DatabaseClient,
-    osuUser: Pick<typeof OsuUser.$inferInsert, 'globalStdRank' | 'globalCatchRank' | 'globalTaikoRank' | 'globalManiaRank' | 'userId' | 'osuUserId' | 'username' | 'restricted' | 'token' | 'countryCode'>
+    osuUser: Pick<
+      typeof OsuUser.$inferInsert,
+      | 'globalStdRank'
+      | 'globalCatchRank'
+      | 'globalTaikoRank'
+      | 'globalManiaRank'
+      | 'userId'
+      | 'osuUserId'
+      | 'username'
+      | 'restricted'
+      | 'token'
+      | 'countryCode'
+    >
   ) {
     return await this.execute(userRepository.db.createOsuUser(db, osuUser));
   }
@@ -75,7 +87,10 @@ export class UserService extends Service {
 
   public async createDiscordUser(
     db: DatabaseClient,
-    discordUser: Pick<typeof DiscordUser.$inferInsert, 'discordUserId' | 'token' | 'userId' | 'username'>
+    discordUser: Pick<
+      typeof DiscordUser.$inferInsert,
+      'discordUserId' | 'token' | 'userId' | 'username'
+    >
   ) {
     return await this.execute(userRepository.db.createDiscordUser(db, discordUser));
   }

@@ -1,15 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { DbRepository } from '$src/modules/_base/repository';
 import { Country, DiscordUser, OsuUser, User } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
-import { DbRepository } from '$src/modules/_base/repository';
 
 class UserDbRepository extends DbRepository {
   public createUser(db: DatabaseClient, user: typeof User.$inferInsert) {
-    const query = db
-      .insert(User)
-      .values(user)
-      .returning({ id: User.id });
+    const query = db.insert(User).values(user).returning({ id: User.id });
 
     return this.wrap({
       query,
@@ -39,10 +36,7 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public createDiscordUser(
-    db: DatabaseClient,
-    user: typeof DiscordUser.$inferInsert
-  ) {
+  public createDiscordUser(db: DatabaseClient, user: typeof DiscordUser.$inferInsert) {
     const query = db.insert(DiscordUser).values(user);
 
     return this.wrap({
@@ -56,10 +50,7 @@ class UserDbRepository extends DbRepository {
     userId: number,
     user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>
   ) {
-    const query = db
-      .update(User)
-      .set(user)
-      .where(eq(User.id, userId));
+    const query = db.update(User).set(user).where(eq(User.id, userId));
 
     return this.wrap({
       query,
@@ -70,7 +61,19 @@ class UserDbRepository extends DbRepository {
   public updateOsuUser(
     db: DatabaseClient,
     osuUserId: number,
-    user: Partial<Pick<typeof OsuUser.$inferInsert, 'countryCode' | 'username' | 'globalCatchRank' | 'globalManiaRank' | 'globalStdRank' | 'globalTaikoRank' | 'restricted' | 'token'>>
+    user: Partial<
+      Pick<
+        typeof OsuUser.$inferInsert,
+        | 'countryCode'
+        | 'username'
+        | 'globalCatchRank'
+        | 'globalManiaRank'
+        | 'globalStdRank'
+        | 'globalTaikoRank'
+        | 'restricted'
+        | 'token'
+      >
+    >
   ) {
     const query = db
       .update(OsuUser)
@@ -106,15 +109,14 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public getUser(
-    db: DatabaseClient,
-    userId: number
-  ) {
+  public getUser(db: DatabaseClient, userId: number) {
     const query = db
-      .select(pick(User, {
-        id: true,
-        banned: true
-      }))
+      .select(
+        pick(User, {
+          id: true,
+          banned: true
+        })
+      )
       .from(User)
       .where(eq(User.id, userId))
       .limit(1);
@@ -126,18 +128,17 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public getOsuUser(
-    db: DatabaseClient,
-    osuUserId: number
-  ) {
+  public getOsuUser(db: DatabaseClient, osuUserId: number) {
     const query = db
-      .select(pick(OsuUser, {
-        userId: true
-      }))
+      .select(
+        pick(OsuUser, {
+          userId: true
+        })
+      )
       .from(OsuUser)
       .where(eq(OsuUser.osuUserId, osuUserId))
       .limit(1);
-      
+
     return this.wrap({
       query,
       name: 'Get osu! user',
@@ -145,15 +146,8 @@ class UserDbRepository extends DbRepository {
     });
   }
 
-  public isUserBanned(
-    db: DatabaseClient,
-    userId: number
-  ) {
-    const query = this.utils.exists(
-      db,
-      User,
-      and(eq(User.id, userId), eq(User.banned, true))
-    );
+  public isUserBanned(db: DatabaseClient, userId: number) {
+    const query = this.utils.exists(db, User, and(eq(User.id, userId), eq(User.banned, true)));
 
     return this.wrap({
       query,

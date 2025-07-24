@@ -1,9 +1,11 @@
-import type { DatabaseClient } from '$src/types';
-import { QueryPromise, sql, type Query, type SQL, type Table } from 'drizzle-orm';
-import { TrackValue, type BaseQueryMeta, type QueryWrapper } from './common';
+import { QueryPromise, sql } from 'drizzle-orm';
 import { serializeToConsole } from '$src/utils';
 import { env } from '$src/utils/env';
+import { TrackValue } from './common';
+import type { Query, SQL, Table } from 'drizzle-orm';
 import type { RunnableQuery } from 'drizzle-orm/runnable-query';
+import type { DatabaseClient } from '$src/types';
+import type { BaseQueryMeta, QueryWrapper } from './common';
 
 export interface DbQueryMeta extends BaseQueryMeta {
   queryType: 'db';
@@ -15,21 +17,25 @@ export interface DbQueryMeta extends BaseQueryMeta {
 
 export class DbRepository {
   protected wrap<
-    TQuery extends RunnableQuery<any, any> & QueryPromise<any> & ({
-      toSQL(): Query
-    } | {
-      getQuery(): Query
-    }),
+    TQuery extends RunnableQuery<any, any> &
+      QueryPromise<any> &
+      (
+        | {
+            toSQL(): Query;
+          }
+        | {
+            getQuery(): Query;
+          }
+      ),
     TMap = undefined
   >(meta: {
     query: TQuery;
     name: string;
     map?: ((result: TQuery['_']['result']) => TMap) | undefined;
-  }): QueryWrapper<
-    undefined extends TMap ? TQuery['_']['result'] : TMap
-  > {
+  }): QueryWrapper<undefined extends TMap ? TQuery['_']['result'] : TMap> {
     const sql = 'toSQL' in meta.query ? meta.query.toSQL() : meta.query.getQuery();
-    const params: any[] = env.NODE_ENV !== 'production' ? sql.params.map((v) => serializeToConsole(v)) : [];
+    const params: any[] =
+      env.NODE_ENV !== 'production' ? sql.params.map((v) => serializeToConsole(v)) : [];
     const output = new TrackValue('undefined');
     const mappedOutput = new TrackValue('undefined');
 
@@ -40,13 +46,13 @@ export class DbRepository {
 
         if (env.NODE_ENV !== 'production') {
           output.set(serializeToConsole(result));
-  
+
           if (meta.map) {
             mapped = meta.map(result);
             mappedOutput.set(serializeToConsole(mapped));
           }
         }
-        
+
         return meta.map && mapped !== undefined ? mapped : result;
       }) as any,
       meta: {
@@ -77,7 +83,9 @@ export class DbRepository {
 
   protected utils = {
     exists: (db: DatabaseClient, table: Table, where: SQL | undefined) => {
-      return db.execute<{ exists: boolean }>(sql`select exists(select 1 as "exists" from ${table} where ${where})`);
+      return db.execute<{ exists: boolean }>(
+        sql`select exists(select 1 as "exists" from ${table} where ${where})`
+      );
     }
   };
 }

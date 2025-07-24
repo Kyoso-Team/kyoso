@@ -1,22 +1,20 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient } from '$src/types';
 import { DbRepository } from '../_base/db-repository';
+import type { DatabaseClient } from '$src/types';
 
 class StaffMemberDbRepository extends DbRepository {
-  public getStaffMember(
-    db: DatabaseClient,
-    staffMemberId: number,
-    tournamentId: number
-  ) {
+  public getStaffMember(db: DatabaseClient, staffMemberId: number, tournamentId: number) {
     const query = db
       .select({
         ...pick(StaffMember, {
           id: true,
           userId: true
         }),
-        permissions: sql<typeof StaffRole.$inferSelect.permissions>`array_agg(distinct unnest(${StaffRole.permissions}))`.as('permissions'),
+        permissions: sql<
+          typeof StaffRole.$inferSelect.permissions
+        >`array_agg(distinct unnest(${StaffRole.permissions}))`.as('permissions')
       })
       .from(StaffMember)
       .innerJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))

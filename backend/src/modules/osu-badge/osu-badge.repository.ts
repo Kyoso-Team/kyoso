@@ -1,7 +1,7 @@
 import { and, eq, inArray, SQL, sql } from 'drizzle-orm';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
-import type { DatabaseClient } from '$src/types';
 import { DbRepository } from '../_base/db-repository';
+import type { DatabaseClient } from '$src/types';
 
 class OsuBadgeDbRepository extends DbRepository {
   public getOsuUserAwardedBadges(db: DatabaseClient, osuUserId: number) {
@@ -42,7 +42,8 @@ class OsuBadgeDbRepository extends DbRepository {
 
   public createOsuUserAwardedBadges(
     db: DatabaseClient,
-    badges: (Pick<typeof OsuBadge.$inferInsert, 'imgFileName'> & Pick<typeof OsuUserAwardedBadge.$inferInsert, 'awardedAt'>)[],
+    badges: (Pick<typeof OsuBadge.$inferInsert, 'imgFileName'> &
+      Pick<typeof OsuUserAwardedBadge.$inferInsert, 'awardedAt'>)[],
     osuUserId: number
   ) {
     const sqlExpressions: SQL[] = badges.map(

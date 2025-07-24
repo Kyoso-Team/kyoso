@@ -1,8 +1,9 @@
-import type { Hits, Index, SearchParams } from 'meilisearch';
-import { TrackValue, type BaseQueryMeta, type QueryWrapper } from './common';
 import { meilisearch } from '$src/singletons/meilisearch';
 import { serializeToConsole } from '$src/utils';
 import { env } from '$src/utils/env';
+import { TrackValue } from './common';
+import type { Hits, Index, SearchParams } from 'meilisearch';
+import type { BaseQueryMeta, QueryWrapper } from './common';
 
 export type UserDoc = {
   osuUserId: number;
@@ -28,7 +29,7 @@ export interface SearchQueryMeta extends BaseQueryMeta {
   search?: {
     query: string;
     options?: SearchParams;
-  }
+  };
   input?: string;
   output?: TrackValue;
 }
@@ -68,10 +69,7 @@ export class SearchIndex<TData extends Record<string, any>> {
     };
   }
 
-  public deleteDocument(meta: {
-    name: string;
-    documentId: string | number;
-  }): QueryWrapper<void> {
+  public deleteDocument(meta: { name: string; documentId: string | number }): QueryWrapper<void> {
     return {
       execute: async () => {
         await this.idx.deleteDocument(meta.documentId);
@@ -97,11 +95,11 @@ export class SearchIndex<TData extends Record<string, any>> {
       execute: async () => {
         const result = await this.idx.search(meta.query, meta.searchOptions);
         const hits = result.hits;
-        
+
         if (env.NODE_ENV !== 'production') {
           output.set(serializeToConsole(hits));
         }
-        
+
         return hits;
       },
       meta: {

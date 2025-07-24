@@ -1,5 +1,5 @@
-import { Service } from '$src/utils/service';
 import * as v from 'valibot';
+import { Service } from '$src/utils/service';
 
 export class DiscordService extends Service {
   public async getDiscordSelf(accessToken: string) {
@@ -16,7 +16,7 @@ export class DiscordService extends Service {
       error: {
         fetchFailed: 'Failed to get Discord user data',
         unhandledStatus: 'Unhandled status code when getting Discord user data',
-        validationFailed: 'Discord user response doesn\'t match the expected schema',
+        validationFailed: "Discord user response doesn't match the expected schema",
         parseFailed: 'Failed to parse Discord user data'
       }
     });

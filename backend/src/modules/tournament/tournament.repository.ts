@@ -2,10 +2,10 @@ import { and, eq, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { pick } from '$src/utils/query';
-import type { DatabaseClient } from '$src/types';
-import type { TournamentValidation } from './validation';
 import { DbRepository } from '../_base/db-repository';
 import { SearchRepository } from '../_base/search-repository';
+import type { DatabaseClient } from '$src/types';
+import type { TournamentValidation } from './validation';
 
 class TournamentDbRepository extends DbRepository {
   public createTournament(
@@ -52,11 +52,7 @@ class TournamentDbRepository extends DbRepository {
     });
   }
 
-  public changeTournamentHost(
-    db: DatabaseClient,
-    hostUserId: number,
-    tournamentId: number
-  ) {
+  public changeTournamentHost(db: DatabaseClient, hostUserId: number, tournamentId: number) {
     const query = db.update(Tournament).set({ hostUserId }).where(eq(Tournament.id, tournamentId));
 
     return this.wrap({
@@ -78,7 +74,10 @@ class TournamentDbRepository extends DbRepository {
   }
 
   public restoreTournament(db: DatabaseClient, tournamentId: number) {
-    const query = db.update(Tournament).set({ deletedAt: null }).where(eq(Tournament.id, tournamentId));
+    const query = db
+      .update(Tournament)
+      .set({ deletedAt: null })
+      .where(eq(Tournament.id, tournamentId));
 
     return this.wrap({
       query,
@@ -86,22 +85,21 @@ class TournamentDbRepository extends DbRepository {
     });
   }
 
-  public getTournament(
-    db: DatabaseClient,
-    tournamentId: number
-  ) {
+  public getTournament(db: DatabaseClient, tournamentId: number) {
     const query = db
-      .select(pick(Tournament, {
-        hostUserId: true,
-        playerRegsClosedAt: true,
-        playerRegsOpenedAt: true,
-        staffRegsClosedAt: true,
-        staffRegsOpenedAt: true,
-        concludedAt: true,
-        publishedAt: true,
-        deletedAt: true,
-        type: true
-      }))
+      .select(
+        pick(Tournament, {
+          hostUserId: true,
+          playerRegsClosedAt: true,
+          playerRegsOpenedAt: true,
+          staffRegsClosedAt: true,
+          staffRegsOpenedAt: true,
+          concludedAt: true,
+          publishedAt: true,
+          deletedAt: true,
+          type: true
+        })
+      )
       .from(Tournament)
       .where(eq(Tournament.id, tournamentId))
       .limit(1);
