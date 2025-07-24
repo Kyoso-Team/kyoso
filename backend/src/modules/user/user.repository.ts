@@ -53,8 +53,8 @@ class UserDbRepository extends DbRepository {
 
   public updateUser(
     db: DatabaseClient,
-    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>,
-    userId: number
+    userId: number,
+    user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>
   ) {
     const query = db
       .update(User)
@@ -69,8 +69,8 @@ class UserDbRepository extends DbRepository {
 
   public updateOsuUser(
     db: DatabaseClient,
-    user: Partial<Pick<typeof OsuUser.$inferInsert, 'countryCode' | 'username' | 'globalCatchRank' | 'globalManiaRank' | 'globalStdRank' | 'globalTaikoRank' | 'restricted' | 'token'>>,
-    osuUserId: number
+    osuUserId: number,
+    user: Partial<Pick<typeof OsuUser.$inferInsert, 'countryCode' | 'username' | 'globalCatchRank' | 'globalManiaRank' | 'globalStdRank' | 'globalTaikoRank' | 'restricted' | 'token'>>
   ) {
     const query = db
       .update(OsuUser)
@@ -89,8 +89,8 @@ class UserDbRepository extends DbRepository {
 
   public updateDiscordUser(
     db: DatabaseClient,
-    user: Partial<Pick<typeof DiscordUser.$inferInsert, 'token' | 'username'>>,
-    discordUserId: bigint
+    discordUserId: bigint,
+    user: Partial<Pick<typeof DiscordUser.$inferInsert, 'token' | 'username'>>
   ) {
     const query = db
       .update(DiscordUser)

@@ -1,11 +1,27 @@
-import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { time } from '$src/utils';
-import type { Context } from 'hono';
 import { Service } from '$src/utils/service';
+import type { Cookie } from 'elysia';
+import type { ElysiaCookie } from 'elysia/cookies';
+
+type Updater<T> = T | ((value: T) => T);
+type Cookies = Record<string, Cookie<string | undefined>>;
 
 export class CookieService extends Service {
-  public setOAuthState(c: Context, forOAuth: 'osu' | 'discord', state: string) {
-    setCookie(c, `${forOAuth}_oauth_state`, state, {
+  private setCookie(cookies: Cookies, name: string, config: Updater<Partial<ElysiaCookie>>) {
+    cookies[name].set(config);
+  }
+
+  private deleteCookie(cookies: Cookies, name: string) {
+    cookies[name]?.remove();
+  }
+
+  private getCookie(cookies: Cookies, name: string) {
+    return cookies[name]?.value;
+  }
+
+  public setOAuthState(cookies: Cookies, forOAuth: 'osu' | 'discord', state: string) {
+    this.setCookie(cookies, `${forOAuth}_oauth_state`, {
+      value: state,
       path: '/',
       httpOnly: true,
       maxAge: time.minutes(10),
@@ -13,14 +29,15 @@ export class CookieService extends Service {
     });
   }
 
-  public getOAuthState(c: Context, forOAuth: 'osu' | 'discord') {
+  public getOAuthState(cookies: Cookies, forOAuth: 'osu' | 'discord') {
     const cookieName = `${forOAuth}_oauth_state`;
-    const cookie = getCookie(c, cookieName);
+    const cookie = this.getCookie(cookies, cookieName);
     return cookie;
   }
 
-  public setSession(c: Context, sessionToken: string) {
-    setCookie(c, 'session', sessionToken, {
+  public setSession(cookies: Cookies, sessionToken: string) {
+    this.setCookie(cookies, 'session', {
+      value: sessionToken,
       path: '/',
       httpOnly: true,
       maxAge: time.days(90),
@@ -28,16 +45,17 @@ export class CookieService extends Service {
     });
   }
 
-  public deleteSession(c: Context) {
-    deleteCookie(c, 'session');
+  public deleteSession(cookies: Cookies) {
+    this.deleteCookie(cookies, 'session');
   }
 
-  public getSession(c: Context) {
-    return getCookie(c, 'session');
+  public getSession(cookies: Cookies) {
+    return this.getCookie(cookies, 'session');
   }
 
-  public setRedirectPath(c: Context, redirectPath: string) {
-    setCookie(c, 'redirect_path', redirectPath, {
+  public setRedirectPath(cookies: Cookies, redirectPath: string) {
+    this.setCookie(cookies, 'redirect_path', {
+      value: redirectPath,
       path: '/',
       httpOnly: true,
       maxAge: time.minutes(10),
@@ -45,11 +63,11 @@ export class CookieService extends Service {
     });
   }
 
-  public deleteRedirectPath(c: Context) {
-    deleteCookie(c, 'redirect_path');
+  public deleteRedirectPath(cookies: Cookies) {
+    this.deleteCookie(cookies, 'redirect_path');
   }
 
-  public getRedirectPath(c: Context) {
-    return getCookie(c, 'redirect_path');
+  public getRedirectPath(cookies: Cookies) {
+    return this.getCookie(cookies, 'redirect_path');
   }
 }

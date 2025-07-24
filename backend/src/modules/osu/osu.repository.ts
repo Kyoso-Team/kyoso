@@ -1,11 +1,11 @@
 import { time } from '$src/utils';
 import { KvRepository } from '$src/modules/_base/repository';
-import * as s from '$src/utils/validation';
+import { OAuthToken } from '$src/utils/validation';
 
 class OsuKvRepository extends KvRepository {
   public setTempOsuTokens(
-    tokens: s.OAuthToken,
-    state: string
+    state: string,
+    tokens: OAuthToken
   ) {
     return this.wrap.set({
       key: this.keys.temporaryOsuTokens(state),
@@ -20,7 +20,7 @@ class OsuKvRepository extends KvRepository {
     return this.wrap.get({
       key: this.keys.temporaryOsuTokens(state),
       name: 'Get temporarily stored osu! tokens',
-      map: (value: string | null) => value ? JSON.parse(value) as s.OAuthToken : null
+      map: (value: string | null) => value ? JSON.parse(value) as OAuthToken : null
     });
   }
 

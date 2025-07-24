@@ -132,9 +132,7 @@ export abstract class Service {
 
     try {
       logger.info(`${logMsg}Start`);
-      return await db.transaction(async (tx) => {
-        await transactionFn(tx);
-      });
+      return await db.transaction(async (tx) => await transactionFn(tx));
     } finally {
       const duration = performance.now() - start;
       logMsg += `Completed in ${Math.round(duration)}ms`;

@@ -76,23 +76,14 @@ class OsuBadgeDbRepository extends DbRepository {
     });
   }
 
-  public removeOsuUserAwardedBadges(
-    db: DatabaseClient,
-    badgeIds: number[],
-    osuUserId: number
-  ) {
+  public deleteAllOsuUserAwardedBadges(db: DatabaseClient, osuUserId: number) {
     const query = db
       .delete(OsuUserAwardedBadge)
-      .where(
-        and(
-          eq(OsuUserAwardedBadge.osuUserId, osuUserId),
-          inArray(OsuUserAwardedBadge.osuBadgeId, badgeIds)
-        )
-      );
+      .where(eq(OsuUserAwardedBadge.osuUserId, osuUserId));
 
     return this.wrap({
       query,
-      name: 'Remove osu! user awarded badges'
+      name: 'Delete all osu! user awarded badges'
     });
   }
 }

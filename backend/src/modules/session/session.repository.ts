@@ -32,21 +32,24 @@ class SessionDbRepository extends DbRepository {
       user: pick(User, {
         id: true,
         admin: true,
-        approvedHost: true
+        approvedHost: true,
+        banned: true
       }),
       osu: pick(OsuUser, {
         osuUserId: true,
-        token: true
+        token: true,
+        username: true
       }),
       discord: pick(DiscordUser, {
         discordUserId: true,
-        token: true
+        token: true,
+        username: true
       })
     })
     .from(Session)
     .innerJoin(User, eq(User.id, Session.userId))
-    .leftJoin(OsuUser, eq(OsuUser.userId, User.id))
-    .leftJoin(DiscordUser, eq(DiscordUser.userId, User.id))
+    .innerJoin(OsuUser, eq(OsuUser.userId, User.id))
+    .innerJoin(DiscordUser, eq(DiscordUser.userId, User.id))
     .where(eq(Session.id, sessionId))
     .limit(1);
 

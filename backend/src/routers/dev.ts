@@ -1,29 +1,19 @@
-// import { vValidator } from '@hono/valibot-validator';
-// import { Hono } from 'hono';
-// import { HTTPException } from 'hono/http-exception';
-// import * as v from 'valibot';
-// import { devCheckMiddleware } from '$src/middlewares/dev.ts';
-import { SessionGuard } from '$src/middlewares/session.ts';
-// import { devService } from '$src/modules/dev/service.ts';
-// import { integerId } from '$src/utils/validation.ts';
-// import { servicesMiddleware } from '$src/middlewares/services';
 import { TestService } from '$src/modules/test/test.service';
 import { elysia, t } from './base';
 import { UserService } from '$src/modules/user/user.service';
 import { status } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 
-export const devRouter = elysia({ prefix: '/dev' })
-  .derive(({ requestId }) => {
-    const authenticationService = new AuthenticationService('request', requestId);
-    const testService = new TestService('request', requestId);
-    const userService = new UserService('request', requestId);
-    return { authenticationService, testService, userService };
-  })
-  .onBeforeHandle(() => {
-    if (process.env.NODE_ENV !== 'development') {
-      return status(403, 'This endpoint is only available in development environment');
-    }
+export const devRouter = elysia({
+  prefix: '/dev',
+  services: {
+    authenticationService: AuthenticationService,
+    testService: TestService,
+    userService: UserService
+  }
+})
+  .guard({
+    devOnly: true
   })
   .get('/test', async ({ testService }) => {
     await testService.deleteTestTable();
@@ -58,11 +48,7 @@ export const devRouter = elysia({ prefix: '/dev' })
       searchResults
     };
   })
-  .put('/impersonate', async ({ headers, body, authenticationService, userService }) => {
-    if (!headers['User-Agent']) {
-      return status(400, '"User-Agent" header is undefined');
-    }
-
+  .put('/impersonate', async ({ body, headers, authenticationService, userService }) => {
     const user = await userService.getUser(body.userId);
 
     if (!user) {
@@ -73,52 +59,24 @@ export const devRouter = elysia({ prefix: '/dev' })
       return status(403, 'The user you want to impersonate is banned');
     }
 
-    await authenticationService.createSession(userId);
-    return 'Successfully impersonated user';
+    await authenticationService.createSession(body.userId, '127.0.0.1', {
+      city: 'Sample',
+      country: 'Sample',
+      region: 'Sample'
+    }, headers['user-agent'] ?? null);
   }, {
     body: t.Object({
       userId: t.IntegerId()
     })
+  })
+  .patch('/change-permissions', async ({ body, session, authenticationService }) => {
+    await authenticationService.updateUser(session.user.id, body);
+  }, {
+    body: t.Partial(
+      t.Object({
+        admin: t.Boolean(),
+        approvedHost: t.Boolean()
+      })
+    ),
+    session: true
   });
-
-
-//   .put(
-//     'impersonate',
-//     vValidator(
-//       'json',
-//       v.object({
-//         userId: integerId()
-//       })
-//     ),
-//     async (c) => {
-//       if (!c.req.header('User-Agent')) {
-//         throw new HTTPException(400, {
-//           message: '"User-Agent" header is undefined'
-//         });
-//       }
-
-//       const body = c.req.valid('json');
-
-//       return devService.impersonate(c, body.userId);
-//     }
-//   )
-//   .patch(
-//     'change-permissions',
-//     vValidator(
-//       'json',
-//       v.object({
-//         admin: v.boolean(),
-//         approvedHost: v.boolean()
-//       })
-//     ),
-//     sessionMiddleware(),
-//     async (c) => {
-//       const body = c.req.valid('json');
-
-//       const { id } = c.get('user');
-
-//       await devService.changePermissions(body, id);
-
-//       return c.text('Successfully updated user permissions');
-//     }
-//   );

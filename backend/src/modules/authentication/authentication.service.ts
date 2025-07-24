@@ -1,29 +1,177 @@
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
-import { generateState, OAuth2Tokens } from 'arctic';
-import { getConnInfo } from 'hono/bun';
-import { HTTPException } from 'hono/http-exception';
+import { OAuth2Tokens } from 'arctic';
 import { db } from '$src/singletons';
-import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
+import { changeAccountDiscordOAuth, mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { Service } from '$src/utils/service';
-import { discordService } from '../discord/discord.service';
-import { ipInfoService } from '../ipinfo/ipinfo.service';
-import { osuBadgeService } from '../osu-badge/service';
+import { DiscordService } from '../discord/discord.service';
+import { IpInfoService } from '../ipinfo/ipinfo.service';
 import { sessionRepository } from '../session/session.repository';
-import { SessionValidation } from '../session/validation';
-import { userService } from '../user/user.service';
-import type { Context } from 'hono';
 import type { UserBadge } from 'osu-web.js';
-import type { UserTokens } from '$src/middlewares/session.ts';
-import type { Session } from '$src/schema';
-import type { DatabaseClient } from '$src/types';
-import type { SessionSelection } from '../session/types';
-import type { AuthenticationValidationInput, AuthenticationValidationOutput } from './validation';
+import type { User } from '$src/schema';
 import { userRepository } from '../user/user.repository';
+import type { OAuthToken } from '$src/utils/validation';
+import { OsuService } from '../osu/osu.service';
+import { osuBadgeRepository } from '../osu-badge/osu-badge.repository';
+import { unknownError } from '$src/utils/error';
+import { osuRepository } from '../osu/osu.repository';
+import { existsSync, unlinkSync } from 'fs';
+import { time } from '$src/utils';
 
 export class AuthenticationService extends Service {
-  public transformArcticToken(token: OAuth2Tokens): AuthenticationValidationOutput['OAuthToken'] {
+  private TEST_SESSION_TOKEN_PATH = `${process.cwd()}/test-tokens/session.txt`;
+
+  public async createUser(
+    osuToken: OAuthToken,
+    osuUser: Awaited<ReturnType<OsuService['getOsuSelf']>>,
+    discordToken: OAuthToken,
+    discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>
+  ) {
+    const badges = osuUser.badges.map(this.transformBadge);
+    await this.execute(userRepository.db.createCountry(db, osuUser.country));
+
+    if (badges.length > 0) {
+      await this.execute(osuBadgeRepository.db.upsertOsuBadges(db, badges));
+    }
+
+    const user = await this.transaction(db, 'Create user', async (tx) => {
+      const isOwner = env.KYOSO_OWNER === osuUser.id;
+      const user = await this.execute(userRepository.db.createUser(tx, {
+        admin: isOwner,
+        approvedHost: isOwner
+      }));
+
+      await this.execute(userRepository.db.createOsuUser(tx, {
+        userId: user.id,
+        osuUserId: osuUser.id,
+        username: osuUser.username,
+        restricted: osuUser.is_restricted,
+        globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
+        globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
+        globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
+        globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
+        countryCode: osuUser.country.code,
+        token: osuToken
+      }));
+
+      await this.execute(userRepository.db.createDiscordUser(tx, {
+        userId: user.id,
+        discordUserId: BigInt(discordUser.id),
+        username: discordUser.username,
+        token: discordToken
+      }));
+
+      if (badges.length > 0) {
+        await this.execute(osuBadgeRepository.db.deleteAllOsuUserAwardedBadges(tx, osuUser.id));
+        await this.execute(osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id));
+      }
+
+      return user;
+    });
+
+    return user;
+  }
+
+  public async createSession(userId: number, ipAddress: string, ipMetadata: Awaited<ReturnType<IpInfoService['getIpMetadata']>>, userAgent: string | null) {
+    const token = this.generateSessionToken();
+    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
+    await this.execute(sessionRepository.db.createSession(db, {
+      ipMetadata,
+      userId,
+      ipAddress,
+      id: sessionId,
+      userAgent: env.NODE_ENV !== 'production' ? 'test' : userAgent
+    }));
+    return token;
+  }
+
+  @Service.testOnly
+  public async createTestSession(userId: number) {
+    const sessionToken = await this.createSession(
+      userId,
+      '127.0.0.1',
+      {
+        city: 'Test',
+        country: 'Test',
+        region: 'Test'
+      },
+      null
+    );
+    await Bun.write(this.TEST_SESSION_TOKEN_PATH, sessionToken);
+  }
+
+  public async updateUser(userId: number, user: Partial<Pick<typeof User.$inferInsert, 'admin' | 'approvedHost' | 'banned'>>) {
+    return await this.execute(userRepository.db.updateUser(db, userId, user));
+  }
+
+  public async updateOsuApiData(osuUser: Awaited<ReturnType<OsuService['getOsuSelf']>>) {
+    const badges = osuUser.badges.map(this.transformBadge);
+    await this.execute(userRepository.db.createCountry(db, osuUser.country));
+
+    if (badges.length > 0) {
+      await this.execute(osuBadgeRepository.db.upsertOsuBadges(db, badges));
+
+      await this.transaction(db, 'Update user badges', async (tx) => {
+        await this.execute(osuBadgeRepository.db.deleteAllOsuUserAwardedBadges(tx, osuUser.id));
+        await this.execute(osuBadgeRepository.db.createOsuUserAwardedBadges(tx, badges, osuUser.id));
+      });
+    }
+
+    await this.execute(userRepository.db.updateOsuUser(db, osuUser.id, {
+      username: osuUser.username,
+      restricted: osuUser.is_restricted,
+      globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
+      globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
+      globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
+      globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
+      countryCode: osuUser.country.code
+    }));
+  }
+
+  public async updateDiscordApiData(discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>) {
+    await this.execute(userRepository.db.updateDiscordUser(db, BigInt(discordUser.id), {
+      username: discordUser.username
+    }));
+  }
+
+  public async getOsuTokens(code: string) {
+    const tokens = await osuOAuth
+      .validateAuthorizationCode(code)
+      .catch(unknownError('Failed to validate osu! authorization code'));
+
+    return this.transformArcticToken(tokens);
+  }
+
+  public async getMainDiscordTokens(code: string) {
+    const tokens = await mainDiscordOAuth
+      .validateAuthorizationCode(code)
+      .catch(unknownError('Failed to validate Discord (main client) authorization code'));
+
+    return this.transformArcticToken(tokens);
+  }
+
+  public async getChangeAccountDiscordTokens(code: string) {
+    const tokens = await changeAccountDiscordOAuth
+      .validateAuthorizationCode(code)
+      .catch(unknownError('Failed to validate Discord (change account client) authorization code'));
+
+    return this.transformArcticToken(tokens);
+  }
+
+  public getOsuUserIdFromAccessToken(accessToken: string) {
+    const payloadString = accessToken.substring(
+      accessToken.indexOf('.') + 1,
+      accessToken.lastIndexOf('.')
+    );
+    const payloadBuffer = Buffer.from(payloadString, 'base64').toString('ascii');
+    const payload: { sub: string } = JSON.parse(payloadBuffer);
+    const osuUserId = Number(payload.sub);
+    return osuUserId;
+  }
+
+  public transformArcticToken(token: OAuth2Tokens): OAuthToken  {
     return {
       accessToken: token.accessToken(),
       refreshToken: token.refreshToken(),
@@ -31,41 +179,33 @@ export class AuthenticationService extends Service {
     };
   }
 
-  public async refreshTokens({ osu, discord }: UserTokens) {
+  public shouldRefreshOsuToken(issuedAt: number) {
     const now = new Date();
+    return now.getDate() - new Date(issuedAt).getDate() >= 1;
+  }
 
-    let osuAccessToken: string = osu.token.accessToken;
+  // Separate function in case the token duration changes in the future
+  public shouldRefreshDiscordToken(issuedAt: number) {
+    const now = new Date();
+    return now.getDate() - new Date(issuedAt).getDate() >= 1;
+  }
+  
+  public async refreshOsuToken(osuUserId: number, refreshToken: string) {
+    const newOsuTokens = await osuOAuth.refreshAccessToken(refreshToken);
+    await this.execute(
+      userRepository.db.updateOsuUser(db, osuUserId, {
+        token: this.transformArcticToken(newOsuTokens)
+      })
+    );
+  }
 
-    if (now.getDate() - new Date(osu.token.tokenIssuedAt).getDate() >= 1) {
-      const newOsuTokens = await osuOAuth.refreshAccessToken(osu.token.refreshToken);
-      await userService.updateOsuUser(
-        db,
-        {
-          token: authenticationService.transformArcticToken(newOsuTokens)
-        },
-        osu.osuUserId
-      );
-
-      osuAccessToken = newOsuTokens.accessToken();
-    }
-
-    if (now.getDate() - new Date(discord.token.tokenIssuedAt).getDate() >= 1) {
-      const newDiscordTokens = await mainDiscordOAuth.refreshAccessToken(
-        discord.token.refreshToken
-      );
-      await userService.updateDiscordUser(
-        db,
-        {
-          token: authenticationService.transformArcticToken(newDiscordTokens)
-        },
-        discord.discordUserId
-      );
-    }
-
-    const osuUser = await osuService.getOsuSelf(osuAccessToken);
-    const badges = osuUser.badges.map(this.transformBadge);
-
-    await osuBadgeService.handleOsuUserAwardedBadges(db, badges, osuUser.id);
+  public async refreshDiscordToken(discordUserId: bigint, refreshToken: string) {
+    const newDiscordTokens = await mainDiscordOAuth.refreshAccessToken(refreshToken);
+    await this.execute(
+      userRepository.db.updateDiscordUser(db, discordUserId, {
+        token: this.transformArcticToken(newDiscordTokens)
+      })
+    );
   }
 
   public transformBadge(badge: UserBadge) {
@@ -77,70 +217,23 @@ export class AuthenticationService extends Service {
     };
   }
 
-  public async registerUser(
-    c: Context,
-    osuToken: AuthenticationValidationInput['OAuthToken'],
-    discordToken: AuthenticationValidationInput['OAuthToken']
+  public async setTempOsuTokens(
+    state: string,
+    tokens: OAuthToken
   ) {
-    const osuUser = await osuService.getOsuSelf(osuToken.accessToken);
-    const discordUser = await discordService.getDiscordSelf(discordToken.accessToken);
-    const badges = osuUser.badges.map(this.transformBadge);
-
-    await userService.createCountry(db, osuUser.country);
-    if (badges.length > 0) {
-      await osuBadgeService.upsertOsuBadges(db, badges);
-    }
-
-    const user = await db.transaction(async (tx) => {
-      const isOwner = env.KYOSO_OWNER === osuUser.id;
-      const user = await this.execute(userRepository.db.createUser(tx, {
-        admin: isOwner,
-        approvedHost: isOwner
-      }));
-      await userService.createOsuUser(tx, {
-        userId: user.id,
-        osuUserId: osuUser.id,
-        username: osuUser.username,
-        restricted: osuUser.is_restricted,
-        globalStdRank: osuUser.statistics_rulesets.osu?.global_rank,
-        globalTaikoRank: osuUser.statistics_rulesets.taiko?.global_rank,
-        globalCatchRank: osuUser.statistics_rulesets.fruits?.global_rank,
-        globalManiaRank: osuUser.statistics_rulesets.mania?.global_rank,
-        countryCode: osuUser.country.code,
-        token: osuToken
-      });
-
-      await userService.createDiscordUser(tx, {
-        userId: user.id,
-        discordUserId: BigInt(discordUser.id),
-        username: discordUser.username,
-        token: discordToken
-      });
-
-      return user;
-    });
-
-    if (badges.length > 0) {
-      await osuBadgeService.handleOsuUserAwardedBadges(db, badges, osuUser.id);
-    }
-
-    return user;
+    await this.execute(osuRepository.kv.setTempOsuTokens(state, tokens));
   }
 
-  public async redirectToOsuLogin(c: Context) {
-    const state = generateState();
-    const url = osuOAuth.createAuthorizationURL(state, ['identify', 'public']);
-
-    cookieService.setOAuthState(c, 'osu', state);
-    return c.redirect(`${url}&prompt=consent`, 302);
+  public async getTempOsuTokens(state: string) {
+    return await this.execute(
+      osuRepository.kv.getTempOsuTokens(state)
+    );
   }
 
-  public async redirectToDiscordLogin(c: Context, generatedState?: string) {
-    const state = generatedState ?? generateState();
-    const url = mainDiscordOAuth.createAuthorizationURL(state, ['identify']);
-
-    cookieService.setOAuthState(c, 'discord', state);
-    return c.redirect(`${url}&prompt=consent`, 302);
+  public async deleteTempOsuTokens(state: string) {
+    return await this.execute(
+      osuRepository.kv.deleteTempOsuTokens(state)
+    );
   }
 
   private generateSessionToken(): string {
@@ -150,88 +243,40 @@ export class AuthenticationService extends Service {
     return token;
   }
 
-  public async createSession(c: Context, db: DatabaseClient, userId: number) {
-    const fn = this.createServiceFunction('Failed to create session');
-    const token = this.generateSessionToken();
-    const ip =
-      env.NODE_ENV === 'test' ? '127.0.0.1' : (getConnInfo(c).remote.address ?? '127.0.0.1');
-    const ipMetadata = await ipInfoService.getIpMetadata(ip);
-    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-
-    const session = await fn.validate(SessionValidation.CreateSession, 'session', {
-      ipMetadata,
-      userId,
-      id: sessionId,
-      ipAddress: ip,
-      userAgent: env.NODE_ENV !== 'production' ? 'test' : c.req.header('user-agent')
-    });
-    await fn.handleDbQuery(sessionRepository.createSession(db, session));
-    cookieService.setSession(c, token);
-    return token;
+  @Service.testOnly
+  public async getTestSessionToken() {
+    return await Bun.file(this.TEST_SESSION_TOKEN_PATH).text();
   }
 
-  public async deleteSession(c: Context, db: DatabaseClient) {
-    let token = cookieService.getSession(c);
-
-    if (env.NODE_ENV === 'test') {
-      token = await Bun.file(`${process.cwd()}/test-tokens/session.txt`).text();
+  public async deleteSession(sessionToken: string) {
+    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(sessionToken)));
+    
+    await this.execute(sessionRepository.db.deleteSession(db, sessionId));
+    if (env.NODE_ENV === 'test' && this.tokenFileExists()) {
+      unlinkSync(this.TEST_SESSION_TOKEN_PATH);
     }
-
-    if (!token) {
-      throw new HTTPException(403, {
-        message: 'Not logged in'
-      });
-    }
-
-    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-    await sessionRepository.deleteSession(db, sessionId);
-    cookieService.deleteSession(c);
   }
 
-  public async validateSession<T extends Omit<SessionSelection, 'id' | 'expiresAt'>>(
-    c: Context,
-    db: DatabaseClient,
-    select: T
-  ) {
-    let token = cookieService.getSession(c);
+  public tokenFileExists() {
+    return existsSync(this.TEST_SESSION_TOKEN_PATH);
+  }
 
-    if (env.NODE_ENV === 'test') {
-      token = await Bun.file(`${process.cwd()}/test-tokens/session.txt`).text();
-    }
-
-    if (!token) {
-      return undefined;
-    }
-
-    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-    const session = await sessionRepository.getSession(db, sessionId, {
-      id: true,
-      expiresAt: true,
-      ...select
-    });
-
-    if (!session && token) {
-      cookieService.deleteSession(c);
-      return undefined;
-    }
-
-    if (
-      session &&
-      Date.now() >= (session as (typeof Session)['$inferSelect']).expiresAt.getTime()
-    ) {
-      await sessionRepository.deleteSession(db, sessionId);
-      cookieService.deleteSession(c);
-      return undefined;
-    } else if (
-      session &&
-      Date.now() >=
-        (session as (typeof Session)['$inferSelect']).expiresAt.getTime() -
-          864_000_000 /* 10 days */
-    ) {
-      await sessionRepository.resetExpiresAt(db, sessionId);
-      cookieService.setSession(c, token);
-    }
-
+  public async getSession(sessionToken: string) {
+    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(sessionToken)));
+    const session = await this.execute(sessionRepository.db.getSession(db, sessionId));
     return session;
+  }
+
+  public hasSessionExpired(session: NonNullable<Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>>) {
+    return Date.now() >= session.expiresAt.getTime();
+  }
+
+  public sessionExpirationNeedsReset(session: NonNullable<Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>>) {
+    return Date.now() >= session.expiresAt.getTime() - time.days(10);
+  }
+
+  public async resetSessionExpiration(sessionToken: string) {
+    const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(sessionToken)));
+    await this.execute(sessionRepository.db.resetExpiration(db, sessionId));
   }
 }
