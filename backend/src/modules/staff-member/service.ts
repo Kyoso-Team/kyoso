@@ -12,7 +12,7 @@ import type { StaffMemberContext } from '$src/middlewares/permissions';
 import type { DatabaseClient } from '$src/types';
 import type { StaffMemberValidationOutput } from './validation';
 
-class StaffMemberService extends Service {
+export class StaffMemberService extends Service {
   public async createStaffMember(
     db: DatabaseClient,
     staffMember: StaffMemberValidationOutput['CreateStaffMember']
@@ -186,6 +186,8 @@ class StaffMemberService extends Service {
 
     return await fn.handleDbQuery(staffMemberRepository.deleteStaffMember(db, staffMember.id));
   }
-}
 
-export const staffMemberService = new StaffMemberService();
+  public async getStaffMember(by: { staffMemberId: number } | { userId: number; tournamentId: number }) {
+    return this.execute(staffMemberRepository.db.getStaffMember(db, by));
+  }
+}

@@ -10,11 +10,10 @@ export const router = <TServices extends Record<string, any> = {}>(
   config: RouterConfig<TServices>
 ) =>
   common(config)
-    .derive({ as: 'global' }, () => ({
+    .derive(() => ({
       forceOsuApiDataUpdate: false,
       forceDiscordApiDataUpdate: false
     }))
-    // Handle session
     .resolve(async ({ cookie, requestId, forceOsuApiDataUpdate, forceDiscordApiDataUpdate }) => {
       const authenticationService = new AuthenticationService('request', requestId);
       const cookieService = new CookieService('request', requestId);

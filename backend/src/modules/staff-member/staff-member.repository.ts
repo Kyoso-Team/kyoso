@@ -5,7 +5,10 @@ import { DbRepository } from '../_base/db-repository';
 import type { DatabaseClient } from '$src/types';
 
 class StaffMemberDbRepository extends DbRepository {
-  public getStaffMember(db: DatabaseClient, staffMemberId: number, tournamentId: number) {
+  public getStaffMember(db: DatabaseClient, by: { staffMemberId: number } | {
+    userId: number;
+    tournamentId: number
+  }) {
     const query = db
       .select({
         ...pick(StaffMember, {
@@ -17,12 +20,17 @@ class StaffMemberDbRepository extends DbRepository {
         >`array_agg(distinct unnest(${StaffRole.permissions}))`.as('permissions')
       })
       .from(StaffMember)
-      .innerJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))
-      .innerJoin(StaffRole, eq(StaffRole.id, StaffMemberRole.staffRoleId))
+      .leftJoin(StaffMemberRole, eq(StaffMemberRole.staffMemberId, StaffMember.id))
+      .leftJoin(StaffRole, eq(StaffRole.id, StaffMemberRole.staffRoleId))
       .where(
         and(
-          eq(StaffMember.id, staffMemberId),
-          eq(StaffMember.tournamentId, tournamentId),
+          ...('staffMemberId' in by
+            ? [eq(StaffMember.id, by.staffMemberId)]
+            : [
+              eq(StaffMember.userId, by.userId),
+              eq(StaffMember.tournamentId, by.tournamentId)
+            ]
+          ),
           or(isNull(StaffMember.deletedAt), gt(StaffMember.deletedAt, sql`now()`))
         )
       )

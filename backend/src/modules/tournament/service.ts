@@ -6,8 +6,9 @@ import { userRepository } from '../user/user.repository';
 import { tournamentRepository } from './tournament.repository';
 import type { DatabaseClient } from '$src/types';
 import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
+import { db } from '$src/singletons';
 
-class TournamentService extends Service {
+export class TournamentService extends Service {
   private HOST_RESTRICTED_FIELDS = new Set<keyof TournamentValidationOutput['UpdateTournament']>([
     'name',
     'urlSlug',
@@ -357,6 +358,8 @@ class TournamentService extends Service {
       });
     }
   }
-}
 
-export const tournamentService = new TournamentService();
+  public async getTournament(tournamentId: number) {
+    return await this.execute(tournamentRepository.db.getTournament(db ,tournamentId));
+  }
+}

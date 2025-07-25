@@ -89,7 +89,7 @@ class TournamentDbRepository extends DbRepository {
     const query = db
       .select(
         pick(Tournament, {
-          hostUserId: true,
+          id: true,
           playerRegsClosedAt: true,
           playerRegsOpenedAt: true,
           staffRegsClosedAt: true,
@@ -97,7 +97,14 @@ class TournamentDbRepository extends DbRepository {
           concludedAt: true,
           publishedAt: true,
           deletedAt: true,
-          type: true
+          type: true,
+          bws: true,
+          lowerRankRange: true,
+          upperRankRange: true,
+          minTeamSize: true,
+          maxTeamSize: true,
+          useTeamBanners: true,
+          hostUserId: true
         })
       )
       .from(Tournament)
