@@ -1,13 +1,13 @@
 import { TournamentService } from '$src/modules/tournament/service';
 import { status } from 'elysia';
 import { t, type RouterConfig } from './common';
-import { router } from './router';
+import { createRouter } from './router';
 import { StaffMemberService } from '$src/modules/staff-member/service';
 
-export const tournamentRouter = <TServices extends Record<string, any> = {}>(
+export const createTournamentRouter = <TServices extends Record<string, any> = {}>(
   config: RouterConfig<TServices>
 ) =>
-  router({
+  createRouter({
     ...config,
     prefix: '/tournament/:tournament_id'
   })
@@ -30,10 +30,15 @@ export const tournamentRouter = <TServices extends Record<string, any> = {}>(
       tournamentId: tournament.id,
       userId: session.user.id
     }) : null;
-    // Is the currently authenticated user the host of the tournament?
     const isTournamentHost = staffMember && staffMember.userId === tournament.hostUserId;
 
-    return { tournament, staffMember, isTournamentHost };
+    return {
+      tournament,
+      staffMember: {
+        ...staffMember,
+        host: isTournamentHost
+      }
+    };
   })
   .macro({
     tournament: (
@@ -71,14 +76,14 @@ export const tournamentRouter = <TServices extends Record<string, any> = {}>(
 
         return { staffMember };
       },
-      beforeHandle: ({ staffMember, isTournamentHost }) => {
+      beforeHandle: ({ staffMember }) => {
         if (typeof v !== 'object') return;
 
-        if (v.roles && (!staffMember || !staffMember.permissions.find((permission: string) => v.roles!.includes(permission)))) {
+        if (v.roles && !staffMember!.permissions.find((permission: string) => v.roles!.includes(permission))) {
           return status(401, `You must have at least one of the following staff permissions: ${v.roles.join(', ')}`);
         }
 
-        if (typeof v.host === 'boolean' && v.host === isTournamentHost) {
+        if (typeof v.host === 'boolean' && v.host === staffMember!.host) {
           return status(401, 'You must be the tournament host to perform this action');
         }
       }

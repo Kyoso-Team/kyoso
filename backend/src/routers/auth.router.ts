@@ -11,9 +11,9 @@ import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
 import { t } from './_base/common';
-import { router } from './_base/router';
+import { createRouter } from './_base/router';
 
-export const authRouter = router({
+export const authRouter = createRouter({
   prefix: '/auth',
   services: {
     authenticationService: AuthenticationService,

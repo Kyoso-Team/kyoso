@@ -6,7 +6,7 @@ import { env } from '$src/utils/env';
 import { status } from 'elysia';
 import { common, type RouterConfig } from './common';
 
-export const router = <TServices extends Record<string, any> = {}>(
+export const createRouter = <TServices extends Record<string, any> = {}>(
   config: RouterConfig<TServices>
 ) =>
   common(config)

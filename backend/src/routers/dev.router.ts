@@ -3,9 +3,9 @@ import { AuthenticationService } from '$src/modules/authentication/authenticatio
 import { TestService } from '$src/modules/test/test.service';
 import { UserService } from '$src/modules/user/user.service';
 import { t } from './_base/common';
-import { router } from './_base/router';
+import { createRouter } from './_base/router';
 
-export const devRouter = router({
+export const devRouter = createRouter({
   prefix: '/dev',
   services: {
     authenticationService: AuthenticationService,
