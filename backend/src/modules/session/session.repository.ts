@@ -39,12 +39,14 @@ class SessionDbRepository extends DbRepository {
         osu: pick(OsuUser, {
           osuUserId: true,
           token: true,
-          username: true
+          username: true,
+          updatedAt: true
         }),
         discord: pick(DiscordUser, {
           discordUserId: true,
           token: true,
-          username: true
+          username: true,
+          updatedAt: true
         })
       })
       .from(Session)

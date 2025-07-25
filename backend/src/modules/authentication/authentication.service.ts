@@ -205,15 +205,16 @@ export class AuthenticationService extends Service {
     };
   }
 
+  /** osu! tokens last 1 day */
   public shouldRefreshOsuToken(issuedAt: number) {
     const now = new Date();
     return now.getDate() - new Date(issuedAt).getDate() >= 1;
   }
 
-  // Separate function in case the token duration changes in the future
+  /** Discord tokens last 7 days */
   public shouldRefreshDiscordToken(issuedAt: number) {
     const now = new Date();
-    return now.getDate() - new Date(issuedAt).getDate() >= 1;
+    return now.getDate() - new Date(issuedAt).getDate() >= 7;
   }
 
   public async refreshOsuToken(osuUserId: number, refreshToken: string) {
@@ -223,6 +224,7 @@ export class AuthenticationService extends Service {
         token: this.transformArcticToken(newOsuTokens)
       })
     );
+    return this.transformArcticToken(newOsuTokens);
   }
 
   public async refreshDiscordToken(discordUserId: bigint, refreshToken: string) {
@@ -232,6 +234,7 @@ export class AuthenticationService extends Service {
         token: this.transformArcticToken(newDiscordTokens)
       })
     );
+    return this.transformArcticToken(newDiscordTokens);
   }
 
   public transformBadge(badge: UserBadge) {
@@ -292,6 +295,22 @@ export class AuthenticationService extends Service {
     >
   ) {
     return Date.now() >= session.expiresAt.getTime();
+  }
+
+  public osuApiDataNeedsUpdate(
+    session: NonNullable<
+      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
+    >
+  ) {
+    return Date.now() >= session.osu.updatedAt.getTime() + time.days(1);
+  }
+
+  public discordApiDataNeedsUpdate(
+    session: NonNullable<
+      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
+    >
+  ) {
+    return Date.now() >= session.discord.updatedAt.getTime() + time.days(1);
   }
 
   public sessionExpirationNeedsReset(
