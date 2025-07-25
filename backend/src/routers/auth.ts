@@ -10,9 +10,10 @@ import { UserService } from '$src/modules/user/user.service';
 import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
-import { elysia, t } from './base';
+import { t } from './_base/common';
+import { router } from './_base/router';
 
-export const authRouter = elysia({
+export const authRouter = router({
   prefix: '/auth',
   services: {
     authenticationService: AuthenticationService,

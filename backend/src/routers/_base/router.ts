@@ -1,51 +1,19 @@
-import Elysia, { status, t as t1 } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 import { CookieService } from '$src/modules/cookie/cookie.service';
-import { env } from '$src/utils/env';
-import { OsuService } from '$src/modules/osu/osu.service';
 import { DiscordService } from '$src/modules/discord/discord.service';
+import { OsuService } from '$src/modules/osu/osu.service';
+import { env } from '$src/utils/env';
+import { status } from 'elysia';
+import { common, type RouterConfig } from './common';
 
-export const t = {
-  ...t1,
-  IntegerId: () =>
-    t1.Integer({
-      minimum: 0
-    })
-};
-
-type ElysiaConfig = {
-  name?: string;
-  prefix?: string;
-};
-
-export const elysia = <TServices extends Record<string, any> = {}>(
-  config: ElysiaConfig & {
-    services?: TServices;
-  }
+export const router = <TServices extends Record<string, any> = {}>(
+  config: RouterConfig<TServices>
 ) =>
-  new Elysia(config)
-    .onRequest(({ set }) => {
-      set.headers['x-request-id'] = Bun.randomUUIDv7();
-    })
-    .derive({ as: 'global' }, ({ set }) => {
-      return {
-        requestId: set.headers['x-request-id']!,
-        forceOsuApiDataUpdate: false,
-        forceDiscordApiDataUpdate: false
-      };
-    })
-    // Initialize services
-    .resolve(({ requestId }) => {
-      const mapped: Record<string, any> = {};
-
-      if (config.services) {
-        for (const [key, ServiceClass] of Object.entries(config.services)) {
-          mapped[key] = new ServiceClass('request', requestId);
-        }
-      }
-
-      return mapped as { [K in keyof TServices]: InstanceType<TServices[K]> };
-    })
+  common(config)
+    .derive({ as: 'global' }, () => ({
+      forceOsuApiDataUpdate: false,
+      forceDiscordApiDataUpdate: false
+    }))
     // Handle session
     .resolve(async ({ cookie, requestId, forceOsuApiDataUpdate, forceDiscordApiDataUpdate }) => {
       const authenticationService = new AuthenticationService('request', requestId);
@@ -97,29 +65,7 @@ export const elysia = <TServices extends Record<string, any> = {}>(
 
       return { session, sessionToken };
     })
-    // Transform query parameters to undefined if they are 'undefined' string
-    .onTransform(({ query }) => {
-      for (const key in query) {
-        if (query[key] === 'undefined') {
-          query[key] = undefined as any;
-        }
-      }
-    })
     .macro({
-      testOnly: {
-        beforeHandle: () => {
-          if (env.NODE_ENV !== 'test') {
-            return status(403, 'This endpoint is only available in test environment');
-          }
-        }
-      },
-      devOnly: {
-        beforeHandle: () => {
-          if (env.NODE_ENV !== 'development') {
-            return status(403, 'This endpoint is only available in development environment');
-          }
-        }
-      },
       session: (
         v:
           | true

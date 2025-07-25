@@ -2,9 +2,10 @@ import { status } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 import { TestService } from '$src/modules/test/test.service';
 import { UserService } from '$src/modules/user/user.service';
-import { elysia, t } from './base';
+import { t } from './_base/common';
+import { router } from './_base/router';
 
-export const devRouter = elysia({
+export const devRouter = router({
   prefix: '/dev',
   services: {
     authenticationService: AuthenticationService,
