@@ -14,8 +14,8 @@
 // import { requestId } from 'hono/request-id';
 // import type { Store } from 'hono-rate-limiter';
 import { Elysia } from 'elysia';
-import { devRouter } from '$src/routers/dev.ts';
-import { newAuthRouter } from './routers/auth';
+import { devRouter } from '$src/routers/dev.router';
+import { authRouter } from './routers/auth.router';
 
 // const app = new Hono()
 //   .use(
@@ -52,7 +52,7 @@ import { newAuthRouter } from './routers/auth';
 //   .route('/', staffMemberRouter)
 //   .route('/', apiKeyRouter);
 
-const app = new Elysia().use(devRouter).use(newAuthRouter);
+const app = new Elysia().use(devRouter).use(authRouter);
 
 export default app;
 export type App = typeof app;
