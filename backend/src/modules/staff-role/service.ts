@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception';
 import { StaffRole } from '$src/schema';
 import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
-import { tournamentService } from '../tournament/service';
+import { tournamentService } from '../tournament/tournament.service';
 import { staffRoleRepository } from './staff-role.repository';
 import type { DatabaseClient } from '$src/types';
 import type { StaffRoleValidationOutput } from './validation';

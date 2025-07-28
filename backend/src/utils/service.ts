@@ -42,7 +42,8 @@ export abstract class Service {
    * "Operation" could be a request or a background job
    */
   protected async execute<T extends QueryWrapper<any>>(
-    wrapped: T
+    wrapped: T,
+    errorHandler?: (error: unknown) => never
   ): Promise<Awaited<ReturnType<T['execute']>>> {
     let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
     let failed = false;
@@ -52,6 +53,11 @@ export abstract class Service {
       return await wrapped.execute();
     } catch (err) {
       failed = true;
+
+      if (errorHandler) {
+        errorHandler(err);
+      }
+
       throw new UnknownError(
         `${wrapped.meta.name} (${wrapped.meta.queryType}) failed in ${this.operation} ${this.operationId}`,
         {

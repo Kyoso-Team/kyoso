@@ -1,8 +1,9 @@
-import { TournamentService } from '$src/modules/tournament/service';
+import { TournamentService } from '$src/modules/tournament/tournament.service';
 import { status } from 'elysia';
 import { t, type RouterConfig } from './common';
 import { createRouter } from './router';
 import { StaffMemberService } from '$src/modules/staff-member/service';
+import type { StaffPermission } from '$src/types';
 
 export const createTournamentRouter = <TServices extends Record<string, any> = {}>(
   config: RouterConfig<TServices>
@@ -34,10 +35,10 @@ export const createTournamentRouter = <TServices extends Record<string, any> = {
 
     return {
       tournament,
-      staffMember: {
+      staffMember: staffMember ? {
         ...staffMember,
         host: isTournamentHost
-      }
+      } : null
     };
   })
   .macro({
@@ -65,8 +66,7 @@ export const createTournamentRouter = <TServices extends Record<string, any> = {
       v:
         | true
         | {
-            roles?: string[];
-            host?: boolean;
+            roles?: StaffPermission[];
           }
     ) => ({
       resolve: ({ staffMember }) => {
@@ -79,12 +79,10 @@ export const createTournamentRouter = <TServices extends Record<string, any> = {
       beforeHandle: ({ staffMember }) => {
         if (typeof v !== 'object') return;
 
-        if (v.roles && !staffMember!.permissions.find((permission: string) => v.roles!.includes(permission))) {
-          return status(401, `You must have at least one of the following staff permissions: ${v.roles.join(', ')}`);
-        }
-
-        if (typeof v.host === 'boolean' && v.host === staffMember!.host) {
-          return status(401, 'You must be the tournament host to perform this action');
+        if (
+          v.roles && (!staffMember!.permissions.find((permission: StaffPermission) => v.roles!.includes(permission)) || !staffMember!.host)
+        ) {
+          return status(401, `You must be the tournament host or have at least one of the following staff permissions: ${v.roles.join(', ')}`);
         }
       }
     })

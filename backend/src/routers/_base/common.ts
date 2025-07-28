@@ -6,7 +6,10 @@ export const t = {
   IntegerId: () =>
     t1.Integer({
       minimum: 0
-    })
+    }),
+  DateString: () => t1.String({
+    format: 'date-time'
+  })
 };
 
 export type RouterConfig<TServices extends Record<string, any> = {}> = {

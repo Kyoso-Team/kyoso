@@ -114,7 +114,9 @@ class UserDbRepository extends DbRepository {
       .select(
         pick(User, {
           id: true,
-          banned: true
+          banned: true,
+          admin: true,
+          approvedHost: true
         })
       )
       .from(User)

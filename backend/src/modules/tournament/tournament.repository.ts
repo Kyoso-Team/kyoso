@@ -1,16 +1,14 @@
-import { and, eq, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
-import * as v from 'valibot';
 import { Tournament } from '$src/schema';
 import { pick } from '$src/utils/query';
 import { DbRepository } from '../_base/db-repository';
 import { SearchRepository } from '../_base/search-repository';
 import type { DatabaseClient } from '$src/types';
-import type { TournamentValidation } from './validation';
+import { eq, sql } from 'drizzle-orm';
 
 class TournamentDbRepository extends DbRepository {
   public createTournament(
     db: DatabaseClient,
-    tournament: v.InferOutput<(typeof TournamentValidation)['CreateTournament']>
+    tournament: typeof Tournament.$inferInsert
   ) {
     const query = db
       .insert(Tournament)
@@ -30,34 +28,27 @@ class TournamentDbRepository extends DbRepository {
 
   public updateTournament(
     db: DatabaseClient,
-    tournament: Partial<typeof Tournament.$inferInsert>,
-    tournamentId: number
+    tournamentId: number,
+    tournament: Omit<Partial<typeof Tournament.$inferInsert>, 'deletedAt'>
   ) {
     const query = db
       .update(Tournament)
       .set(tournament)
-      .where(
-        and(
-          eq(Tournament.id, tournamentId),
-          or(
-            isNull(Tournament.deletedAt),
-            and(isNotNull(Tournament.deletedAt), lt(Tournament.deletedAt, sql`now()`))
-          )
-        )
+      .where(eq(Tournament.id, tournamentId))
+      .returning(
+        pick(Tournament, {
+          name: true,
+          acronym: true,
+          urlSlug: true,
+          publishedAt: true,
+          deletedAt: true
+        })
       );
 
     return this.wrap({
       query,
-      name: 'Update tournament'
-    });
-  }
-
-  public changeTournamentHost(db: DatabaseClient, hostUserId: number, tournamentId: number) {
-    const query = db.update(Tournament).set({ hostUserId }).where(eq(Tournament.id, tournamentId));
-
-    return this.wrap({
-      query,
-      name: 'Change tournament host'
+      name: 'Update tournament',
+      map: this.map.firstRow
     });
   }
 
@@ -82,6 +73,17 @@ class TournamentDbRepository extends DbRepository {
     return this.wrap({
       query,
       name: 'Restore tournament'
+    });
+  }
+
+  public deleteTournament(db: DatabaseClient, tournamentId: number) {
+    const query = db
+      .delete(Tournament)
+      .where(eq(Tournament.id, tournamentId));
+
+    return this.wrap({
+      query,
+      name: 'Delete tournament'
     });
   }
 

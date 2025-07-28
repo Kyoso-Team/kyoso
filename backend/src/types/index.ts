@@ -1,3 +1,4 @@
+import type { StaffPermission } from '$src/schema';
 import type { Table } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase, PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
@@ -26,3 +27,5 @@ export type MapOutput<T> = {
 export type MapInput<T> = {
   [K in keyof T]: T[K] extends v.GenericSchema ? v.InferInput<T[K]> : T[K];
 };
+
+export type StaffPermission = (typeof StaffPermission.enumValues)[number];

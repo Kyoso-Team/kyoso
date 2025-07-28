@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { truncateTable, truncateTables } from '$src/dev';
-import { tournamentService } from '$src/modules/tournament/service';
+import { tournamentService } from '$src/modules/tournament/tournament.service';
 import { userService } from '$src/modules/user/user.service';
 import { Tournament } from '$src/schema';
 import { db } from '$src/singletons';
