@@ -5,9 +5,7 @@ import { createRouter } from './router';
 import { StaffMemberService } from '$src/modules/staff-member/service';
 import type { StaffPermission } from '$src/types';
 
-export const createTournamentRouter = <TServices extends Record<string, any> = {}>(
-  config: RouterConfig<TServices>
-) =>
+export const createTournamentRouter = (config?: RouterConfig) =>
   createRouter({
     ...config,
     prefix: '/tournament/:tournament_id'
@@ -31,7 +29,7 @@ export const createTournamentRouter = <TServices extends Record<string, any> = {
       tournamentId: tournament.id,
       userId: session.user.id
     }) : null;
-    const isTournamentHost = staffMember && staffMember.userId === tournament.hostUserId;
+    const isTournamentHost = !!staffMember && staffMember.userId === tournament.hostUserId;
 
     return {
       tournament,
@@ -50,8 +48,8 @@ export const createTournamentRouter = <TServices extends Record<string, any> = {
     ) => ({
       beforeHandle: async ({ tournament }) => {
         const now = new Date().getTime();
-        const deleted = tournament && now >= tournament?.deletedAt.getTime();
-        const concluded = tournament && now >= tournament?.concludedAt.getTime();
+        const deleted = tournament?.deletedAt && now >= tournament.deletedAt.getTime();
+        const concluded = tournament?.concludedAt && now >= tournament.concludedAt.getTime();
 
         if (typeof v.deleted === 'boolean' && v.deleted === deleted) {
           return status(410, 'Deleted tournament');

@@ -10,20 +10,20 @@ import { UserService } from '$src/modules/user/user.service';
 import { db } from '$src/singletons';
 import { mainDiscordOAuth, osuOAuth } from '$src/singletons/oauth';
 import { env } from '$src/utils/env';
-import { t } from './_base/common';
+import { initServices, t } from './_base/common';
 import { createRouter } from './_base/router';
 
 export const authRouter = createRouter({
-  prefix: '/auth',
-  services: {
+  prefix: '/auth'
+})
+  .use(initServices({
     authenticationService: AuthenticationService,
     cookieService: CookieService,
     ipInfoService: IpInfoService,
     osuService: OsuService,
     discordService: DiscordService,
     userService: UserService
-  }
-})
+  }))
   .get(
     '/login',
     ({ cookie, query, redirect, cookieService }) => {

@@ -2,17 +2,17 @@ import { status } from 'elysia';
 import { AuthenticationService } from '$src/modules/authentication/authentication.service';
 import { TestService } from '$src/modules/test/test.service';
 import { UserService } from '$src/modules/user/user.service';
-import { t } from './_base/common';
+import { initServices, t } from './_base/common';
 import { createRouter } from './_base/router';
 
 export const devRouter = createRouter({
-  prefix: '/dev',
-  services: {
+  prefix: '/dev'
+})
+  .use(initServices({
     authenticationService: AuthenticationService,
     testService: TestService,
     userService: UserService
-  }
-})
+  }))
   .guard({
     devOnly: true
   })

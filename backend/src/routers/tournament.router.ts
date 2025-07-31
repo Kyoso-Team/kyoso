@@ -1,10 +1,15 @@
 import { TournamentService } from '$src/modules/tournament/tournament.service';
 import { createRouter } from './_base/router';
 import Elysia, { status } from 'elysia';
-import { t } from './_base/common';
+import { initServices, t } from './_base/common';
 import { createTournamentRouter } from './_base/tournament-router';
 import { time } from '$src/utils';
 import { UserService } from '$src/modules/user/user.service';
+
+const services = initServices({
+  tournamentService: TournamentService,
+  userService: UserService
+});
 
 const BaseTournamentType = t.Object({
   name: t.String({ minLength: 2, maxLength: 50 }),
@@ -30,18 +35,16 @@ const BaseTournamentType = t.Object({
 });
 
 const tournamentRouter1 = createRouter({
-  prefix: '/tournament',
-  services: {
-    tournamentService: TournamentService
-  }
+  prefix: '/tournament'
 })
+  .use(services)
   .post('/', async ({ body, tournamentService }) => {
     return await tournamentService.createTournament(body);
   }, {
     body: t.Object({
       ...BaseTournamentType.properties,
       isOpenRank: t.Boolean(),
-      type: t.Union([t.Literal('solo'), t.Literal('teams'), t.Literal('draft')]),
+      type: t.Union([t.Literal('solo'), t.Literal('teams'), t.Literal('draft')])
     }),
     session: {
       approvedHost: true
@@ -61,12 +64,8 @@ const tournamentRouter1 = createRouter({
     }
   });
 
-const tournamentRouter2 = createTournamentRouter({
-  services: {
-    tournamentService: TournamentService,
-    userService: UserService
-  }
-})
+const tournamentRouter2 = createTournamentRouter()
+  .use(services)
   .patch('/', async ({ params, body, tournamentService }) => {
     return await tournamentService.updateTournament(params.tournament_id, {
       ...body,
