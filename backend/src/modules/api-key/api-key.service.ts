@@ -25,10 +25,6 @@ export class ApiKeyService extends Service {
     return await this.execute(apiKeyRepository.db.getUserApiKeys(db, userId));
   }
 
-  public async doesApiKeyExist(apiKey: string) {
-    return await this.execute(apiKeyRepository.db.doesApiKeyExist(db, apiKey));
-  }
-
   private generateRandomString(length: number) {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';

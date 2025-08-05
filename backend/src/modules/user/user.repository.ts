@@ -1,6 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { DbRepository } from '$src/modules/_base/repository';
-import { Country, DiscordUser, OsuUser, User } from '$src/schema';
+import { Country, DiscordUser, OsuUser, User, UserApiKey } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
 
@@ -147,6 +147,42 @@ class UserDbRepository extends DbRepository {
       map: this.map.firstRowOrNull
     });
   }
+
+  public getUserByApiKey(db: DatabaseClient, apiKey: string) {
+      const query = db
+        .select({
+          ...pick(User, {
+            id: true,
+            admin: true,
+            approvedHost: true,
+            banned: true
+          }),
+          osu: pick(OsuUser, {
+            osuUserId: true,
+            token: true,
+            username: true,
+            updatedAt: true
+          }),
+          discord: pick(DiscordUser, {
+            discordUserId: true,
+            token: true,
+            username: true,
+            updatedAt: true
+          })
+        })
+        .from(UserApiKey)
+        .innerJoin(User, eq(User.id, UserApiKey.userId))
+        .innerJoin(OsuUser, eq(OsuUser.userId, User.id))
+        .innerJoin(DiscordUser, eq(DiscordUser.userId, User.id))
+        .where(eq(UserApiKey.key, apiKey))
+        .limit(1);
+  
+      return this.wrap({
+        query,
+        name: 'Get user by API key',
+        map: this.map.firstRowOrNull
+      });
+    }
 
   public isUserBanned(db: DatabaseClient, userId: number) {
     const query = this.utils.exists(db, User, and(eq(User.id, userId), eq(User.banned, true)));

@@ -103,6 +103,10 @@ export class UserService extends Service {
     return await this.execute(userRepository.db.getOsuUser(db, osuUserId));
   }
 
+  public async getUserByApiKey(apiKey: string) {
+    return await this.execute(userRepository.db.getUserByApiKey(db, apiKey));
+  }
+
   public async isUserBanned(db: DatabaseClient, userId: number) {
     return await this.execute(userRepository.db.isUserBanned(db, userId));
   }
