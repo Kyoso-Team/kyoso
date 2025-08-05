@@ -7,6 +7,9 @@ export const t = {
     t1.Integer({
       minimum: 0
     }),
+  IntegerIdString: () => t1.Numeric({
+    minimum: 0
+  }),
   DateString: () => t1.String({
     format: 'date-time'
   })

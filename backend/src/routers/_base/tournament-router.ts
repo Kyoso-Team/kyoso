@@ -13,7 +13,7 @@ export const createTournamentRouter = (config?: RouterConfig) =>
   .guard({
     schema: 'standalone',
     params: t.Object({
-      tournament_id: t.IntegerId()
+      tournament_id: t.IntegerIdString()
     })
   })
   .resolve(async ({ params, requestId, session }) => {

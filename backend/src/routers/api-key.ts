@@ -1,40 +1,27 @@
-import { vValidator } from '@hono/valibot-validator';
-import { Hono } from 'hono';
-import * as v from 'valibot';
-import { servicesMiddleware } from '$src/middlewares/services';
-import { sessionMiddleware } from '$src/middlewares/session';
 import { ApiKeyService } from '$src/modules/api-key/api-key.service';
-import * as s from '$src/utils/validation';
+import { createRouter } from './_base/router';
+import { initServices, t } from './_base/common';
 
-export const apiKeyRouter = new Hono()
-  .basePath('api-keys')
-  .use(
-    servicesMiddleware({
-      apiKeyService: ApiKeyService
+export const apiKeyRouter = createRouter({
+  prefix: '/api-keys'  
+})
+  .use(initServices({
+    apiKeyService: ApiKeyService
+  }))
+  .guard({
+    session: true
+  })
+  .get('/', async ({ session, apiKeyService }) => {
+    return await apiKeyService.getUserApiKeys(session.user.id);
+  })
+  .post('/', async ({ session, apiKeyService }) => {
+    return await apiKeyService.createApiKey(session.user.id);
+  })
+  .delete('/:api_key_id', async ({ params, session, apiKeyService }) => {
+    await apiKeyService.deleteApiKey(params.api_key_id, session.user.id);
+  }, {
+    params: t.Object({
+      api_key_id: t.IntegerIdString()
     })
-  )
-  .use(sessionMiddleware())
-  .get('/', async (c) => {
-    const keys = await c.var.apiKeyService.getUserApiKeys(c.get('user').id);
-    return c.json(keys);
-  })
-  .post('/', async (c) => {
-    const key = await c.var.apiKeyService.createApiKey(c.get('user').id);
-    return c.json(key);
-  })
-  .delete(
-    '/:apiKeyId',
-    vValidator(
-      'param',
-      v.object({
-        apiKeyId: s.integerId()
-      })
-    ),
-    async (c) => {
-      const { apiKeyId } = c.req.valid('param');
+  });
 
-      await c.var.apiKeyService.deleteApiKey(apiKeyId, c.get('user').id);
-
-      return c.json({ message: 'Successfully deleted API key' });
-    }
-  );
