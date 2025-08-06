@@ -142,9 +142,10 @@ const tournamentRouter2 = createTournamentRouter()
         )
       })
     ),
+    nonEmptyBody: true,
     session: true,
     staffMember: {
-      roles: ['manage_tournament']
+      permissions: ['manage_tournament']
     },
     tournament: {
       deleted: false,
@@ -262,7 +263,7 @@ const tournamentRouter2 = createTournamentRouter()
     }),
     session: true,
     staffMember: {
-      roles: []
+      permissions: []
     },
     tournament: {
       deleted: false,
@@ -277,7 +278,7 @@ const tournamentRouter2 = createTournamentRouter()
     }),
     session: true,
     staffMember: {
-      roles: []
+      permissions: []
     },
     tournament: {
       concluded: false

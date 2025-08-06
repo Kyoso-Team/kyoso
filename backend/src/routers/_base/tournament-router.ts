@@ -64,7 +64,7 @@ export const createTournamentRouter = (config?: RouterConfig) =>
       v:
         | true
         | {
-            roles?: StaffPermission[];
+            permissions?: StaffPermission[];
           }
     ) => ({
       resolve: ({ staffMember }) => {
@@ -78,9 +78,9 @@ export const createTournamentRouter = (config?: RouterConfig) =>
         if (typeof v !== 'object') return;
 
         if (
-          v.roles && (!staffMember!.permissions.find((permission: StaffPermission) => v.roles!.includes(permission)) || !staffMember!.host)
+          v.permissions && (!staffMember!.permissions.find((permission: StaffPermission) => v.permissions!.includes(permission)) || !staffMember!.host)
         ) {
-          return status(401, `You must be the tournament host or have at least one of the following staff permissions: ${v.roles.join(', ')}`);
+          return status(401, `You must be the tournament host or have at least one of the following staff permissions: ${v.permissions.join(', ')}`);
         }
       }
     })

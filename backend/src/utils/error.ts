@@ -4,6 +4,12 @@ import postgres from 'postgres';
 import * as v from 'valibot';
 import type { Column } from 'drizzle-orm';
 
+export class ExpectedError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
 export class UnknownError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(`Unknown error: ${message}`, options);

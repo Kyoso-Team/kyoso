@@ -157,7 +157,8 @@ export abstract class Service {
   protected async transaction<T>(
     db: DatabaseClient,
     txName: string,
-    transactionFn: (tx: DatabaseTransactionClient) => Promise<T>
+    transactionFn: (tx: DatabaseTransactionClient) => Promise<T>,
+    errorHandler?: (error: unknown) => never
   ) {
     let logMsg = `${this.operation === 'request' ? 'Request' : 'Background job'} ${this.operationId} - ${txName} (tx) - `;
     const start = performance.now();
@@ -165,6 +166,10 @@ export abstract class Service {
     try {
       logger.info(`${logMsg}Start`);
       return await db.transaction(async (tx) => await transactionFn(tx));
+    } catch (err) {
+      if (errorHandler) {
+        errorHandler(err);
+      }
     } finally {
       const duration = performance.now() - start;
       logMsg += `Completed in ${Math.round(duration)}ms`;

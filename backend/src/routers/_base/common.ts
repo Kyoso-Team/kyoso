@@ -1,5 +1,6 @@
 import Elysia, { status, t as t1 } from 'elysia';
 import { env } from '$src/utils/env';
+import { ExpectedError } from '$src/utils/error';
 
 export const t = {
   ...t1,
@@ -60,6 +61,18 @@ export const common = (config?: RouterConfig) => new Elysia(config)
           return status(403, 'This endpoint is only available in development environment');
         }
       }
+    },
+    nonEmptyBody: {
+      beforeHandle: ({ body }) => {
+        if (typeof body === 'object' && Object.keys(body ?? {}).length === 0) {
+          return status(422, 'Body cannot be empty');
+        }
+      }
+    }
+  })
+  .onError(({ error }) => {
+    if (error instanceof ExpectedError) {
+      return status(error.status, error.message);
     }
   });
 

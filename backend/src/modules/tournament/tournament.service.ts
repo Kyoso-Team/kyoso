@@ -1,6 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { Tournament } from '$src/schema';
-import { isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
+import { ExpectedError, isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
 import { userRepository } from '../user/user.repository';
 import { tournamentRepository } from './tournament.repository';
@@ -93,15 +93,11 @@ export class TournamentService extends Service {
   ) {
     return (err: unknown): never => {
       if (isUniqueConstraintViolationError(err, [Tournament.urlSlug])) {
-        throw new HTTPException(409, {
-          message: `Tournament with URL slug ${tournament.urlSlug} already exists`
-        });
+        throw new ExpectedError(409, `Tournament with URL slug "${tournament.urlSlug}" already exists`);
       }
 
       if (isUniqueConstraintViolationError(err, [Tournament.name])) {
-        throw new HTTPException(409, {
-          message: `Tournament with name ${tournament.name} already exists`
-        });
+        throw new ExpectedError(409, `Tournament with name "${tournament.name}" already exists`);
       }
 
       throw err;
