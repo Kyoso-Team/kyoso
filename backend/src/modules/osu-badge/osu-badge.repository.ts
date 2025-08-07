@@ -1,4 +1,4 @@
-import { and, eq, inArray, SQL, sql } from 'drizzle-orm';
+import { eq, inArray, SQL, sql } from 'drizzle-orm';
 import { OsuBadge, OsuUserAwardedBadge } from '$src/schema';
 import { DbRepository } from '../_base/db-repository';
 import type { DatabaseClient } from '$src/types';

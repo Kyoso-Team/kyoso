@@ -1,14 +1,11 @@
-import { and, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { StaffMember, StaffMemberRole, StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import { DbRepository } from '../_base/db-repository';
 import type { DatabaseClient } from '$src/types';
 
 class StaffMemberDbRepository extends DbRepository {
-  public getStaffMember(db: DatabaseClient, by: { staffMemberId: number } | {
-    userId: number;
-    tournamentId: number
-  }) {
+  public getStaffMember(db: DatabaseClient, by: { staffMemberId: number; tournamentId?: number } | { userId: number; tournamentId: number }) {
     const query = db
       .select({
         ...pick(StaffMember, {
@@ -25,7 +22,10 @@ class StaffMemberDbRepository extends DbRepository {
       .where(
         and(
           ...('staffMemberId' in by
-            ? [eq(StaffMember.id, by.staffMemberId)]
+            ? [
+              eq(StaffMember.id, by.staffMemberId),
+              by.tournamentId ? eq(StaffMember.tournamentId, by.tournamentId) : undefined
+            ]
             : [
               eq(StaffMember.userId, by.userId),
               eq(StaffMember.tournamentId, by.tournamentId)
@@ -112,7 +112,37 @@ class StaffMemberDbRepository extends DbRepository {
   //   });
   // }
 
-  public deleteStaffMember(db: DatabaseClient, staffMemberId: number) {
+  public createStaffMemberRoles(db: DatabaseClient, staffMemberId: number, staffRoleIds: number[]) {
+    const query = db
+      .insert(StaffMemberRole)
+      .values(
+        staffRoleIds.map((staffRoleId) => ({
+          staffMemberId,
+          staffRoleId
+        }))
+      )
+      .onConflictDoNothing({
+        target: [StaffMemberRole.staffMemberId, StaffMemberRole.staffRoleId]
+      });
+
+    return this.wrap({
+      query,
+      name: 'Create staff member roles'
+    });
+  }
+
+  public deleteAllStaffMemberRoles(db: DatabaseClient, staffMemberId: number) {
+    const query = db
+      .delete(StaffMemberRole)
+      .where(eq(StaffMemberRole.staffMemberId, staffMemberId));
+
+    return this.wrap({
+      query,
+      name: 'Delete all staff member roles'
+    });
+  }
+
+  public softDeleteStaffMember(db: DatabaseClient, staffMemberId: number) {
     const query = db
       .update(StaffMember)
       .set({
@@ -122,7 +152,7 @@ class StaffMemberDbRepository extends DbRepository {
 
     return this.wrap({
       query,
-      name: 'Delete staff member'
+      name: 'Soft delete staff member'
     });
   }
 }

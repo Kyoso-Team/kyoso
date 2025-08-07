@@ -72,6 +72,12 @@ export class StaffRoleService extends Service {
     });
   }
 
+  public async getStaffRoles(tournamentId: number, options?: {
+    staffRoleIds?: number[];
+  }) {
+    return await this.execute(staffRoleRepository.db.getStaffRoles(db, tournamentId, options));
+  }
+
   private handleStaffRoleMutationError(
     staffRole: { name?: string | undefined }
   ) {

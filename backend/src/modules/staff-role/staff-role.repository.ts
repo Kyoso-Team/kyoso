@@ -1,30 +1,10 @@
-import { and, count, eq, or, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, or, sql } from 'drizzle-orm';
 import { DbRepository } from '$src/modules/_base/repository';
 import { StaffRole } from '$src/schema';
 import { pick } from '$src/utils/query';
 import type { DatabaseClient } from '$src/types';
 
 class StaffRoleDbRepository extends DbRepository {
-  public getStaffRole(db: DatabaseClient, staffRoleId: number) {
-    const query = db
-      .select(
-        pick(StaffRole, {
-          id: true,
-          name: true,
-          order: true,
-          tournamentId: true
-        })
-      )
-      .from(StaffRole)
-      .where(eq(StaffRole.id, staffRoleId));
-
-    return this.wrap({
-      query,
-      name: 'Get staff role',
-      map: this.map.firstRowOrNull
-    });
-  }
-
   public createStaffRole(
     db: DatabaseClient,
     staffRole: Pick<typeof StaffRole.$inferInsert, 'name' | 'tournamentId' | 'color' | 'order'>
@@ -125,6 +105,48 @@ class StaffRoleDbRepository extends DbRepository {
       query,
       name: 'Delete staff role',
       map: this.map.firstRowOrNull
+    });
+  }
+
+  public getStaffRole(db: DatabaseClient, staffRoleId: number) {
+    const query = db
+      .select(
+        pick(StaffRole, {
+          id: true,
+          name: true,
+          order: true,
+          tournamentId: true
+        })
+      )
+      .from(StaffRole)
+      .where(eq(StaffRole.id, staffRoleId));
+
+    return this.wrap({
+      query,
+      name: 'Get staff role',
+      map: this.map.firstRowOrNull
+    });
+  }
+
+  public getStaffRoles(db: DatabaseClient, tournamentId: number, options?: {
+    staffRoleIds?: number[];
+  }) {
+    const query = db
+      .select(
+        pick(StaffRole, {
+          id: true,
+          permissions: true
+        })
+      )
+      .from(StaffRole)
+      .where(and(
+        eq(StaffRole.tournamentId, tournamentId),
+        options?.staffRoleIds ? inArray(StaffRole.id, options.staffRoleIds) : undefined
+      ));
+
+    return this.wrap({
+      query,
+      name: 'Get staff roles'
     });
   }
 

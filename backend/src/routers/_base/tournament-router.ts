@@ -2,7 +2,7 @@ import { TournamentService } from '$src/modules/tournament/tournament.service';
 import { status } from 'elysia';
 import { t, type RouterConfig } from './common';
 import { createRouter } from './router';
-import { StaffMemberService } from '$src/modules/staff-member/service';
+import { StaffMemberService } from '$src/modules/staff-member/staff-member.service';
 import type { StaffPermission } from '$src/types';
 
 export const createTournamentRouter = (config?: RouterConfig) =>
