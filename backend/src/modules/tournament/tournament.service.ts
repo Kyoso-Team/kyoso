@@ -1,11 +1,7 @@
-import { HTTPException } from 'hono/http-exception';
 import { Tournament } from '$src/schema';
-import { ExpectedError, isUniqueConstraintViolationError, unknownError } from '$src/utils/error';
+import { ExpectedError, isUniqueConstraintViolationError } from '$src/utils/error';
 import { Service } from '$src/utils/service';
-import { userRepository } from '../user/user.repository';
 import { tournamentRepository } from './tournament.repository';
-import type { DatabaseClient } from '$src/types';
-import type { TournamentValidationInput, TournamentValidationOutput } from './validation';
 import { db } from '$src/singletons';
 import { time } from '$src/utils';
 
