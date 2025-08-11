@@ -33,14 +33,14 @@ export default ts.config(
   },
   {
     rules: {
-      'quotes': [
+      quotes: [
         'warn',
         'single',
         {
           avoidEscape: true
         }
       ],
-      'semi': ['warn', 'always'],
+      semi: ['warn', 'always'],
       'no-var': 'error',
       'brace-style': ['warn', '1tbs'],
       'comma-dangle': ['warn', 'never'],
@@ -49,7 +49,7 @@ export default ts.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
-      'quote-props': ['warn', 'consistent'],
+      'quote-props': ['warn', 'as-needed'],
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -58,6 +58,7 @@ export default ts.config(
           caughtErrorsIgnorePattern: '^_'
         }
       ],
+      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
       'svelte/no-at-html-tags': 'off'
       // 'drizzle/enforce-delete-with-where': [
       //   'error',

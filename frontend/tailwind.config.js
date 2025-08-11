@@ -188,7 +188,7 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
       '@apply w-full h-[1px] bg-surface-token-600-400': {}
     },
 
-    'h2': {
+    h2: {
       '@apply text-2xl font-bold text-surface-token-100-900 dark:text-white text-black': {}
     },
 

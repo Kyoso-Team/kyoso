@@ -5,6 +5,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "baseUrl": ".",
+    "experimentalDecorators": true,
     "paths": {
       "$src": ["./src"],
       "$src/*": ["./src/*"]
