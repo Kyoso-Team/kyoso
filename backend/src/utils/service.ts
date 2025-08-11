@@ -45,7 +45,6 @@ export abstract class Service {
     wrapped: T,
     errorHandler?: (error: unknown) => never
   ): Promise<AwaitedReturnType<T['execute']>> {
-    let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
     let failed = false;
     const start = performance.now();
 
@@ -66,7 +65,7 @@ export abstract class Service {
       );
     } finally {
       const duration = performance.now() - start;
-      logMsg = this.buildLogMsg(logMsg, failed, duration, wrapped.meta);
+      const logMsg = this.buildLogMsg(failed, duration, wrapped.meta);
 
       if (failed) {
         logger.error(logMsg);
@@ -143,8 +142,8 @@ export abstract class Service {
     }
   }
 
-  private buildLogMsg(base: string, failed: boolean, duration: number, meta: QueryMeta) {
-    let logMsg = `${base}${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
+  private buildLogMsg(failed: boolean, duration: number, meta: QueryMeta) {
+    let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${meta.name} (${meta.queryType}) - ${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
 
     if (meta.queryType === 'db') {
       const params = meta.params.length > 0 ? ` - [${meta.params.join(', ')}]` : '';
