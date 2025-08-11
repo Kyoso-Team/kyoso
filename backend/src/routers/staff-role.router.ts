@@ -6,21 +6,21 @@ const BaseStaffRoleType = t.Object({
   name: t.String({
     minLength: 1
   }),
-  color: t.Union([
-    t.Literal('slate'),
-    t.Literal('gray'),
-    t.Literal('red'),
-    t.Literal('orange'),
-    t.Literal('yellow'),
-    t.Literal('lime'),
-    t.Literal('green'),
-    t.Literal('emerald'),
-    t.Literal('cyan'),
-    t.Literal('blue'),
-    t.Literal('indigo'),
-    t.Literal('purple'),
-    t.Literal('fuchsia'),
-    t.Literal('pink')
+  color: t.UnionEnum([
+    'slate',
+    'gray',
+    'red',
+    'orange',
+    'yellow',
+    'lime',
+    'green',
+    'emerald',
+    'cyan',
+    'blue',
+    'indigo',
+    'purple',
+    'fuchsia',
+    'pink'
   ])
 });
 
@@ -62,27 +62,27 @@ export const staffRoleRouter = createTournamentRouter({
       t.Object({
         ...BaseStaffRoleType.properties,
         permissions: t.Array(
-          t.Union([
-            t.Literal('manage_tournament'),
-            t.Literal('manage_assets'),
-            t.Literal('manage_theme'),
-            t.Literal('manage_regs'),
-            t.Literal('manage_pool_structure'),
-            t.Literal('view_pool_suggestions'),
-            t.Literal('create_pool_suggestions'),
-            t.Literal('delete_pool_suggestions'),
-            t.Literal('view_pooled_maps'),
-            t.Literal('manage_pooled_maps'),
-            t.Literal('view_feedback'),
-            t.Literal('can_playtest'),
-            t.Literal('can_submit_replays'),
-            t.Literal('view_matches'),
-            t.Literal('manage_matches'),
-            t.Literal('ref_matches'),
-            t.Literal('commentate_matches'),
-            t.Literal('stream_matches'),
-            t.Literal('manage_stats'),
-            t.Literal('can_play')
+          t.UnionEnum([
+            'manage_tournament',
+            'manage_assets',
+            'manage_theme',
+            'manage_regs',
+            'manage_pool_structure',
+            'view_pool_suggestions',
+            'create_pool_suggestions',
+            'delete_pool_suggestions',
+            'view_pooled_maps',
+            'manage_pooled_maps',
+            'view_feedback',
+            'can_playtest',
+            'can_submit_replays',
+            'view_matches',
+            'manage_matches',
+            'ref_matches',
+            'commentate_matches',
+            'stream_matches',
+            'manage_stats',
+            'can_play'
           ])
         )
       })

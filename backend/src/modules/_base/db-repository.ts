@@ -15,6 +15,8 @@ export interface DbQueryMeta extends BaseQueryMeta {
   mappedOutput: TrackValue;
 }
 
+export type GetQueryReturnType<TQuery extends (...params: any[]) => QueryWrapper<any>> = Awaited<ReturnType<ReturnType<TQuery>['execute']>>;
+
 export class DbRepository {
   protected wrap<
     TQuery extends RunnableQuery<any, any> &

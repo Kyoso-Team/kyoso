@@ -44,7 +44,7 @@ const tournamentRouter1 = createRouter({
     body: t.Object({
       ...BaseTournamentType.properties,
       isOpenRank: t.Boolean(),
-      type: t.Union([t.Literal('solo'), t.Literal('teams'), t.Literal('draft')])
+      type: t.UnionEnum(['solo', 'teams', 'draft'])
     }),
     session: {
       approvedHost: true
@@ -94,7 +94,7 @@ const tournamentRouter2 = createTournamentRouter()
       t.Object({
         ...BaseTournamentType.properties,
         useTeamBanners: t.Boolean(),
-        winCondition: t.Union([t.Literal('score'), t.Literal('accuracy'), t.Literal('combo')]),
+        winCondition: t.UnionEnum(['score', 'accuracy', 'combo']),
         bws: t.Nullable(
           t.Record(
             t.Union([t.Literal('x'), t.Literal('y'), t.Literal('z')]),
@@ -204,7 +204,7 @@ const tournamentRouter2 = createTournamentRouter()
         'rankRange',
         'bws'
       ]);
-      const hasHostOnlyProps = propsToUpdate.intersection(hostOnlyProps).size !== 0;
+      const hasHostOnlyProps = !propsToUpdate.isDisjointFrom(hostOnlyProps);
 
       if (hasHostOnlyProps && !staffMember.host) {
         return status(401, `You must be the tournament host to update the following properties: "${

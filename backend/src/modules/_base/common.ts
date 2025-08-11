@@ -22,7 +22,7 @@ export interface BaseQueryMeta {
   name: string;
 }
 
-type QueryMeta = DbQueryMeta | KvQueryMeta | SearchQueryMeta;
+export type QueryMeta = DbQueryMeta | KvQueryMeta | SearchQueryMeta;
 
 export interface QueryWrapper<T> {
   execute: () => Promise<T>;

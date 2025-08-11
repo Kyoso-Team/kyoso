@@ -18,15 +18,17 @@ import { unknownError } from '$src/utils/error';
 import { osuRepository } from '../osu/osu.repository';
 import { existsSync, unlinkSync } from 'fs';
 import { time } from '$src/utils';
+import type { GetQueryReturnType } from '../_base/db-repository';
+import type { AwaitedReturnType } from '$src/types';
 
 export class AuthenticationService extends Service {
   private TEST_SESSION_TOKEN_PATH = `${process.cwd()}/test-tokens/session.txt`;
 
   public async createUser(
     osuToken: OAuthToken,
-    osuUser: Awaited<ReturnType<OsuService['getOsuSelf']>>,
+    osuUser: AwaitedReturnType<OsuService['getOsuSelf']>,
     discordToken: OAuthToken,
-    discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>
+    discordUser: AwaitedReturnType<DiscordService['getDiscordSelf']>
   ) {
     const badges = osuUser.badges.map(this.transformBadge);
     await this.execute(userRepository.db.createCountry(db, osuUser.country));
@@ -84,7 +86,7 @@ export class AuthenticationService extends Service {
   public async createSession(
     userId: number,
     ipAddress: string,
-    ipMetadata: Awaited<ReturnType<IpInfoService['getIpMetadata']>>,
+    ipMetadata: AwaitedReturnType<IpInfoService['getIpMetadata']>,
     userAgent: string | null
   ) {
     const token = this.generateSessionToken();
@@ -124,7 +126,7 @@ export class AuthenticationService extends Service {
     return await this.execute(userRepository.db.updateUser(db, userId, user));
   }
 
-  public async updateOsuApiData(osuUser: Awaited<ReturnType<OsuService['getOsuSelf']>>) {
+  public async updateOsuApiData(osuUser: AwaitedReturnType<OsuService['getOsuSelf']>) {
     const badges = osuUser.badges.map(this.transformBadge);
     await this.execute(userRepository.db.createCountry(db, osuUser.country));
 
@@ -153,7 +155,7 @@ export class AuthenticationService extends Service {
   }
 
   public async updateDiscordApiData(
-    discordUser: Awaited<ReturnType<DiscordService['getDiscordSelf']>>
+    discordUser: AwaitedReturnType<DiscordService['getDiscordSelf']>
   ) {
     await this.execute(
       userRepository.db.updateDiscordUser(db, BigInt(discordUser.id), {
@@ -290,33 +292,25 @@ export class AuthenticationService extends Service {
   }
 
   public hasSessionExpired(
-    session: NonNullable<
-      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
-    >
+    session: NonNullable<GetQueryReturnType<typeof sessionRepository.db.getSession>>
   ) {
     return Date.now() >= session.expiresAt.getTime();
   }
 
   public osuApiDataNeedsUpdate(
-    session: NonNullable<
-      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
-    >
+    session: NonNullable<GetQueryReturnType<typeof sessionRepository.db.getSession>>
   ) {
     return Date.now() >= session.osu.updatedAt.getTime() + time.days(1);
   }
 
   public discordApiDataNeedsUpdate(
-    session: NonNullable<
-      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
-    >
+    session: NonNullable<GetQueryReturnType<typeof sessionRepository.db.getSession>>
   ) {
     return Date.now() >= session.discord.updatedAt.getTime() + time.days(1);
   }
 
   public sessionExpirationNeedsReset(
-    session: NonNullable<
-      Awaited<ReturnType<ReturnType<typeof sessionRepository.db.getSession>['execute']>>
-    >
+    session: NonNullable<GetQueryReturnType<typeof sessionRepository.db.getSession>>
   ) {
     return Date.now() >= session.expiresAt.getTime() - time.days(10);
   }

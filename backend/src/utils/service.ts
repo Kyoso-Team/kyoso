@@ -1,8 +1,8 @@
 import * as v from 'valibot';
 import { logger } from '$src/singletons';
 import { UnknownError, unknownError, validationError } from './error';
-import type { DatabaseClient, DatabaseTransactionClient } from '$src/types';
-import type { QueryWrapper } from '../modules/_base/repository';
+import type { AwaitedReturnType, DatabaseClient, DatabaseTransactionClient } from '$src/types';
+import type { QueryMeta, QueryWrapper } from '../modules/_base/repository';
 
 export abstract class Service {
   public static devOnly = (_: any, propertyKey: string, descriptor: PropertyDescriptor) => {
@@ -44,7 +44,7 @@ export abstract class Service {
   protected async execute<T extends QueryWrapper<any>>(
     wrapped: T,
     errorHandler?: (error: unknown) => never
-  ): Promise<Awaited<ReturnType<T['execute']>>> {
+  ): Promise<AwaitedReturnType<T['execute']>> {
     let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${wrapped.meta.name} (${wrapped.meta.queryType}) - `;
     let failed = false;
     const start = performance.now();
@@ -66,41 +66,7 @@ export abstract class Service {
       );
     } finally {
       const duration = performance.now() - start;
-      logMsg += `${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
-
-      if (wrapped.meta.queryType === 'db') {
-        const params =
-          wrapped.meta.params.length > 0 ? ` - [${wrapped.meta.params.join(', ')}]` : '';
-        const o = wrapped.meta.output.get();
-        const mo = wrapped.meta.mappedOutput.get();
-        const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
-
-        logMsg += `${wrapped.meta.query}${params}${output}`;
-      } else if (wrapped.meta.queryType === 'kv') {
-        const input =
-          wrapped.meta.input && wrapped.meta.input !== 'undefined'
-            ? ` set to "${wrapped.meta.input}"`
-            : '';
-        const expires = wrapped.meta.expires ? ` to expire in ${wrapped.meta.expires}ms` : '';
-        const o = wrapped.meta.output?.get();
-        const mo = wrapped.meta.mappedOutput?.get();
-        const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
-
-        logMsg += `${wrapped.meta.method} "${wrapped.meta.key}"${input}${expires}${output}`;
-      } else if (wrapped.meta.queryType === 'search') {
-        const input =
-          wrapped.meta.input && wrapped.meta.input !== 'undefined'
-            ? ` with input "${wrapped.meta.input}"`
-            : '';
-        const o = wrapped.meta.output?.get();
-        const output = o && o !== 'undefined' ? ` - Received ${o}` : '';
-        const document = wrapped.meta.documentId
-          ? ` - Affected document with ID "${wrapped.meta.documentId}"`
-          : '';
-        const search = wrapped.meta.search ? ` with query "${wrapped.meta.search.query}"` : '';
-
-        logMsg += `${wrapped.meta.index}.${wrapped.meta.method}${search}${input}${document}${output}`;
-      }
+      logMsg = this.buildLogMsg(logMsg, failed, duration, wrapped.meta);
 
       if (failed) {
         logger.error(logMsg);
@@ -175,5 +141,43 @@ export abstract class Service {
       logMsg += `Completed in ${Math.round(duration)}ms`;
       logger.info(logMsg);
     }
+  }
+
+  private buildLogMsg(base: string, failed: boolean, duration: number, meta: QueryMeta) {
+    let logMsg = `${base}${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
+
+    if (meta.queryType === 'db') {
+      const params = meta.params.length > 0 ? ` - [${meta.params.join(', ')}]` : '';
+      const o = meta.output.get();
+      const mo = meta.mappedOutput.get();
+      const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
+
+      logMsg += `${meta.query}${params}${output}`;
+    } else if (meta.queryType === 'kv') {
+      const input = meta.input && meta.input !== 'undefined'
+          ? ` set to "${meta.input}"`
+          : '';
+      const expires = meta.expires ? ` to expire in ${meta.expires}ms` : '';
+      const o = meta.output?.get();
+      const mo = meta.mappedOutput?.get();
+      const output = o && o !== 'undefined' ? ` - Received ${o} and mapped to ${mo}` : '';
+
+      logMsg += `${meta.method} "${meta.key}"${input}${expires}${output}`;
+    } else if (meta.queryType === 'search') {
+      const input =
+        meta.input && meta.input !== 'undefined'
+          ? ` with input "${meta.input}"`
+          : '';
+      const o = meta.output?.get();
+      const output = o && o !== 'undefined' ? ` - Received ${o}` : '';
+      const document = meta.documentId
+        ? ` - Affected document with ID "${meta.documentId}"`
+        : '';
+      const search = meta.search ? ` with query "${meta.search.query}"` : '';
+
+      logMsg += `${meta.index}.${meta.method}${search}${input}${document}${output}`;
+    }
+
+    return logMsg;
   }
 }
