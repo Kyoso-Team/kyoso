@@ -14,7 +14,7 @@ import {
 import { DraftOrderType, TournamentType, WinCondition } from './enums';
 import { User } from './users';
 import { timestampConfig } from './utils';
-import type { TournamentValidationOutput } from '$src/modules/tournament/validation';
+import type { Bws } from '$src/utils/validation';
 
 export const Tournament = pgTable(
   'tournament',
@@ -41,7 +41,7 @@ export const Tournament = pgTable(
     }).notNull(),
     // Format and team settings
     type: TournamentType().notNull(),
-    bws: jsonb().$type<TournamentValidationOutput['Bws']>(),
+    bws: jsonb().$type<Bws>(),
     lowerRankRange: integer(),
     upperRankRange: integer(),
     minTeamSize: smallint(),

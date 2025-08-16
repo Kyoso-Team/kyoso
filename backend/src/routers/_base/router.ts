@@ -6,7 +6,7 @@ import { env } from '$src/utils/env';
 import { status } from 'elysia';
 import { common, type RouterConfig } from './common';
 
-export const createRouter = (config?: RouterConfig) =>
+export const createRouter = <TPrefix extends string>(config?: RouterConfig<TPrefix>) =>
   common(config)
     .derive(() => ({
       forceOsuApiDataUpdate: false,

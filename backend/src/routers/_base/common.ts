@@ -2,7 +2,12 @@ import Elysia, { status, t as t1 } from 'elysia';
 import { env } from '$src/utils/env';
 import { ExpectedError } from '$src/utils/error';
 
-export const t = {
+// Build fails if `t` isn't explicitly typed for some reason
+export const t: typeof t1 & {
+  IntegerId: () => ReturnType<typeof t1.Integer>
+  IntegerIdString: () => ReturnType<typeof t1.Numeric>
+  DateString: () => ReturnType<typeof t1.String>
+} = {
   ...t1,
   IntegerId: () =>
     t1.Integer({
@@ -16,9 +21,9 @@ export const t = {
   })
 };
 
-export type RouterConfig = {
+export type RouterConfig<TPrefix extends string> = {
   name?: string;
-  prefix?: string;
+  prefix?: TPrefix;
 };
 
 export const initServices = <TServices extends Record<string, any> = {}>(services: TServices) => new Elysia()
@@ -35,7 +40,7 @@ export const initServices = <TServices extends Record<string, any> = {}>(service
     return mapped as { [K in keyof TServices]: InstanceType<TServices[K]> };
   });
 
-export const common = (config?: RouterConfig) => new Elysia(config)
+export const common = <TPrefix extends string>(config?: RouterConfig<TPrefix>) => new Elysia<TPrefix>(config)
   .onRequest(({ set }) => {
     set.headers['x-request-id'] = Bun.randomUUIDv7();
   })

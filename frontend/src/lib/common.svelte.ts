@@ -1,10 +1,9 @@
-import type { InferResponseType } from 'hono';
-import type { api } from './api';
+import type { Api } from './api';
 
 class Common {
-  public session: InferResponseType<(typeof api)['auth']['session']['$get']> = $state(null);
+  public session: Api['auth']['session']['get'] | null = $state(null);
 
-  public setSession(session: InferResponseType<(typeof api)['auth']['session']['$get']>) {
+  public setSession(session: Api['auth']['session']['get']) {
     this.session = session;
   }
 }

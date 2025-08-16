@@ -5,13 +5,19 @@ import { createRouter } from './router';
 import { StaffMemberService } from '$src/modules/staff-member/staff-member.service';
 import type { StaffPermission } from '$src/types';
 
-export const createTournamentRouter = (config?: RouterConfig) =>
-  createRouter({
+export const createTournamentRouter = <TSuffix extends `/${string}` = '/'>(config?: RouterConfig<TSuffix>) =>
+  createRouter<`/tournament/:tournament_id${TSuffix}`>({
     ...config,
-    prefix: '/tournament/:tournament_id'
+    prefix: `/tournament/:tournament_id${config?.prefix ?? ''}` as any
   })
   .guard({
     schema: 'standalone',
+    params: t.Object({
+      tournament_id: t.IntegerIdString()
+    })
+  })
+  // Some really weird type stuff makes it so we have to duplicate this validation without the standalone option
+  .guard({
     params: t.Object({
       tournament_id: t.IntegerIdString()
     })

@@ -2,7 +2,7 @@ import { bearer } from '@elysiajs/bearer';
 import { common, type RouterConfig } from './common';
 import { UserService } from '$src/modules/user/user.service';
 
-export const createPublicApiRouter = (config?: RouterConfig) =>
+export const createPublicApiRouter = <TPrefix extends string>(config?: RouterConfig<TPrefix>) =>
   common(config)
     .use(bearer())
     .resolve(async ({ requestId, bearer }) => {

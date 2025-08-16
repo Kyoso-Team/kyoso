@@ -1,3 +1,4 @@
+import { t } from '$src/routers/_base/common';
 import { is, SQL } from 'drizzle-orm';
 import * as v from 'valibot';
 
@@ -36,12 +37,22 @@ export const dateOrString = () =>
     )
   ]);
 
-export const OAuthToken = v.object({
+export const OAuthToken = t.Object({
   /** Encrypted using JWT */
-  accessToken: nonEmptyString(),
+  accessToken: t.String({
+    minLength: 1
+  }),
   /** Encrypted using JWT */
-  refreshToken: nonEmptyString(),
+  refreshToken: t.String({
+    minLength: 1
+  }),
   /** Timestamp in milliseconds */
-  tokenIssuedAt: v.pipe(v.number(), v.integer())
+  tokenIssuedAt: t.Integer()
 });
-export type OAuthToken = v.InferOutput<typeof OAuthToken>;
+export type OAuthToken = typeof OAuthToken['static'];
+
+export const Bws = t.Record(
+  t.Union([t.Literal('x'), t.Literal('y'), t.Literal('z')]),
+  t.Number({ minimum: -10, maximum: 10 })
+);
+export type Bws = typeof Bws['static'];
