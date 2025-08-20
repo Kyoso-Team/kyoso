@@ -109,8 +109,11 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
   );
 
   addUtilities({
-    '.p-content': {
-      '@apply px-20': {}
+    '.content-wrapper': {
+      '@apply flex justify-center items-center': {}
+    },
+    '.content': {
+      '@apply w-full max-w-5xl': {}
     }
   });
 

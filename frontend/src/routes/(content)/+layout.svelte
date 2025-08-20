@@ -6,12 +6,12 @@
   import Toast from '$components/Toast.svelte';
   import { c } from '$lib/common.svelte';
   import { toggleTheme } from '$lib/theme';
-  import type { LayoutData } from './$types';
+  import type { LayoutServerData } from './$types';
 
-  const { children, data } = $props() as {
+  const { children, data }: {
     children: Snippet;
-    data: LayoutData;
-  };
+    data: LayoutServerData;
+  } = $props();
 
   $effect(() => {
     c.setSession(data.session);
@@ -24,4 +24,9 @@
 <Toast />
 <FadedBg />
 <NavBar />
-{@render children()}
+<div class="content-wrapper">
+  <!-- 59px is the height of the nav bar -->
+  <div class="content mt-[calc(59px+40px)] mb-10">
+    {@render children()}
+  </div>
+</div>

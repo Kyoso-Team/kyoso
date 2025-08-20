@@ -78,9 +78,9 @@
           <Pencil size={16} />
         {/if}
       </button>
-      {#snippet tip()}
+      <!-- {#snippet tip()}
         {editing ? 'Preview' : 'Edit'}
-      {/snippet}
+      {/snippet} -->
     </Tooltip>
     <div class="flex w-full justify-end">
       {#if editing}
@@ -93,9 +93,9 @@
               >
                 <format.icon size={16} />
               </button>
-              {#snippet tip()}
+              <!-- {#snippet tip()}
                 {format.tip}
-              {/snippet}
+              {/snippet} -->
             </Tooltip>
           {/each}
         </div>

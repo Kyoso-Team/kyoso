@@ -3,7 +3,6 @@
   import { onMount } from 'svelte';
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
-  import { focusTrap } from '$lib/focus-trap';
   import type { Snippet } from 'svelte';
   import type { Form } from '$lib/form.svelte';
 
@@ -19,21 +18,26 @@
 
   onMount(() => {
     fadeUi.set(true);
+    document.addEventListener('keydown', onEscapeKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', onEscapeKeyDown);
+    };
   });
 
-  function onKeyDown(e: KeyboardEvent) {
-    return e.key !== 'Enter';
+  function onEscapeKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      form.cancel();
+    }
   }
 </script>
 
 <form
   class="bg-surface-token-800-200 border-surface-token-700-300 m-auto flex h-max w-[32rem] flex-col rounded-md border p-8"
   role="presentation"
-  onkeydown={onKeyDown}
   onsubmit={form.submit}
   use:portal={'#faded-bg-content'}
   transition:fade={{ duration: 75 }}
-  use:focusTrap={true}
 >
   <h2>{form.title}</h2>
   <div class="line mt-4"></div>

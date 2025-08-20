@@ -5,7 +5,7 @@
   import Options from '$components/form/Options.svelte';
   import Text from '$components/form/Text.svelte';
   import { F, Form } from '$lib/form.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import type { FormProps } from '$lib/types';
 
   const { unmount, onCancel }: FormProps = $props();
@@ -60,7 +60,7 @@
 
 {#snippet urlSlugPreview()}
   <span class="font-medium">Example URL:</span>
-  {$page.url.origin}/t/{form.fields.urlSlug.raw ? form.fields.urlSlug.raw : '[slug]'}
+  {page.url.origin}/t/{form.fields.urlSlug.raw ? form.fields.urlSlug.raw : '[slug]'}
 {/snippet}
 <FormElement {form}>
   <strong>Branding</strong>

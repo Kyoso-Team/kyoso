@@ -26,6 +26,7 @@
   {/if}
   <input
     type="text"
+    name={field.key}
     class="input{field.canDiplayError && field.error ? ' input-error' : ''}"
     disabled={field.isDisabled}
     onblur={onBlur}

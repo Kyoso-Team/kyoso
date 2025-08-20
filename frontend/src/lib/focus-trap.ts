@@ -66,7 +66,9 @@ export function focusTrap(node: HTMLElement, enabled: boolean) {
       elemLast.addEventListener('keydown', onLastElemKeydown);
     }
   };
-  onScanElements(false);
+  setTimeout(() => {
+    onScanElements(false);
+  }, 100);
 
   function onCleanUp(): void {
     if (elemFirst) elemFirst.removeEventListener('keydown', onFirstElemKeydown);

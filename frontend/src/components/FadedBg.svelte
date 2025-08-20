@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fadeUi } from '$lib/fade-ui.svelte';
+  import { focusTrap } from '$lib/focus-trap';
   import { fade } from 'svelte/transition';
 </script>
 
@@ -11,5 +12,6 @@
   <div
     id="faded-bg-content"
     class="fixed inset-0 z-[76] flex min-h-screen w-screen items-center justify-center overflow-y-auto p-8"
+    use:focusTrap={true}
   ></div>
 {/if}
