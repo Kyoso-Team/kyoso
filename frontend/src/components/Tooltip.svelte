@@ -63,6 +63,7 @@
     // Base
     position = 'top',
     class: classes = '',
+    btnClass,
     triggerAriaLabel = '',
     // Snippets
     children,
@@ -70,9 +71,13 @@
     // Events
     onmouseover,
     onclick,
+    btnOnclick,
     // Zag ---
     ...zagProps
-  }: TooltipProps = $props();
+  }: TooltipProps & {
+    btnClass?: string;
+    btnOnclick?: () => void | Promise<void>;
+  } = $props();
 
   let open = $state(false);
   const id = [...Array(8)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -99,7 +104,7 @@
 <span class="block {classes}" data-testid="tooltip">
   <!-- Snippet: Trigger -->
   {#if children}
-    <button {...triggerProps} type="button" aria-label={triggerAriaLabel}>
+    <button {...triggerProps} class={btnClass} onclick={btnOnclick} type="button" aria-label={triggerAriaLabel}>
       {@render children()}
     </button>
   {/if}

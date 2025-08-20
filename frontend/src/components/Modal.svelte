@@ -3,7 +3,6 @@
   import { onMount } from 'svelte';
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
-  import { focusTrap } from '$lib/focus-trap';
   import type { Snippet } from 'svelte';
   import type { MaybePromise } from '$lib/types';
 
@@ -36,7 +35,6 @@
   class="bg-surface-token-800-200 border-surface-token-700-300 m-auto flex h-max w-[32rem] flex-col rounded-md border p-8"
   use:portal={'#faded-bg-content'}
   transition:fade={{ duration: 75 }}
-  use:focusTrap={true}
 >
   <h2>{title}</h2>
   <div class="my-8">

@@ -43,7 +43,7 @@
   {/snippet}
 </Tooltip>
 <div class="my-16 ml-8 w-[32rem]">
-  <!-- <MarkdowEditor bind:value /> -->
+  <MarkdowEditor bind:value />
 </div>
 
 <div class="line my-10"></div>

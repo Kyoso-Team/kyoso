@@ -70,32 +70,25 @@
 
 <div class="border-surface-token-700-300 flex w-full flex-col rounded-md border">
   <div class="bg-surface-token-800-200 flex rounded-t-md p-1">
-    <Tooltip>
-      <button class="btn-icon-sm-contrast" onclick={toggleEditing}>
-        {#if editing}
-          <Eye size={16} />
-        {:else}
-          <Pencil size={16} />
-        {/if}
-      </button>
-      <!-- {#snippet tip()}
+    <Tooltip btnClass="btn-icon-sm-contrast" btnOnclick={toggleEditing} >
+      {#if editing}
+        <Eye size={16} />
+      {:else}
+        <Pencil size={16} />
+      {/if}
+      {#snippet tip()}
         {editing ? 'Preview' : 'Edit'}
-      {/snippet} -->
+      {/snippet}
     </Tooltip>
     <div class="flex w-full justify-end">
       {#if editing}
         <div class="flex" transition:fade={{ duration: 75 }}>
           {#each formats as format, i}
-            <Tooltip>
-              <button
-                class="btn-icon-sm-surface-soft bg-surface-token-800-200 border-0"
-                onclick={() => onFormatBtnClick(i)}
-              >
-                <format.icon size={16} />
-              </button>
-              <!-- {#snippet tip()}
+            <Tooltip btnClass="btn-icon-sm-surface-soft bg-surface-token-800-200 border-0" btnOnclick={() => onFormatBtnClick(i)}>
+              <format.icon size={16} />
+              {#snippet tip()}
                 {format.tip}
-              {/snippet} -->
+              {/snippet}
             </Tooltip>
           {/each}
         </div>
