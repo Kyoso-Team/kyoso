@@ -68,8 +68,8 @@ export const authRouter = createRouter({
           state: t.String()
         }),
         cookie: t.Cookie({
-          osu_oauth_state: t.String(),
-          discord_oauth_state: t.String()
+          osu_oauth_state: t.Optional(t.String()),
+          discord_oauth_state: t.Optional(t.String())
         })
       })
       .onBeforeHandle(({ cookie, query, cookieService, path }) => {
@@ -83,9 +83,16 @@ export const authRouter = createRouter({
           });
         }
       })
-      .derive(({ server, request }) => ({
-        ipAddress: env.NODE_ENV === 'test' ? '127.0.0.1' : server!.requestIP(request)!.address
-      }))
+      .derive(({ server, request }) => {
+        const serverRequestedIp = server?.requestIP(request)?.address;
+        if (!serverRequestedIp && env.NODE_ENV === 'production') {
+          return status(500, 'Could not determine client\'s IP address');
+        }
+
+        return {
+          ipAddress: serverRequestedIp ?? '127.0.0.1' 
+        };
+      })
       .get(
         '/osu',
         async ({
@@ -177,7 +184,7 @@ export const authRouter = createRouter({
           );
 
           const ipMetadata = await ipInfoService.getIpMetadata(ipAddress);
-          await authenticationService.createSession(
+          const sessionToken = await authenticationService.createSession(
             user.id,
             ipAddress,
             ipMetadata,
@@ -186,6 +193,10 @@ export const authRouter = createRouter({
 
           const redirectPath = cookieService.getRedirectPath(cookie);
           cookieService.deleteRedirectPath(cookie);
+          cookieService.deleteOAuthState(cookie, 'osu');
+          cookieService.deleteOAuthState(cookie, 'discord');
+          cookieService.setSession(cookie, sessionToken);
+          
           return redirect(`${env.FRONTEND_URL}${redirectPath ?? '/'}`, 302);
         }
       )

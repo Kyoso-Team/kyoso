@@ -35,6 +35,11 @@ export class CookieService extends Service {
     return cookie;
   }
 
+  public deleteOAuthState(cookies: Cookies, forOAuth: 'osu' | 'discord') {
+    const cookieName = `${forOAuth}_oauth_state`;
+    this.deleteCookie(cookies, cookieName);
+  }
+
   public setSession(cookies: Cookies, sessionToken: string) {
     this.setCookie(cookies, 'session', {
       value: sessionToken,

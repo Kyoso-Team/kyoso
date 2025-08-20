@@ -4,10 +4,11 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ fetch }) => {
   const resp = await api(fetch).auth.session.get();
 
+  console.log(resp)
   // TODO: Better handling of non-200 status codes
   if (resp.error?.status === 401 && resp.error.value === 'Not logged in') {
     return { session: null };
-  } else {
+  } else if (resp.error) {
     throw resp.error;
   }
 

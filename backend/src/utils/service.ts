@@ -46,12 +46,14 @@ export abstract class Service {
     errorHandler?: (error: unknown) => never
   ): Promise<AwaitedReturnType<T['execute']>> {
     let failed = false;
+    let error: any;
     const start = performance.now();
 
     try {
       return await wrapped.execute();
     } catch (err) {
       failed = true;
+      error = err;
 
       if (errorHandler) {
         errorHandler(err);
@@ -69,6 +71,7 @@ export abstract class Service {
 
       if (failed) {
         logger.error(logMsg);
+        logger.error(error);
       } else {
         logger.info(logMsg);
       }
