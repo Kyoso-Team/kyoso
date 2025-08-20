@@ -2,7 +2,7 @@
   import Render from '../Render.svelte';
   import Check from 'lucide-svelte/icons/check';
   import { fade, slide } from 'svelte/transition';
-  import type { BooleanField } from '$lib/form.svelte';
+  import type { BooleanField } from '$lib/state/form.svelte';
 
   const { field }: { field: BooleanField } = $props();
   let value: boolean | null | undefined = $state(false);

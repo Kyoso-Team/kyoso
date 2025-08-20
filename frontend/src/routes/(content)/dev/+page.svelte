@@ -1,7 +1,7 @@
 <script lang="ts">
   import MarkdowEditor from '$components/MarkdowEditor.svelte';
   import Tooltip from '$components/Tooltip.svelte';
-  import { toast } from '$lib/toast.svelte';
+  import { toast } from '$lib/state/toast.svelte';
   import CreateTournamentForm from '$ui/forms/CreateTournamentForm.svelte';
   import Test1Modal from '$ui/modals/Test1Modal.svelte';
   import TestModal from '$ui/modals/TestModal.svelte';

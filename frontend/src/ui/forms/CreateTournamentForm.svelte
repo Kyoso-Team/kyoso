@@ -4,7 +4,7 @@
   import Number from '$components/form/Number.svelte';
   import Options from '$components/form/Options.svelte';
   import Text from '$components/form/Text.svelte';
-  import { F, Form } from '$lib/form.svelte';
+  import { F, Form } from '$lib/state/form.svelte';
   import { page } from '$app/state';
   import type { FormProps } from '$lib/types';
 

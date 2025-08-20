@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { fadeUi } from '$lib/fade-ui.svelte';
+  import { fadeUi } from '$lib/state/fade-ui.svelte';
   import { onMount } from 'svelte';
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
   import type { Snippet } from 'svelte';
-  import type { Form } from '$lib/form.svelte';
+  import type { Form } from '$lib/state/form.svelte';
 
   const {
     form,

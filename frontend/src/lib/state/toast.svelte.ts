@@ -1,5 +1,5 @@
 import { SvelteMap as Map, SvelteSet as Set } from 'svelte/reactivity';
-import type { ToastItem } from './types';
+import type { ToastItem } from '../types';
 
 export class Toast {
   private maxItemsOnScreen = 3 as const;

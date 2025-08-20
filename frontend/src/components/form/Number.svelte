@@ -1,7 +1,7 @@
 <script lang="ts">
   import Render from '../Render.svelte';
   import { slide } from 'svelte/transition';
-  import type { NumberField } from '$lib/form.svelte';
+  import type { NumberField } from '$lib/state/form.svelte';
 
   const { field }: { field: NumberField<any> } = $props();
   let value: number | null | undefined = $state(null);

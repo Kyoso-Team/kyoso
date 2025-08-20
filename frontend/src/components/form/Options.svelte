@@ -1,7 +1,7 @@
 <script lang="ts">
   import Render from '../Render.svelte';
   import { slide } from 'svelte/transition';
-  import type { OptionalOptionsField, OptionsField } from '$lib/form.svelte';
+  import type { OptionalOptionsField, OptionsField } from '$lib/state/form.svelte';
 
   const { field }: { field: OptionsField<any> | OptionalOptionsField<any> } = $props();
   let value: string | null | undefined = $state();

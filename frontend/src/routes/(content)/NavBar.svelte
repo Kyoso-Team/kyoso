@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { c } from '$lib/common.svelte';
+  import { c } from '$lib/state/common.svelte';
   import { loginUrl } from '$lib/api';
 
   const links: {

@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import '../../app.css';
   import FadedBg from '$components/FadedBg.svelte';
-  import { c } from '$lib/common.svelte';
+  import { c } from '$lib/state/common.svelte';
   import { toggleTheme } from '$lib/theme';
   import type { LayoutData } from './$types';
 

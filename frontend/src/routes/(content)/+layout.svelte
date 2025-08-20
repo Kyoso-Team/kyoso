@@ -4,7 +4,7 @@
   import NavBar from './NavBar.svelte';
   import FadedBg from '$components/FadedBg.svelte';
   import Toast from '$components/Toast.svelte';
-  import { c } from '$lib/common.svelte';
+  import { c } from '$lib/state/common.svelte';
   import { toggleTheme } from '$lib/theme';
   import type { LayoutServerData } from './$types';
 

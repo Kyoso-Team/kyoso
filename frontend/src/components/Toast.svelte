@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { toast } from '$lib/toast.svelte';
+  import { toast } from '$lib/state/toast.svelte';
   import { flip } from 'svelte/animate';
   import { fly } from 'svelte/transition';
   import type { ToastItem } from '$lib/types';

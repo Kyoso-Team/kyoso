@@ -1,7 +1,7 @@
 import { fadeUi } from './fade-ui.svelte';
 import type { Snippet } from 'svelte';
 import type { EventHandler } from 'svelte/elements';
-import type { MaybePromise } from './types';
+import type { MaybePromise } from '../types';
 
 type HandleFieldType<T extends Field<any, any> | Record<string, Field<any, any>>> =
   T['$data'] extends boolean

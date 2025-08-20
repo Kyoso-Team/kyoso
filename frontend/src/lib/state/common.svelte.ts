@@ -1,4 +1,4 @@
-import type { Api } from './api';
+import type { Api } from '../api';
 
 class Common {
   public session: Api['auth']['session']['get'] | null = $state(null);

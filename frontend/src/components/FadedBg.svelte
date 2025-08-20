@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fadeUi } from '$lib/fade-ui.svelte';
+  import { fadeUi } from '$lib/state/fade-ui.svelte';
   import { focusTrap } from '$lib/focus-trap';
   import { fade } from 'svelte/transition';
 </script>

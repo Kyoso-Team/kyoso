@@ -1,7 +1,7 @@
 <script lang="ts">
   import Render from '../Render.svelte';
   import { slide } from 'svelte/transition';
-  import type { TextField } from '$lib/form.svelte';
+  import type { TextField } from '$lib/state/form.svelte';
 
   const { field }: { field: TextField<any> } = $props();
   let value: string | null | undefined = $state();

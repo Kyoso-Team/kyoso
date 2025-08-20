@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fadeUi } from '$lib/fade-ui.svelte';
+  import { fadeUi } from '$lib/state/fade-ui.svelte';
   import { onMount } from 'svelte';
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
