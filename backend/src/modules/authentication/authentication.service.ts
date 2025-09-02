@@ -209,14 +209,12 @@ export class AuthenticationService extends Service {
 
   /** osu! tokens last 1 day */
   public shouldRefreshOsuToken(issuedAt: number) {
-    const now = new Date();
-    return now.getDate() - new Date(issuedAt).getDate() >= 1;
+    return Date.now() >= new Date(issuedAt).getTime() + time.days(1);
   }
 
   /** Discord tokens last 7 days */
   public shouldRefreshDiscordToken(issuedAt: number) {
-    const now = new Date();
-    return now.getDate() - new Date(issuedAt).getDate() >= 7;
+    return Date.now() >= new Date(issuedAt).getTime() + time.days(7);
   }
 
   public async refreshOsuToken(osuUserId: number, refreshToken: string) {

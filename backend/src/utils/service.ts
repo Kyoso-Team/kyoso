@@ -149,6 +149,18 @@ export abstract class Service {
     }
   }
 
+  public handleUnknownError(description: string) {
+    return (err: any): never => {
+      const logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${description}`;
+      logger.error(logMsg);
+      logger.error(err);
+
+      throw new UnknownError(description, {
+        cause: err
+      });
+    };
+  }
+
   private buildLogMsg(failed: boolean, duration: number, meta: QueryMeta) {
     let logMsg = `${this.operation === 'request' ? 'Request' : this.operation === 'job' ? 'Background job' : 'Test setup'} ${this.operationId} - ${meta.name} (${meta.queryType}) - ${failed ? 'Failed' : 'Success'} in ${Math.round(duration)}ms - `;
 
