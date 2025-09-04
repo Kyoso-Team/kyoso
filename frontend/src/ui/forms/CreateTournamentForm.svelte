@@ -1,16 +1,16 @@
 <script lang="ts">
-  import FormElement from '$components/Form.svelte';
+  import Form from '$components/Form.svelte';
   import Boolean from '$components/form/Boolean.svelte';
   import Number from '$components/form/Number.svelte';
   import Options from '$components/form/Options.svelte';
   import Text from '$components/form/Text.svelte';
-  import { F, Form } from '$lib/state/form.svelte';
+  import { F, FormHandler } from '$lib/state/form.svelte';
   import { page } from '$app/state';
   import type { FormProps } from '$lib/types';
 
   const { unmount, onCancel }: FormProps = $props();
 
-  const form = new Form('Create Tournament', {
+  const form = new FormHandler('Create Tournament', {
     name: new F.Text('Tournament name').gte(2).lte(50),
     acronym: new F.Text('Tournament acronym').gte(2).lte(8),
     urlSlug: new F.Text('URL slug', {
@@ -62,7 +62,7 @@
   <span class="font-medium">Example URL:</span>
   {page.url.origin}/t/{form.fields.urlSlug.raw ? form.fields.urlSlug.raw : '[slug]'}
 {/snippet}
-<FormElement {form}>
+<Form {form}>
   <strong>Branding</strong>
   <Text field={form.fields.name} />
   <Text field={form.fields.acronym} />
@@ -77,4 +77,4 @@
   <Boolean field={form.fields.isOpenRank} />
   <Number field={form.fields.rankRange.lower} />
   <Number field={form.fields.rankRange.upper} />
-</FormElement>
+</Form>

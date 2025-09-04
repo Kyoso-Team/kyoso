@@ -110,7 +110,3 @@ body {
   font-family: 'Inter';
   @apply dark:bg-surface-900 bg-surface-100 text-black dark:text-white;
 }
-
-h1 {
-  @apply text-5xl font-bold;
-}

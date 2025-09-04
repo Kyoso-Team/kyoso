@@ -5,10 +5,15 @@
   import type { BooleanField } from '$lib/state/form.svelte';
 
   const { field }: { field: BooleanField } = $props();
-  let value: boolean | null | undefined = $state(false);
+  let value: boolean | null | undefined = $state(field.defaultValue ?? false);
 
   $effect(() => {
-    field.set(value);
+    if (field.shouldReset) {
+      value = field.defaultValue ?? false;
+      field.shouldReset = false;
+    } else {
+      field.set(value);
+    }
   });
 
   function onBlur() {
@@ -23,6 +28,7 @@
 <label class="label grid grid-cols-[auto_1fr] gap-2">
   <div>
     <button
+      type="button"
       role="checkbox"
       aria-checked={value}
       class="input-checkbox{field.canDiplayError && field.error ? ' input-error' : ''}"

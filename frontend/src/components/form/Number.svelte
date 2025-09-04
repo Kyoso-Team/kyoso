@@ -4,10 +4,15 @@
   import type { NumberField } from '$lib/state/form.svelte';
 
   const { field }: { field: NumberField<any> } = $props();
-  let value: number | null | undefined = $state(null);
+  let value: number | null | undefined = $state(field.defaultValue);
 
   $effect(() => {
-    field.set(value);
+    if (field.shouldReset) {
+      value = field.defaultValue;
+      field.shouldReset = false;
+    } else {
+      field.set(value);
+    }
   });
 
   function onBlur() {

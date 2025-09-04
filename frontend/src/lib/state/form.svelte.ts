@@ -10,7 +10,7 @@ type HandleFieldType<T extends Field<any, any> | Record<string, Field<any, any>>
       ? T['$data'] | null
       : T['$data'];
 
-export class Form<
+export class FormHandler<
   TFields extends Record<string, Field<any, any> | Record<string, Field<any, any>>>
 > {
   public $data: {
@@ -22,6 +22,7 @@ export class Form<
           | null
       : HandleFieldType<TFields[K1]>;
   } = undefined as any;
+  public defaultValue?: () => this['$data'];
   public submit: EventHandler<SubmitEvent, HTMLFormElement> = (e) => {
     e.preventDefault();
   };
@@ -47,15 +48,49 @@ export class Form<
     }
   }
 
+  public setDefaultValue(fn: () => this['$data']) {
+    this.defaultValue = fn;
+    this.reset();
+    return this;
+  }
+
+  public reset() {
+    const defaultValue = this.defaultValue ? this.defaultValue() : undefined;
+
+    for (const [k1, field1] of Object.entries(this.fields)) {
+      if (field1 instanceof Field) {
+        field1.defaultValue = defaultValue?.[k1] ?? null;
+        field1.shouldReset = true;
+        field1.canDiplayError = false;
+      } else {
+        for (const [k2, field2] of Object.entries(field1)) {
+          field2.defaultValue = defaultValue?.[k1]?.[k2] ?? null;
+          field2.shouldReset = true;
+          field2.canDiplayError = false;
+        }
+      }
+    }
+
+    this.errors = {};
+    this.attemptedToSubmit = false;
+  }
+
   public onSubmit(callback: (value: this['$data']) => MaybePromise<void>) {
     this.submit = async (e) => {
       e.preventDefault();
       const value: Record<string, any> = {};
+      let totalFields = 0;
+      const fieldsSameAsDefault: string[] = [];
 
       for (const [k1, field1] of Object.entries(this.fields)) {
         if (field1 instanceof Field) {
           field1.set(field1.value);
           value[k1] = field1.value;
+          
+          totalFields += 1;
+          if (field1.value === field1.defaultValue) {
+            fieldsSameAsDefault.push(k1);
+          }
         } else {
           if (typeof value[k1] !== 'object') {
             value[k1] = {};
@@ -64,6 +99,11 @@ export class Form<
           for (const [k2, field2] of Object.entries(field1)) {
             field2.set(field2.value);
             value[k1][k2] = field2.value;
+
+            totalFields += 1;
+            if (field2.value === field2.defaultValue) {
+              fieldsSameAsDefault.push(`${k1}.${k2}`);
+            }
           }
         }
       }
@@ -78,7 +118,7 @@ export class Form<
         }
       }
 
-      if (!this.hasErrors) {
+      if (!this.hasErrors && totalFields > fieldsSameAsDefault.length) {
         await callback(value as this['$data']);
       }
 
@@ -100,6 +140,7 @@ export class Form<
 abstract class Field<TType, TOptional extends boolean = boolean> {
   public $data: TType = undefined as any;
   public value: TType | null = $state(null);
+  public defaultValue: TType | null = $state(null);
   public raw: TType | null | undefined = $state();
   public error: string | undefined = $state();
   public canDiplayError: boolean = $state(false);
@@ -109,9 +150,10 @@ abstract class Field<TType, TOptional extends boolean = boolean> {
   }[] = [];
   public isDisabled: boolean = $state(false);
   public isOptional: TOptional = $state(false) as any;
+  public shouldReset: boolean = $state(false);
   public description?: string | Snippet;
   public preview?: string | Snippet;
-  public form?: Form<any> | undefined;
+  public form?: FormHandler<any> | undefined;
   public key?: string | undefined;
 
   constructor(
@@ -171,7 +213,7 @@ abstract class Field<TType, TOptional extends boolean = boolean> {
     this.canDiplayError = true;
   }
 
-  public setFormAndKey(form: Form<any>, key: string) {
+  public setFormAndKey(form: FormHandler<any>, key: string) {
     this.form = form;
     this.key = key;
   }

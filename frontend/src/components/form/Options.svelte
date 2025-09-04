@@ -4,10 +4,15 @@
   import type { OptionalOptionsField, OptionsField } from '$lib/state/form.svelte';
 
   const { field }: { field: OptionsField<any> | OptionalOptionsField<any> } = $props();
-  let value: string | null | undefined = $state();
+  let value: string | null | undefined = $state(field.defaultValue);
 
   $effect(() => {
-    field.set(value);
+    if (field.shouldReset) {
+      value = field.defaultValue;
+      field.shouldReset = false;
+    } else {
+      field.set(value);
+    }
   });
 
   function onBlur() {

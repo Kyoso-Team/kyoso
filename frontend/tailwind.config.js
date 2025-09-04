@@ -191,12 +191,37 @@ const customStyles = plugin(({ matchUtilities, addComponents, addUtilities }) =>
       '@apply w-full h-[1px] bg-surface-token-600-400': {}
     },
 
+    h1: {
+      '@apply text-3xl font-bold text-surface-token-100-900 dark:text-white text-black': {}
+    },
     h2: {
       '@apply text-2xl font-bold text-surface-token-100-900 dark:text-white text-black': {}
     },
 
     '.from-markdown-content': {
       '@apply prose prose-neutral dark:prose-invert': {}
+    },
+
+    '.card': {
+      '@apply rounded-md border border-surface-token-600-400 bg-surface-token-800-200 flex flex-col text-left overflow-hidden text-sm': {}
+    },
+    '.card-title': {
+      '@apply font-semibold text-xl': {}
+    },
+    '.card-body': {
+      '@apply p-6': {}
+    },
+    '.card-form': {
+      '@apply grid gap-4': {}
+    },
+    '.card-footer': {
+      '@apply bg-surface-token-900-100 px-6 py-3 flex': {}
+    },
+    '.card-footer-body': {
+      '@apply flex items-center min-w-max': {}
+    },
+    '.card-btns': {
+      '@apply flex justify-end w-full gap-2': {}
     }
   });
 });

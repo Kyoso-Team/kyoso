@@ -4,14 +4,14 @@
   import { portal } from 'svelte-portal';
   import { fade } from 'svelte/transition';
   import type { Snippet } from 'svelte';
-  import type { Form } from '$lib/state/form.svelte';
+  import type { FormHandler } from '$lib/state/form.svelte';
 
   const {
     form,
     header,
     children
   }: {
-    form: Form<any>;
+    form: FormHandler<any>;
     children: Snippet;
     header?: Snippet;
   } = $props();
