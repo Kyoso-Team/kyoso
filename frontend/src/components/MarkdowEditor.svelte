@@ -68,8 +68,8 @@
   }
 </script>
 
-<div class="border-surface-token-700-300 flex w-full flex-col rounded-md border">
-  <div class="bg-surface-token-800-200 flex rounded-t-md p-1">
+<div class="dark:border-surface-700 border-surface-300 flex w-full flex-col rounded-md border">
+  <div class="dark:bg-surface-800 bg-surface-200 flex rounded-t-md p-1">
     <Tooltip btnClass="btn-icon-sm-contrast" btnOnclick={toggleEditing} >
       {#if editing}
         <Eye size={16} />
@@ -84,7 +84,7 @@
       {#if editing}
         <div class="flex" transition:fade={{ duration: 75 }}>
           {#each formats as format, i}
-            <Tooltip btnClass="btn-icon-sm-surface-soft bg-surface-token-800-200 border-0" btnOnclick={() => onFormatBtnClick(i)}>
+            <Tooltip btnClass="btn-icon-sm-surface-soft dark:bg-surface-800 bg-surface-200 border-0" btnOnclick={() => onFormatBtnClick(i)}>
               <format.icon size={16} />
               {#snippet tip()}
                 {format.tip}
@@ -97,7 +97,7 @@
   </div>
   {#if editing}
     <textarea
-      class="input !mt-0 h-64 resize-none rounded-t-none text-base"
+      class="input mt-0! h-64 resize-none rounded-t-none text-base"
       bind:value
       {oninput}
       bind:this={textareaElement}
@@ -105,7 +105,7 @@
   {:else}
     <div class="px-2 py-1">
       {#if value.length === 0}
-        <p class="text-surface-token-200-800 italic">No content</p>
+        <p class="dark:text-surface-200 text-surface-800 italic">No content</p>
       {:else}
         <div class="from-markdown-content">
           {@html showdown.makeHtml(value)}

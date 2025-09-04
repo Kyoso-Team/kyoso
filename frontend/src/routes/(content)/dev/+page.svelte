@@ -109,7 +109,7 @@
     <Boolean field={inlineForm.fields.boolean} />
   </FormCard>
 </div>
-<div class="my-16 w-[32rem]">
+<div class="my-16 w-lg">
   <MarkdowEditor bind:value />
 </div>
 <h2 class="mb-4">Toast</h2>

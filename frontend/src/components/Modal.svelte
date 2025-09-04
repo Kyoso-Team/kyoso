@@ -32,7 +32,7 @@
 </script>
 
 <div
-  class="bg-surface-token-800-200 border-surface-token-700-300 m-auto flex h-max w-[32rem] flex-col rounded-md border p-8"
+  class="dark:bg-surface-800 bg-surface-200 dark:border-surface-700 border-surface-300 m-auto flex h-max w-lg flex-col rounded-md border p-8"
   use:portal={'#faded-bg-content'}
   transition:fade={{ duration: 75 }}
 >

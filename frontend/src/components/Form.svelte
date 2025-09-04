@@ -33,7 +33,7 @@
 </script>
 
 <form
-  class="bg-surface-token-800-200 border-surface-token-700-300 m-auto flex h-max w-[32rem] flex-col rounded-md border p-8"
+  class="dark:bg-surface-800 bg-surface-200 dark:border-surface-700 border-surface-300 m-auto flex h-max w-lg flex-col rounded-md border p-8"
   role="presentation"
   onsubmit={form.submit}
   use:portal={'#faded-bg-content'}
@@ -43,7 +43,7 @@
   <div class="line mt-4"></div>
   {@render header?.()}
   <div
-    class="[&>strong]:text-surface-token-100-900 my-4 flex flex-col gap-4 [&>strong]:font-semibold"
+    class="[&>strong]:dark:text-surface-100 [&>strong]:text-surface-900 my-4 flex flex-col gap-4 [&>strong]:font-semibold"
   >
     {@render children()}
   </div>

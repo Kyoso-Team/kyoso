@@ -18,7 +18,7 @@
 </script>
 
 <div
-  class="bg-surface-token-800-200 border-surface-token-700-300 fixed left-0 top-0 z-50 flex w-screen items-center gap-16 border-b px-20 py-3 backdrop-blur-sm transition-opacity"
+  class="dark:bg-surface-800 bg-surface-200 dark:border-surface-700 border-surface-300 fixed left-0 top-0 z-50 flex w-screen items-center gap-16 border-b px-20 py-3 backdrop-blur-sm transition-opacity"
 >
   <div class="flex h-6 w-32 items-center text-sm">logo placeholder</div>
   <nav class="flex w-full items-center">

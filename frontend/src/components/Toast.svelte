@@ -12,7 +12,7 @@
   };
 </script>
 
-<div class="fixed bottom-4 left-4 z-[101] flex flex-col gap-2">
+<div class="fixed bottom-4 left-4 z-101 flex flex-col gap-2">
   {#each toast.showingItems as item (item.id)}
     <div
       role="presentation"

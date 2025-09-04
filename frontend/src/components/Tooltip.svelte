@@ -110,12 +110,12 @@
   {/if}
   <!-- Tooltip Content -->
   {#if api.open}
-    <div {...api.getPositionerProps()} transition:fade={{ duration: 100 }} class="!top-[2px]">
+    <div {...api.getPositionerProps()} transition:fade={{ duration: 100 }} class="top-[2px]!">
       <!-- Arrow -->
       <div {...api.getArrowProps()}>
         <div
           {...api.getArrowTipProps()}
-          class="!top-[1px] !h-2 !w-2 border border-b-0 border-r-0 border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:!bg-zinc-900"
+          class="top-px! h-2! w-2! border border-b-0 border-r-0 border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900!"
         ></div>
       </div>
       <!-- Snippet Content -->

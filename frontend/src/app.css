@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 /* inter-latin-400-normal */
 @font-face {
@@ -106,7 +105,143 @@
     U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-surface-50: #F5F4F5;
+  --color-surface-100: #E9E7E9;
+  --color-surface-200: #D1CCD1;
+  --color-surface-300: #B4ACB4;
+  --color-surface-400: #8F848F;
+  --color-surface-500: #433D43;
+  --color-surface-600: #3D383D;
+  --color-surface-700: #332E33;
+  --color-surface-800: #282428;
+  --color-surface-900: #1B181B;
+  --color-surface-950: #000000;
+
+  --color-primary-50: #FEF6FA;
+  --color-primary-100: #FCE9F2;
+  --color-primary-200: #F9D2E4;
+  --color-primary-300: #F5B8D4;
+  --color-primary-400: #F098C1;
+  --color-primary-500: #EA6CA7;
+  --color-primary-600: #E65197;
+  --color-primary-700: #E0297E;
+  --color-primary-800: #B71A63;
+  --color-primary-900: #861349;
+  --color-primary-950: #5E0D33;
+}
+
 body {
   font-family: 'Inter';
   @apply dark:bg-surface-900 bg-surface-100 text-black dark:text-white;
+}
+
+h1 {
+  @apply text-3xl font-bold dark:text-white text-black;
+}
+
+h2 {
+  @apply text-2xl font-bold dark:text-white text-black;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+@utility content-wrapper {
+  @apply flex justify-center items-center;
+}
+
+@utility content {
+  @apply w-full max-w-5xl;
+}
+
+@utility btn-sm {
+  @apply block px-3 py-1 text-sm leading-normal duration-150 font-medium rounded-md disabled:opacity-50;
+}
+@utility btn-sm-surface-soft {
+  @apply btn-sm dark:bg-surface-700 bg-surface-300 dark:hover:bg-surface-600 hover:bg-surface-400 dark:border-surface-600 border-surface-400 border;
+}
+@utility btn-sm-contrast {
+  @apply btn-sm bg-black dark:bg-white dark:hover:bg-surface-100 hover:bg-surface-900 dark:text-black text-white;
+}
+
+@utility btn-icon-sm {
+  @apply block p-2 text-sm duration-150 rounded-md disabled:opacity-50;
+}
+@utility btn-icon-sm-surface-soft {
+  @apply btn-icon-sm dark:bg-surface-700 bg-surface-300 dark:hover:bg-surface-600 hover:bg-surface-400 dark:border-surface-600 border-surface-400 border;
+}
+@utility btn-icon-sm-contrast {
+  @apply btn-icon-sm bg-black dark:bg-white dark:hover:bg-surface-100 hover:bg-surface-900 dark:text-black text-white;
+}
+
+@utility btn-md {
+  @apply block px-4 py-[6px] text-sm leading-normal duration-150 font-medium rounded-md;
+}
+@utility btn-md-avatar {
+  @apply w-[34.6px] h-[34.6px] border-2 dark:border-white border-black rounded-full overflow-hidden duration-150 hover:opacity-90;
+}
+@utility btn-md-surface-soft {
+  @apply btn-md dark:bg-surface-700 bg-surface-300 dark:hover:bg-surface-600 hover:bg-surface-400 dark:border-surface-600 border-surface-400 border;
+}
+@utility btn-md-ghost {
+  @apply btn-md bg-transparent hover:bg-primary-500/25 border-transparent border;
+}
+@utility btn-md-contrast {
+  @apply btn-md border bg-black border-black dark:bg-white dark:border-white dark:hover:border-surface-100 hover:border-surface-900 dark:hover:bg-surface-100 hover:bg-surface-900 dark:text-black text-white;
+}
+
+@utility label {
+  @apply has-disabled:opacity-50 duration-150 [&>legend]:text-sm [&>legend]:dark:text-surface-200 [&>legend]:text-surface-800 [&>legend]:duration-150 [&>legend>span]:text-red-500 [&>legend>span]:duration-150 [&>.error]:block [&>.error]:text-red-500 [&>.error]:text-sm [&>.error]:mt-[2px] [&>.error]:duration-150 [&>.description]:block [&>.description]:text-xs [&>.description]:mt-[2px] [&>.description]:dark:text-surface-400 [&>.description]:text-surface-600 [&>.description]:duration-150;
+}
+@utility input {
+  @apply w-full rounded-md dark:bg-surface-700 bg-surface-300 border dark:border-surface-600 border-surface-400 px-2 py-1 mt-1 text-black dark:text-white duration-150 disabled:cursor-not-allowed;
+}
+@utility input-select {
+  @apply input px-2 py-[6.4px];
+}
+@utility input-checkbox {
+  @apply w-5 h-5 flex justify-center items-center rounded-md dark:bg-surface-700 bg-surface-300 border dark:border-surface-600 border-surface-400 aria-checked:bg-primary-500 aria-checked:border-primary-400 dark:aria-checked:border-primary-600 duration-75;
+}
+@utility input-error {
+  @apply dark:border-red-500/50 duration-150;
+}
+@utility input-preview {
+  @apply block text-xs dark:text-surface-200 text-surface-800 mt-[2px] duration-150;
+}
+@utility input-preview-error {
+  @apply block text-xs dark:text-red-300 text-red-700 mt-[2px] duration-150;
+}
+
+@utility line {
+  @apply w-full h-px dark:bg-surface-600 bg-surface-400;
+}
+
+@utility from-markdown-content {
+  @apply prose prose-neutral dark:prose-invert;
+}
+
+@utility card {
+  @apply rounded-md border dark:border-surface-600 border-surface-400 dark:bg-surface-800 bg-surface-200 flex flex-col text-left overflow-hidden text-sm;
+}
+@utility card-title {
+  @apply font-semibold text-xl;
+}
+@utility card-body {
+  @apply p-6;
+}
+@utility card-form {
+  @apply grid gap-4;
+}
+@utility card-footer {
+  @apply dark:bg-surface-900 bg-surface-100 px-6 py-3 flex;
+}
+@utility card-footer-body {
+  @apply flex items-center min-w-max;
+}
+@utility card-btns {
+  @apply flex justify-end w-full gap-2;
 }
