@@ -16,10 +16,9 @@ export class FormHandler<
   public $data: {
     [K1 in keyof TFields]: TFields[K1] extends Record<string, Field<any>>
       ?
-          | {
-              [K2 in keyof TFields[K1]]: HandleFieldType<TFields[K1][K2]>;
-            }
-          | null
+          {
+            [K2 in keyof TFields[K1]]: HandleFieldType<TFields[K1][K2]>;
+          }
       : HandleFieldType<TFields[K1]>;
   } = undefined as any;
   public defaultValue?: () => this['$data'];

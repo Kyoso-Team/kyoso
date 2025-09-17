@@ -15,12 +15,11 @@ const BaseTournamentType = t.Object({
   name: t.String({ minLength: 2, maxLength: 50 }),
   urlSlug: t.String({ minLength: 2, maxLength: 16 }),
   acronym: t.String({ minLength: 2, maxLength: 8 }),
-  description: t.Optional(t.String()),
   rankRange: t.Optional(
     t.Nullable(
       t.Object({
         lower: t.Integer({ minimum: 1 }),
-        upper: t.Optional(t.Integer({ minimum: 1 }))
+        upper: t.Optional(t.Nullable(t.Integer({ minimum: 1 })))
       })
     )
   ),
@@ -28,7 +27,7 @@ const BaseTournamentType = t.Object({
     t.Nullable(
       t.Object({
         min: t.Integer({ minimum: 2, maximum: 16 }),
-        max: t.Optional(t.Integer({ minimum: 2, maximum: 16 }))
+        max: t.Integer({ minimum: 2, maximum: 16 })
       })
     )
   )
@@ -39,7 +38,13 @@ const tournamentRouter1 = createRouter({
 })
   .use(services)
   .post('/', async ({ body, tournamentService }) => {
-    return await tournamentService.createTournament(body);
+    return await tournamentService.createTournament({
+      ...body,
+      minTeamSize: body.teamSize?.min ?? null,
+      maxTeamSize: body.teamSize?.max ?? null,
+      lowerRankRange: body.rankRange?.lower ?? null,
+      upperRankRange: body.rankRange?.upper ?? null
+    });
   }, {
     body: t.Object({
       ...BaseTournamentType.properties,
@@ -54,12 +59,20 @@ const tournamentRouter1 = createRouter({
         return status(422, 'Can\'t set rank range for an open rank tournament');
       }
 
-      if (body.type === 'solo' && body.teamSize !== undefined) {
+      if (body.type === 'solo' && !(body.teamSize === undefined || body.teamSize === null)) {
         return status(422, 'Can\'t set team settings for a solo tournament');
       }
 
       if (body.type !== 'solo' && (body.teamSize === undefined || body.teamSize === null)) {
         return status(422, 'Must set team settings for a team-based tournament');
+      }
+
+      if (body.teamSize && body.teamSize.min > body.teamSize.max) {
+        return status(422, 'The minimum team size can\'t be greater than the maximum team size');
+      }
+
+      if (body.rankRange && body.rankRange.upper && body.rankRange.lower > body.rankRange.upper) {
+        return status(422, 'The lower rank range limit can\'t be greater than the upper rank range limit');
       }
     }
   });
@@ -93,6 +106,7 @@ const tournamentRouter2 = createTournamentRouter()
     body: t.Partial(
       t.Object({
         ...BaseTournamentType.properties,
+        description: t.Optional(t.String()),
         useTeamBanners: t.Boolean(),
         winCondition: t.UnionEnum(['score', 'accuracy', 'combo']),
         bws: t.Nullable(
@@ -164,6 +178,14 @@ const tournamentRouter2 = createTournamentRouter()
 
       if (body.bws && (body.bws.x === 0 || body.bws.y === 0 || body.bws.z === 0)) {
         return status(422, 'None of the BWS constants can be zero');
+      }
+
+      if (body.teamSize && body.teamSize.min > (body.teamSize.max ?? body.teamSize.min)) {
+        return status(422, 'The minimum team size can\'t be greater than the maximum team size');
+      }
+
+      if (body.rankRange && body.rankRange.upper && body.rankRange.lower > body.rankRange.upper) {
+        return status(422, 'The lower rank range can\'t be greater than the upper rank range');
       }
 
       if (body.schedule) {

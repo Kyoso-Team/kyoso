@@ -5,6 +5,8 @@ import { staffMemberRouter } from './routers/staff-member.router';
 import { staffRoleRouter } from './routers/staff-role.router';
 import { tournamentRouter } from './routers/tournament.router';
 import { apiKeyRouter } from './routers/api-key.router';
+import { env } from './utils/env';
+import { cors } from '@elysiajs/cors';
 
 // const app = new Hono()
 //   .use(
@@ -41,8 +43,13 @@ import { apiKeyRouter } from './routers/api-key.router';
 //   .route('/', staffMemberRouter)
 //   .route('/', apiKeyRouter);
 
-// TODO: CORS and ratelimit
+// TODO: Ratelimit
 const app = new Elysia()
+  .use(
+    cors({
+      origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN
+    })
+  )
   .use(devRouter)
   .use(authRouter)
   .use(staffMemberRouter)

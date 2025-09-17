@@ -15,7 +15,8 @@ class TournamentDbRepository extends DbRepository {
       .values(tournament)
       .returning(
         pick(Tournament, {
-          id: true
+          id: true,
+          urlSlug: true
         })
       );
 

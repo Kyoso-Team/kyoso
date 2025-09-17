@@ -5,6 +5,7 @@
   import { c } from '$lib/state/common.svelte';
   import { toggleTheme } from '$lib/theme';
   import type { LayoutData } from './$types';
+  import Toast from '$components/Toast.svelte';
 
   const { children, data } = $props() as {
     children: Snippet;
@@ -19,5 +20,6 @@
 <svelte:head>
   {@html `<\u{73}cript>(${toggleTheme.toString()})();</script>`}
 </svelte:head>
+<Toast />
 <FadedBg />
 {@render children()}

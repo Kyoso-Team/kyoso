@@ -36,3 +36,6 @@ type MapApiRoutes<T> = {
       : never;
 };
 export type Api = MapApiRoutes<ReturnType<typeof api>>;
+
+export type ApiFns = ReturnType<typeof api>;
+export type Body<T extends (body: any) => any> = Parameters<T>[0];

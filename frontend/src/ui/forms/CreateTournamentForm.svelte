@@ -6,7 +6,10 @@
   import Text from '$components/form/Text.svelte';
   import { F, FormHandler } from '$lib/state/form.svelte';
   import { page } from '$app/state';
+  import * as api from '$lib/api.requests';
   import type { FormProps } from '$lib/types';
+  import { toast } from '$lib/state/toast.svelte';
+  import { goto } from '$app/navigation';
 
   const { unmount, onCancel }: FormProps = $props();
 
@@ -27,9 +30,9 @@
       teams: 'Teams',
       draft: 'Draft'
     }),
-    teamSettings: {
-      minTeamSize: new F.Number('Min. team size').int().gte(1).lte(16),
-      maxTeamSize: new F.Number('Max. team size').int().gte(2).lte(16)
+    teamSize: {
+      min: new F.Number('Min. team size').int().gte(1).lte(16),
+      max: new F.Number('Max. team size').int().gte(2).lte(16)
     },
     isOpenRank: new F.Boolean('Is open rank?'),
     rankRange: {
@@ -38,7 +41,21 @@
     }
   })
     .onSubmit(async (value) => {
-      console.log(value);
+      const created = await api.createTournament(fetch, {
+        ...value,
+        teamSize: value.type === 'solo' ? null : value.teamSize,
+        rankRange: value.isOpenRank ? null : value.rankRange
+      });
+
+      await unmount();
+      toast.add({
+        type: 'success',
+        message: 'Successfully created tournament!'
+      });
+
+      await goto(`/t/m/${created.urlSlug}`, {
+        invalidateAll: true
+      });
     })
     .onCancel(async () => {
       await onCancel?.();
@@ -47,8 +64,8 @@
 
   $effect(() => {
     const disable = form.fields.type.raw !== 'teams';
-    form.fields.teamSettings.maxTeamSize.disable(disable);
-    form.fields.teamSettings.minTeamSize.disable(disable);
+    form.fields.teamSize.max.disable(disable);
+    form.fields.teamSize.min.disable(disable);
   });
 
   $effect(() => {
@@ -70,8 +87,8 @@
   <div class="line mt-4"></div>
   <strong>Format</strong>
   <Options field={form.fields.type} />
-  <Number field={form.fields.teamSettings.minTeamSize} />
-  <Number field={form.fields.teamSettings.maxTeamSize} />
+  <Number field={form.fields.teamSize.min} />
+  <Number field={form.fields.teamSize.max} />
   <div class="line mt-4"></div>
   <strong>Rank Range</strong>
   <Boolean field={form.fields.isOpenRank} />
